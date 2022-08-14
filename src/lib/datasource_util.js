@@ -1007,6 +1007,7 @@ export const transform = (f, dataSource, code, type = 'id', codeType = 'dbDDL') 
       temp.type = dataType;
       temp.domain = type === 'id' ? (domain.defName || domain.defKey) : f.domain;
       temp.dbType = mappings.filter(m => m.id === domain.applyFor)[0]?.[db] || f.type;
+      temp.domainData = domain;
     } else {
       const realType = mappings.filter(m => m[db] === f.type)[0]?.[code] || f.type;
       temp.type = realType;
@@ -1023,6 +1024,7 @@ export const transform = (f, dataSource, code, type = 'id', codeType = 'dbDDL') 
         temp.scale = domain.scale === undefined ? '' : domain.scale;
         temp.type = mapping?.[code] || '';
         temp.dbType = mapping?.[db] || f.type;
+        temp.domainData = domain;
       }
     } else {
       temp.type = mappings.filter(m => m[db] === f.type)[0]?.[code] || f.type;
@@ -1039,6 +1041,7 @@ export const transform = (f, dataSource, code, type = 'id', codeType = 'dbDDL') 
   if (f.uiHint) {
     const uiHint = uiHints.filter(u => u[type] === f.uiHint)[0];
     temp.uiHint = uiHint?.defName || uiHint?.defKey;
+    temp.uiHintData = uiHint;
   }
   // 转换引用数据表  如果是视图
   if (entities && f.refEntity) {

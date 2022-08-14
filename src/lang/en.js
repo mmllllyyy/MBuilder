@@ -41,6 +41,8 @@ export default {
         exportSql: 'export DDL',
         exportDict: 'exportDictSQL',
         exportWord: 'export WORD',
+        exportHtml: 'export HTML',
+        exportMarkdown: 'export Markdown',
         exportWordStep1: '[1/2] 1. Generating diagram...[{count}/{length}]',
         exportWordStep2: '[2/2] 2. Generating word...',
         exportSuccess: 'Export Success',

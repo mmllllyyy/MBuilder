@@ -31,6 +31,7 @@ import { separator } from '../../../profile';
 import { getMenu, getMenus, dealMenuClick } from '../../lib/contextMenuUtil';
 import { moveArrayPosition } from '../../lib/array_util';
 import AppCodeEdit from '../container/appcode/AppCodeEdit';
+import { generateFile } from '../../lib/generatefile';
 import {
   validateKey,
   updateAllData,
@@ -303,22 +304,37 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     const cavRef = getCurrentCav();
     cavRef.redo();
   };
-  const exportWord = () => {
-    selectWordFile(dataSourceRef.current)
-      .then(([dir, template]) => {
-        const length = dataSourceRef.current.diagrams?.length || 0;
-        let count = 0;
+  const genImg = (useBase = false) => {
+    return new Promise((resolve) => {
+      const length = dataSourceRef.current.diagrams?.length || 0;
+      let count = 0;
+      restProps.openLoading(FormatMessage.string({
+        id: 'toolbar.exportWordStep1',
+        data: { count, length },
+      }));
+      imgAll(dataSourceRef.current, () => {
+        count += 1;
         restProps.openLoading(FormatMessage.string({
           id: 'toolbar.exportWordStep1',
           data: { count, length },
         }));
-        imgAll(dataSourceRef.current, () => {
-          count += 1;
-          restProps.openLoading(FormatMessage.string({
-            id: 'toolbar.exportWordStep1',
-            data: { count, length },
-          }));
-        }).then((imgDir) => {
+      }, useBase).then((res) => {
+        resolve(res);
+      });
+    });
+  };
+  const generateSimpleFile = (fileType) => {
+    generateFile(fileType, dataSourceRef.current, (callback) => {
+      genImg(true).then((res) => {
+        restProps.closeLoading();
+        callback(res);
+      });
+    });
+  };
+  const exportWord = () => {
+    selectWordFile(dataSourceRef.current)
+      .then(([dir, template]) => {
+        genImg().then((imgDir) => {
           restProps.openLoading(FormatMessage.string({id: 'toolbar.exportWordStep2'}));
           connectDB(dataSourceRef.current, configRef.current, {
             sinerFile: projectInfo,
@@ -1181,6 +1197,8 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       case 'redo': redo(); break;
       case 'img': exportImg(); break;
       case 'word': exportWord(); break;
+      case 'html':
+      case 'markdown': generateSimpleFile(key, dataSourceRef.current, projectInfoRef.current); break;
       case 'sql': exportSql('sql'); break;
       case 'dict': exportSql('dict'); break;
       case 'empty': createEmptyTable(e);break;

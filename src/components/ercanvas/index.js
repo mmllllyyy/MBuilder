@@ -402,6 +402,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         cells: calcCellData(data?.canvasData?.cells || [], dataSourceRef.current, updateFields,
           getTableGroup(), commonPorts, relationType, commonEntityPorts),
       });
+      isInit.current = true;
     } else {
       // 需要更新数据表相关的节点
       const cells = graphRef.current.getCells();

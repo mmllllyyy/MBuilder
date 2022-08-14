@@ -27,12 +27,12 @@ export default React.memo(({ prefix, dataSource, dataChange, updateDataSource, g
     }
   }
   const columnsChange = (value) => {
-      currentHeaders.current = currentHeaders.current.map(h => {
-          const change = value.filter(v => v.refKey === h.refKey)[0];
-          if (change) {
+      currentHeaders.current = value.map(h => {
+          const current = currentHeaders.current.filter(v => v.refKey === h.refKey)[0];
+          if (current) {
               return {
-                  freeze: h.freeze || false,
-                  ...change,
+                  ...h,
+                  freeze: current.freeze || false,
               };
           }
           return h;

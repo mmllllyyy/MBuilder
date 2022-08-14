@@ -106,9 +106,9 @@ const refactorEntityFields = (fields, preDataSource, currentDataSource) => {
 const compareObj = (current, pre, names, omitNames = [], refactor) => {
   const compareNames = names || [...new Set(Object.keys(current).concat(Object.keys(pre)))];
   return compareNames.filter(n => !omitNames.includes(n)).reduce((p, n) => {
-    if (!(n in current)) {
+    if (!(n in current) && (n in pre)) {
       return p.concat({opt: 'delete', data: n});
-    } else if (!(n in pre)) {
+    } else if (!(n in pre) && (n in current)) {
       return p.concat({opt: 'add', data: n});
     } else if (current[n] !== pre[n]) {
       if (refactor && (Array.isArray(current[n]) || Array.isArray(pre[n]))) {

@@ -225,6 +225,8 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
         icon={<Icon type='icon-daochu'/>}
         dropMenu={[
             {key: 'word', name: FormatMessage.string({id: 'toolbar.exportWord'})},
+            {key: 'html', name: FormatMessage.string({id: 'toolbar.exportHtml'})},
+            // {key: 'markdown', name: FormatMessage.string({id: 'toolbar.exportMarkdown'})},
             {key: 'sql', name: FormatMessage.string({id: 'toolbar.exportSql'})},
             {key: 'dict', name: FormatMessage.string({id: 'toolbar.exportDict'})},
             {
