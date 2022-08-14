@@ -41,6 +41,8 @@ export default {
         exportSql: '导出DDL',
         exportDict: '导出数据字典SQL',
         exportWord: '导出WORD',
+        exportHtml: '导出HTML',
+        exportMarkdown: '导出Markdown',
         exportWordStep1: '[1/2] 1.正在生成关系图...[{count}/{length}]',
         exportWordStep2: '[2/2] 2.正在生成WORD...',
         exportSuccess: '导出成功！',

@@ -109,13 +109,17 @@ export const img = (data, relationType, dataSource, needCalc = true, groups) => 
   })
 };
 
-export const imgAll = (dataSource, callBack) => {
+export const imgAll = (dataSource, callBack, useBase) => {
   if ((dataSource.diagrams || []).length === 0){
     return new Promise((res, rej) => {
-      saveTempImages([])
-        .then((dir) => {
-          res(dir);
-        }).catch(err => rej(err));
+      if (useBase) {
+        res([]);
+      } else {
+        saveTempImages([])
+            .then((dir) => {
+              res(dir);
+            }).catch(err => rej(err));
+      }
     });
   }
   return new Promise( async (res, rej) => {
@@ -151,10 +155,9 @@ export const imgAll = (dataSource, callBack) => {
           html2canvas(dom).then((canvas) => {
             document.body.removeChild(dom.parentElement.parentElement);
             const clippedCanvas = clipCanvasEmptyPadding(canvas, 30);
-            const dataBuffer = Buffer.from(clippedCanvas.toDataURL('image/png')
-                    .replace(/^data:image\/\w+;base64,/, ""),
-                'base64');
-            result.push({fileName: d.id, data: dataBuffer});
+            const baseData = clippedCanvas.toDataURL('image/png');
+            const dataBuffer = Buffer.from(baseData.replace(/^data:image\/\w+;base64,/, ""), 'base64');
+            result.push({fileName: d.id, data: useBase ? baseData : dataBuffer});
             console.log(d.defName || d.defKey);
             callBack && callBack();
             resolve();
@@ -162,10 +165,14 @@ export const imgAll = (dataSource, callBack) => {
         }).catch(err => reject(err))
       })
     }
-    saveTempImages(result)
-        .then((dir) => {
-          res(dir);
-        }).catch(err => rej(err));
+    if (useBase) {
+      res(result);
+    } else {
+      saveTempImages(result)
+          .then((dir) => {
+            res(dir);
+          }).catch(err => rej(err));
+    }
   });
 }
 

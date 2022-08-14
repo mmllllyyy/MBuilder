@@ -1,4 +1,5 @@
 import _object from 'lodash/object';
+import {transform} from '../datasource_util';
 
 const relation = '关联关系';
 const relationList = '关联关系清单';
@@ -23,31 +24,32 @@ const generateHeader = (dataSource) => {
   const viewGroups = _object.get(dataSource, 'viewGroups', []);
   const generateHeaderIndex = (group, index, groupName, dataName, mainTitle, title, subTitle) => {
     const dataRefs = _object.get(group, name, []);
-    const data = (dataSource[dataName] || []).filter(e => dataRefs.includes(e.defKey));
+    const data = (dataSource[dataName] || []).filter(e => dataRefs.includes(e.id));
     GroupsString += `<ul>`;
     GroupsString += `<li class="second-li"><a class="group-list" href="#">${index} ${mainTitle}</a></li>\n`;
     GroupsString += `<ul>`;
-    GroupsString += `<li class="second-li"><a class="group-list" id="group-${group.defKey}-tableList-from" href="#group-${group.defKey}-${dataName}-to">2 ${title}</a></li>\n`;
-    GroupsString += `<li class="second-li"><a class="group-list" id="group-${group.defKey}-tableColumnList-from" href="#group-${group.defKey}-${groupName}-to">3 ${subTitle}</a>\n`;
+    GroupsString += `<li class="second-li"><a class="group-list" id="group-${group.id}-${dataName}-from" href="#group-${group.id}-${dataName}-to">1 ${title}</a></li>\n`;
+    if (subTitle) {
+      GroupsString += `<li class="second-li"><a class="group-list" id="group-${group.id}-${groupName}-from" href="#group-${group.id}-${groupName}-to">2 ${subTitle}</a>\n`;
+    }
     GroupsString += `<ul>`;
     data.forEach((d, dIndex) => {
-      GroupsString += `<li class="third-li"><a id="group-${group.defKey}-tableColumnList-${d.defKey}-from" href="#group-${group.defKey}-${groupName}-${d.defKey}-to">3.${dIndex + 1} ${d.defKey}[${d.defName || ''}]</a></li>\n`
+      GroupsString += `<li class="third-li"><a id="group-${group.id}-${d.id}-from" href="#group-${group.id}-${d.id}-to">3.${dIndex + 1} ${d.id}[${d.defName || ''}]</a></li>\n`
     });
     GroupsString += `</ul></li></ul></li>`;
     GroupsString += `</ul>`;
-    GroupsString += `</ul>`;
   }
   viewGroups.forEach((group, index) => {
-    GroupsString += `<li class="first-li"><a class="group" id="group-${group.defKey}-from" href="#group-${group.defKey}-to">${index + 1} ${group.defName || group.defKey}</a>\n`;
+    GroupsString += `<li class="first-li"><a class="group" id="group-${group.id}-from" href="#group-${group.id}-to">${index + 1} ${group.defName || group.defKey}</a>\n`;
     generateHeaderIndex(group, 1, 'refDiagrams', 'diagrams', relation, relationList);
-    generateHeaderIndex(group, 2, 'refEntities', 'entities', table, tableList, tableColumnList);
-    generateHeaderIndex(group, 3, 'refViews', 'views', view, viewList, viewColumnList);
-    generateHeaderIndex(group, 4, 'refDicts', 'dicts', dict, dictList, dictItemList);
+    generateHeaderIndex(group, 2, 'entities-column', 'entities', table, tableList, tableColumnList);
+    generateHeaderIndex(group, 3, 'views-column', 'views', view, viewList, viewColumnList);
+    generateHeaderIndex(group, 4, 'dicts-column', 'dicts', dict, dictList, dictItemList);
   });
   return `${GroupsString}</ul>\n`;
 };
 
-const generateTableListTable = (dataSource, groupKey) => {
+const generateTableListTable = (dataSource, groupKey, type, fieldName) => {
   /*
   |  名称 | 代码  |
   | ------------ | ------------ |
@@ -56,10 +58,10 @@ const generateTableListTable = (dataSource, groupKey) => {
   let tableString = `<table border="1" cellspacing="0">\n`;
   tableString += `<tr class="first-tr"><td>${name}</td><td>${code}</td><td>${remark}</td></tr>\n`;
   const viewGroups = _object.get(dataSource, 'viewGroups', []);
-  const entities = _object.get(dataSource, 'entities', []);
+  const entities = _object.get(dataSource, fieldName, []);
   viewGroups.forEach((group) => {
-    if (group.defKey === groupKey) {
-      const currentEntities = entities.filter(e => (group?.refEntities || []).includes(e.defKey));
+    if (group.id === groupKey) {
+      const currentEntities = entities.filter(e => (group?.[type] || []).includes(e.id));
       currentEntities.forEach((entity) => {
         tableString += `<tr><td>${entity.defName || entity.defKey}</td><td>${entity.defKey}</td><td>${entity.comment || ''}</td></tr>\n`;
       })
@@ -68,7 +70,7 @@ const generateTableListTable = (dataSource, groupKey) => {
   return `${tableString}</table>`;
 };
 
-const generateTableColumnListTable = (dataSource, groupKey, tableKey) => {
+const generateTableColumnListTable = (dataSource, groupKey, tableKey, nameType) => {
   /*
   |  名称 | 代码  |
   | ------------ | ------------ |
@@ -76,19 +78,23 @@ const generateTableColumnListTable = (dataSource, groupKey, tableKey) => {
    */
   const defaultDb = _object.get(dataSource, 'profile.default.dbs', '');
   let tableString = `<table border="1" cellspacing="0">\n`;
-  tableString += `<tr class="first-tr"><td>${code}</td><td>${name}</td><td>${dataType}${defaultDb}</td><td>${main}</td><td>${remark}</td></tr>\n`;
+  tableString += `<tr class="first-tr"><td>${code}</td><td>${name}</td>${nameType !== 'dicts' ? `<td>${dataType}${defaultDb}</td><td>${main}</td>` : ''}<td>${remark}</td></tr>\n`;
   const viewGroups = _object.get(dataSource, 'viewGroups', []);
   viewGroups.forEach((group) => {
-    if (group.defKey === groupKey) {
-      const entities = _object.get(dataSource, 'entities', []);
+    if (group.id === groupKey) {
+      const entities = _object.get(dataSource, nameType, []);
       entities.forEach((entity) => {
-        if (entity.defKey === tableKey) {
+        if (entity.id === tableKey) {
           // 循环实体的属性
-          (entity.fields || []).forEach((field) => {
+          (entity[nameType === 'dicts' ? 'items' : 'fields'] || []).forEach((field) => {
             // 获取每一个属性对应的每一个数据的数据类型
-            const fieldType = field.type;
-            tableString += `<tr><td>${field.defKey}</td><td>${field.defName || ''}</td><td>${fieldType}</td><td>${field.primaryKey && '√' || ''}</td><td>${field.comment || ''}</td></tr>\n`;
-          });
+            if (nameType === 'dicts') {
+              tableString += `<tr><td>${field.defKey}</td><td>${field.defName || ''}</td><td>${field.intro || ''}</td></tr>\n`;
+            } else {
+              const fieldType = transform(field, dataSource).type;
+              tableString += `<tr><td>${field.defKey}</td><td>${field.defName || ''}</td><td>${fieldType}</td><td>${field.primaryKey && '√' || ''}</td><td>${field.comment || ''}</td></tr>\n`;
+            }
+           });
         }
       })
     }
@@ -100,15 +106,16 @@ const generateRelation = (group, images) => {
   /*
   ![Alt text](/path/to/img.jpg "Optional title")
    */
-  if (images[group.defKey]) {
-    return images[group.defKey]
-      .map((i, index) => `<img style="width: 98%;margin-top: 10px" src="${i}" title="${group.defName}-关系图-${index + 1}"/>`)
+  const img = images.filter(i => group.refDiagrams?.includes(i.fileName));
+  if (img.length > 0) {
+    return img
+      .map((i, index) => `<img style="width: 98%;margin-top: 10px" src="${i.data}" title="${group.defName}-关系图-${index + 1}"/>`)
       .join('\n');
   }
   return `<span>该模块未配置关系图</span>`;
 };
 
-const generateModuleBody = (dataSource, images = {}) => {
+const generateModuleBody = (dataSource, images = []) => {
   /*
   ---
 ### 1. 模块清单
@@ -140,28 +147,35 @@ const generateModuleBody = (dataSource, images = {}) => {
   // 循环所有的模块
   // 生成关系图
   // 生成该模块的表清单
+  const renderEntitiesOrViews = (group, type, name, index, subIndex, title, subTitle) => {
+    let renderString = '';
+    // 表清单
+    renderString += `<li><a class="group-list" id="group-${group.id}-${name}-to" href="#group-${group.id}-${name}-from">${index + 1}.${subIndex}.1  ${title}</a>\n\n`;
+
+    renderString += `\n\n`;
+    renderString += `${generateTableListTable(dataSource, group.id, type, name)}\n`;
+    renderString += `</li><hr>\n\n`;
+    renderString += `<li><a class="group-list" id="group-${group.id}-${name}-column-to" href="#group-${group.id}-${name}-column-from">${index + 1}.${subIndex}.2 ${subTitle}</a>\n\n`;
+    const entityRefs = _object.get(group, type, []);
+    const entities = (dataSource?.[name] || []).filter(e => entityRefs.includes(e.id));
+    renderString += `<ul style="padding: 0">`;
+    entities.forEach((entity, entityIndex) => {
+      renderString += ` <li><a class="block" id="group-${group.id}-${name}-column-${entity.id}-to" href="#group-${group.id}-${name}-column-${entity.id}-from">${index + 1}.${subIndex}.2.${entityIndex + 1} ${entity.defKey}[${entity.defName || ''}]</a>\n\n`;
+      renderString += `${generateTableColumnListTable(dataSource, group.id, entity.id, name)}\n`;
+      renderString += `</li>\n\n`;
+    });
+    renderString += '</li></ul><hr></li>'
+    return renderString;
+  }
   viewGroups.forEach((group, index) => {
-    groupsString += `<li class="first-li"><a class="group" id="group-${group.defKey}-to" href="#group-${group.defKey}-from">${index + 1} ${group.defName || group.defKey}</a><ul>\n`;
-    groupsString += `<li class="second-li"><a class="group-list" class="block" id="group-${group.defKey}-relation-to" href="#group-${group.defKey}-relation-from">${index + 1}.1 ${relationList}</a>\n`;
+    groupsString += `<li class="first-li"><a class="group" id="group-${group.id}-to" href="#group-${group.id}-from">${index + 1} ${group.defName || group.id}</a><ul>\n`;
+    groupsString += `<li class="second-li"><a class="group-list" class="block" id="group-${group.id}-diagrams-to" href="#group-${group.id}-diagrams-from">${index + 1}.1 ${relationList}</a>\n`;
     groupsString += `${generateRelation(group, images)}\n`;
     groupsString += `</li><hr>\n`;
-    // 表清单
-    groupsString += `<li><a class="group-list" id="group-${group.defKey}-tableList-to" href="group-${group.defKey}-tableList-from">${index + 1}.2  ${tableList}</a>\n\n`;
+    groupsString += renderEntitiesOrViews(group, 'refEntities', 'entities', index, 2, tableList, tableColumnList);
+    groupsString += renderEntitiesOrViews(group, 'refViews', 'views', index, 3, viewList, viewColumnList);
+    groupsString += renderEntitiesOrViews(group, 'refDicts', 'dicts', index, 4, dictList, dictItemList);
 
-    groupsString += `\n\n`;
-    groupsString += `${generateTableListTable(dataSource, group.defKey)}\n`;
-    groupsString += `</li><hr>\n\n`;
-    // 列清单
-    // 循环所有的表
-    groupsString += `<li><a class="group-list" id="group-${group.defKey}-tableColumnList-to" href="group-${group.defKey}-tableColumnList-from">${index + 1}.3 ${tableColumnList}</a>\n\n`;
-    const entityRefs = _object.get(group, 'refEntities', []);
-    const entities = (dataSource?.entities || []).filter(e => entityRefs.includes(e.defKey));
-    groupsString += `<ul style="padding: 0">`;
-    entities.forEach((entity, entityIndex) => {
-      groupsString += ` <li><a class="block" id="group-${group.defKey}-tableColumnList-${entity.defKey}-to" href="group-${group.defKey}-tableColumnList-${entity.defKey}-from">${index + 1}.3.${entityIndex + 1} ${entity.defKey}[${entity.defName || ''}]</a>\n\n`;
-      groupsString += `${generateTableColumnListTable(dataSource, group.defKey, entity.defKey)}\n`;
-      groupsString += `</li>\n\n`;
-    });
     groupsString += '</ul></li></ul><hr></li>'
   });
   // 生成该模块的表列清单
