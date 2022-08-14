@@ -988,7 +988,7 @@ export const reset = (f, dataSource, [key, id]) => {
   };
 };
 
-export const transform = (f, dataSource, code, type = 'id', codeType = 'dbDDL') => {
+export const transform = (f, dataSource, code, type = 'id', codeType = 'dbDDL', omitName = []) => {
   // 获取该数据表需要显示的字段
   const domains = dataSource?.domains || [];
   const entities = dataSource?.entities || [];
@@ -1032,7 +1032,7 @@ export const transform = (f, dataSource, code, type = 'id', codeType = 'dbDDL') 
     }
   }
   // 转换数据字典
-  if (f.refDict) {
+  if (f.refDict && !omitName.includes('refDict')) {
     const dict = dicts.filter(d => d[type] === f.refDict)[0];
     temp.refDict = dict?.defName || dict?.defKey;
     temp.refDictData = dict || {};

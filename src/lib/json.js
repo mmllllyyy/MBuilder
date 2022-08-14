@@ -350,7 +350,7 @@ export const connectDB = (dataSource, config, params = {}, cmd, cb) => {
           fields: (e.fields || []).map(f => {
             return {
               ...f,
-              ...transform(f, dataSource),
+              ...transform(f, dataSource, undefined, undefined, undefined, ['refDict']),
             };
           })
         }
