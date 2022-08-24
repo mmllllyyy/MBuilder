@@ -5,10 +5,12 @@ import './style/index.less';
 import {getPrefix} from '../../lib/prefixUtil';
 import Left from './Left';
 import Right from './Right';
+import {unRepeated} from '../../lib/array_util';
 
 export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
                                         data, groups, prefix, formatResult, arrayData,
                                         defaultSelected = []}, ref) => {
+  const tempSelected = unRepeated(defaultSelected);
   const currentPrefix = getPrefix(prefix);
   const currentGroup = useMemo(() => {
     return groups
@@ -23,9 +25,9 @@ export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
   const newDataKeys = useMemo(() => newData.map(n => n.id), [newData]);
   const repeatData = useMemo(() => currentData.map(f => f.defKey)
       .filter(f => newData.map(n => n.defKey).includes(f)), [data, groups]);
-  const [checked, setChecked] = useState([...defaultSelected]);
+  const [checked, setChecked] = useState([...tempSelected]);
   useEffect(() => {
-    setChecked([...defaultSelected]);
+    setChecked([...tempSelected]);
   }, [newDataKeys]);
   const checkedRef = useRef(null);
   checkedRef.current = checked;
@@ -51,7 +53,7 @@ export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
   }, []);
   const _iconClick = (type) => {
     if (type === 'all') {
-      setChecked([...defaultSelected || []]);
+      setChecked([...tempSelected || []]);
     } else {
       setChecked(() => {
         return [...new Set(importDataRef.current.map(d => d.id))];
@@ -102,24 +104,24 @@ export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
     </div>
     <div className={`${currentPrefix}-listselect-container`}>
       <Left
-        defaultSelected={defaultSelected}
-        prefix={currentPrefix}
-        checked={checked}
-        newData={newData}
-        checkBoxChange={_checkBoxChange}
-        repeatData={repeatData}
+          defaultSelected={tempSelected}
+          prefix={currentPrefix}
+          checked={checked}
+          newData={newData}
+          checkBoxChange={_checkBoxChange}
+          repeatData={repeatData}
       />
       <Right
-        defaultSelected={defaultSelected}
-        currentGroup={currentGroup}
-        newData={[...new Set(checked)].map((c) => {
-          return newData.filter(d => d.id === c)[0];
-        }).filter(d => !!d)}
-        prefix={currentPrefix}
-        onGroupChange={_onGroupChange}
-        onRemove={onRemove}
-        allowClear={allowClear}
-        notAllowEmpty={notAllowEmpty}
+          defaultSelected={tempSelected}
+          currentGroup={currentGroup}
+          newData={[...new Set(checked)].map((c) => {
+            return newData.filter(d => d.id === c)[0];
+          }).filter(d => !!d)}
+          prefix={currentPrefix}
+          onGroupChange={_onGroupChange}
+          onRemove={onRemove}
+          allowClear={allowClear}
+          notAllowEmpty={notAllowEmpty}
       />
     </div>
   </div>;

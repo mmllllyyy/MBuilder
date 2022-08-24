@@ -74,3 +74,19 @@ export const moveArrayPositionByArray = (array, moveArray, step, keyName, status
   }
   return tempArray;
 };
+
+// 去重
+export const unRepeated = (data = [], repeatKey) => {
+  const tempArray = [];
+  data.forEach(d => {
+    if(tempArray.findIndex(t => {
+      if (repeatKey) {
+        return t[repeatKey] === d[repeatKey];
+      }
+      return t === d;
+    }) < 0) {
+      tempArray.push(d);
+    }
+  })
+  return tempArray;
+}
