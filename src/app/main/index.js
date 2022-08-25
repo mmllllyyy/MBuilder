@@ -42,7 +42,7 @@ import {
   calcDomains,
   reset,
   updateHeaders,
-  mergeDataSource, mergeData, mergeDomains, resetHeader,
+  mergeDataSource, mergeData, mergeDomains, resetHeader, validateNeedSave,
 } from '../../lib/datasource_util';
 import {
   clearAllTabData,
@@ -1084,7 +1084,9 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
         }
         const freeze = tempData.freeze;
         filterData.splice(0, 0, 'dictSQLTemplate', 'freeze');
+        let needSave = false;
         Object.keys(tempData).filter(f => !filterData.includes(f)).forEach((f) => {
+          needSave = true;
           tempDataSource = _.set(tempDataSource, f, tempData[f]);
         });
         if ('profile.headers' in tempData) {
@@ -1110,6 +1112,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
             }
           });
         }
+        needSave &&
         restProps?.save(tempDataSource, FormatMessage.string({id: 'saveProject'}), !projectInfoRef.current); // 配置项内容在关闭弹窗后自动保存
       }
       modal && modal.close();
@@ -1345,13 +1348,13 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     if (config.autoSave && projectInfoRef.current) {
       // 开始执行自动保存任务
       autoSaveRef.current = setInterval(() => {
-        console.log('autoSave');
-        const newData = updateAllData(dataSourceRef.current,
-          injectTempTabs.current.concat(tabsRef.current));
-        if (newData.result.status) {
-          restProps.autoSave(newData.dataSource);
-        } else {
-          restProps.autoSave(dataSourceRef.current);
+        if(validateNeedSave(dataSourceRef.current)) {
+          console.log('autoSave');
+          const newData = updateAllData(dataSourceRef.current,
+              injectTempTabs.current.concat(tabsRef.current));
+          if (newData.result.status) {
+            restProps.autoSave(newData.dataSource);
+          }
         }
       }, config.autoSave * 60 * 1000);
     }

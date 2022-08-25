@@ -104,24 +104,24 @@ export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
     </div>
     <div className={`${currentPrefix}-listselect-container`}>
       <Left
-          defaultSelected={tempSelected}
-          prefix={currentPrefix}
-          checked={checked}
-          newData={newData}
-          checkBoxChange={_checkBoxChange}
-          repeatData={repeatData}
+        defaultSelected={tempSelected}
+        prefix={currentPrefix}
+        checked={checked}
+        newData={newData}
+        checkBoxChange={_checkBoxChange}
+        repeatData={repeatData}
       />
       <Right
-          defaultSelected={tempSelected}
-          currentGroup={currentGroup}
-          newData={[...new Set(checked)].map((c) => {
+        defaultSelected={tempSelected}
+        currentGroup={currentGroup}
+        newData={[...new Set(checked)].map((c) => {
             return newData.filter(d => d.id === c)[0];
           }).filter(d => !!d)}
-          prefix={currentPrefix}
-          onGroupChange={_onGroupChange}
-          onRemove={onRemove}
-          allowClear={allowClear}
-          notAllowEmpty={notAllowEmpty}
+        prefix={currentPrefix}
+        onGroupChange={_onGroupChange}
+        onRemove={onRemove}
+        allowClear={allowClear}
+        notAllowEmpty={notAllowEmpty}
       />
     </div>
   </div>;

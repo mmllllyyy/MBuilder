@@ -8,7 +8,7 @@ import empty from './template/empty';
 import { separator } from '../../profile';
 import {firstUp} from './string';
 import {compareVersion} from './update';
-import demoProject from '../lib/template/教学管理系统.chnr.json';
+import demoProject from '../lib/template/教学管理系统.pdm.json';
 import {notify} from './subscribe';
 
 export const allType = [
@@ -1544,7 +1544,7 @@ export const transformationData = (oldDataSource) => {
 
 export const validateNeedSave = (dataSource) => {
   const cacheData = getAllTabData();
-  if (Object.keys(cacheData).length > 0) {
+  if (Object.keys(cacheData).filter(c => !cacheData[c].isInit).length > 0) {
     return true;
   } else if (dataSource !== getMemoryCache('data')) {
     return true;

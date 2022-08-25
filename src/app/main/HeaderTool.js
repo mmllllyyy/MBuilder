@@ -169,6 +169,30 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
           />}
         disable={activeTab?.type !== 'diagram' || !isCellSelected}
       />
+      {/*<GroupIcon*/}
+      {/*  topStyle={{height: '24px'}}*/}
+      {/*  dropType='all'*/}
+      {/*  disable={activeTab?.type !== 'diagram'}*/}
+      {/* eslint-disable-next-line max-len */}
+      {/*  hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}*/}
+      {/*  groupKey='alignment'*/}
+      {/*  title={FormatMessage.string({id: 'toolbar.alignment'})}*/}
+      {/*  icon='fa-align-left'*/}
+      {/*  onClick={iconClick}*/}
+      {/*  dropMenu={[*/}
+      {/*          { key: 'alignLeft', name: FormatMessage.string({id: 'toolbar.alignLeft'})},*/}
+      {/* eslint-disable-next-line max-len */}
+      {/*          { key: 'horizontalCenter', name: FormatMessage.string({id: 'toolbar.horizontalCenter'})},*/}
+      {/*          { key: 'alignRight', name: FormatMessage.string({id: 'toolbar.alignRight'})},*/}
+      {/*          { key: 'alignTop', name: FormatMessage.string({id: 'toolbar.alignTop'})},*/}
+      {/* eslint-disable-next-line max-len */}
+      {/*          { key: 'verticalCenter', name: FormatMessage.string({id: 'toolbar.verticalCenter'})},*/}
+      {/* eslint-disable-next-line max-len */}
+      {/*          { key: 'alignBottom', name: FormatMessage.string({id: 'toolbar.alignBottom'})},*/}
+      {/*          { key: 'alignRow', name: FormatMessage.string({id: 'toolbar.alignRow'})},*/}
+      {/* eslint-disable-next-line max-len */}
+      {/*          { key: 'alignColumn', name: FormatMessage.string({id: 'toolbar.alignColumn'})},*/}
+      {/*      ]}/>*/}
     </GroupIconGroup>
     <GroupIconGroup>
       <GroupIcon
