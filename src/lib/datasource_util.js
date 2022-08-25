@@ -8,7 +8,7 @@ import empty from './template/empty';
 import { separator } from '../../profile';
 import {firstUp} from './string';
 import {compareVersion} from './update';
-import demoProject from '../lib/template/教学管理系统.pdm.json';
+import demoProject from './template/教学管理系统.pdma.json';
 import {notify} from './subscribe';
 
 export const allType = [

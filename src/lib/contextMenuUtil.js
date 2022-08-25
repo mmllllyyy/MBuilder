@@ -34,7 +34,7 @@ import {
 } from './datasource_util';
 // 专门处理左侧菜单 右键菜单数据
 import { separator } from '../../profile';
-import demoProject from './template/教学管理系统.pdm.json';
+import demoProject from './template/教学管理系统.pdma.json';
 
 const opt = [{
   key: 'add',
