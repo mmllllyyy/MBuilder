@@ -726,7 +726,8 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         graph.cleanClipboard();
       }
     });
-    graph.bindKey(['ctrl+m','command+m'], () => {
+    graph.bindKey(['ctrl+m','command+m'], (e) => {
+      e.preventDefault();
       const minimapContainer = document.getElementById(`${id}minimapContainer`);
       if (minimapContainer) {
         if (minimapContainer.style.opacity === '0') {
