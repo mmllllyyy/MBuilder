@@ -777,6 +777,10 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     const cavRef = getCurrentCav();
     cavRef?.createCircleNode(e);
   };
+  const alignment = (align) => {
+    const cavRef = getCurrentCav();
+    cavRef?.alignment(align);
+  };
   const domainMenu = useMemo(() => [
     {
       id: 'dataTypeMapping',
@@ -892,7 +896,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     saveProject(false, tab, callback);
   };
   const selectionChanged = (cell) => {
-    headerToolRef.current.setIsCellSelected(cell.length > 0);
+    headerToolRef.current.setIsCellSelected(cell);
   };
   const jumpEntity = (tabKey) => {
     updateActiveKey(tabKey);
@@ -1210,6 +1214,14 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       case 'rect': createNode(e, 'rect');break;
       case 'polygon': createPolygonNode(e);break;
       case 'group': createGroupNode(e);break;
+      case 'alignLeft':
+      case 'alignRight':
+      case 'alignTop':
+      case 'verticalCenter':
+      case 'alignBottom':
+      case 'alignRow':
+      case 'alignColumn':
+      case 'horizontalCenter': alignment(key);break;
       default: break;
     }
   };

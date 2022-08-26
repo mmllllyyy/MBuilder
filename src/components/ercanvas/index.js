@@ -22,6 +22,7 @@ import { img } from '../../lib/generatefile/img';
 import LabelEditor from './LabelEditor';
 import FindEntity from './FindEntity';
 import clipCanvasEmptyPadding from './_util/clip_canvas';
+import * as align from '../../lib/position';
 
 const { Dnd } = Addon;
 
@@ -343,6 +344,29 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       });
     }
   };
+  const alignment = (a) => {
+    const cells = graphRef.current.getSelectedCells();
+    graphRef.current.cleanSelection();
+    graphRef.current.batchUpdate(() => {
+      const cellsPosition = align[a](cells);
+      const calcChildren = (children , offset) => {
+        (children || []).forEach((child) => {
+          const { x, y } = child.getProp('position');
+          child.setProp('position', {x: x + offset.x, y: y + offset.y});
+          calcChildren(child.children, offset);
+        });
+      };
+      cells.forEach((c) => {
+        const currentCell = cellsPosition.filter(p => p.id === c.id)[0];
+        if (currentCell) {
+          const { x, y } = c.getProp('position');
+          c.setProp('position', {x: currentCell.x, y: currentCell.y});
+          calcChildren(c.children, {x: currentCell.x - x, y: currentCell.y - y});
+        }
+      });
+    });
+    graphRef.current.resetSelection(cells);
+  };
   const updateColor = (key, color) => {
     //currentColor.current[key] = color.hex;
     let cells = graphRef.current.getSelectedCells();
@@ -395,6 +419,18 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
   };
   const validateScale = (factor) => {
     graphRef.current.zoom(factor);
+  };
+  const undo = () => {
+    const cells = graphRef.current.getSelectedCells();
+    graphRef.current.cleanSelection();
+    graphRef.current.undo({undo: true});
+    graphRef.current.resetSelection(cells);
+  };
+  const redo = () => {
+    const cells = graphRef.current.getSelectedCells();
+    graphRef.current.cleanSelection();
+    graphRef.current.redo({undo: true});
+    graphRef.current.resetSelection(cells);
   };
   const render = () => {
     if (!isInit.current) {
@@ -710,10 +746,10 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       }
     });
     graph.bindKey(['ctrl+z','command+z'], () => {
-      graph.undo({undo: true});
+      undo();
     });
     graph.bindKey(['ctrl+shift+z','command+shift+z'], () => {
-      graph.redo({redo: true});
+      redo();
     });
     graph.on('render:done', () => {
       if (!isInit.current) {
@@ -786,7 +822,6 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       dataChange && dataChange(graph.toJSON({diff: true}));
     });
     graph.on('selection:changed', ({ added,removed }) => {
-      console.log(added);
       added.forEach((cell) => {
         if (cell.isNode()) {
           cell.attr('body', {
@@ -835,7 +870,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
           cell.attr('line/strokeWidth', 1, { ignoreHistory : true});
         }
       });
-      selectionChanged && selectionChanged(added);
+      selectionChanged && selectionChanged(graph.getSelectedCells());
     });
     graph.on('edge:removed', ({edge}) => {
       const sourceCell = graph.getCell(edge.getSourceCellId());
@@ -1399,8 +1434,8 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       }
     };
     renderReady && renderReady({
-      undo: () => graphRef.current.undo({undo: true}),
-      redo: () => graphRef.current.redo({redo: true}),
+      undo,
+      redo,
       startDrag,
       startRemarkDrag,
       startGroupNodeDrag,
@@ -1410,6 +1445,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       validateScale,
       getScaleNumber,
       updateColor,
+      alignment,
       exportImg: () => {
         restProps.openLoading(FormatMessage.string({id: 'toolbar.exportImgLoading'}));
         img(graphRef.current.toJSON().cells, relationType,null, false).then((dom) => {

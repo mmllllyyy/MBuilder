@@ -3,18 +3,25 @@ import {FormatMessage, GroupIcon, Icon, SearchSuggest, Slider, NumberInput, Moda
 import { SketchPicker } from 'react-color';
 import numeral from 'numeral';
 import {validateNeedSave} from '../../lib/datasource_util';
+import { checkAlignEnable} from '../../lib/position';
 
 const GroupIconGroup = GroupIcon.GroupIconGroup;
 
 export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorChange, openModal,
                                         activeTab, resize, sliderChange, dataSource,
                                         jumpPosition, jumpDetail}, ref) => {
-  const [isCellSelected, setIsCellSelected] = useState(false);
+  const [isCellSelected, setIsCellSelected] = useState([]);
   const [scaleNumber, setScaleNumber] = useState(1);
   const [colorState, setColor] = useState({
     fontColor: 'rgba(0, 0, 0, 0.65)',
     fillColor: '#ACDAFC',
   });
+  const calcIsCellSelected = (isSimple) => {
+      if (isSimple) {
+          return isCellSelected.length > 0;
+      }
+      return checkAlignEnable(isCellSelected);
+  };
   useImperativeHandle(ref, () => {
     return {
       setScaleNumber,
@@ -150,7 +157,7 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
           color={colorState.fontColor}
           onChange={color => _colorChange('fontColor', color)}
           />}
-        disable={activeTab?.type !== 'diagram' || !isCellSelected}
+        disable={activeTab?.type !== 'diagram' || !calcIsCellSelected(true)}
       />
       <GroupIcon
         hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
@@ -167,32 +174,27 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
           color={colorState.fillColor}
           onChange={color => _colorChange('fillColor', color)}
           />}
-        disable={activeTab?.type !== 'diagram' || !isCellSelected}
+        disable={activeTab?.type !== 'diagram' || !calcIsCellSelected(true)}
       />
-      {/*<GroupIcon*/}
-      {/*  topStyle={{height: '24px'}}*/}
-      {/*  dropType='all'*/}
-      {/*  disable={activeTab?.type !== 'diagram'}*/}
-      {/* eslint-disable-next-line max-len */}
-      {/*  hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}*/}
-      {/*  groupKey='alignment'*/}
-      {/*  title={FormatMessage.string({id: 'toolbar.alignment'})}*/}
-      {/*  icon='fa-align-left'*/}
-      {/*  onClick={iconClick}*/}
-      {/*  dropMenu={[*/}
-      {/*          { key: 'alignLeft', name: FormatMessage.string({id: 'toolbar.alignLeft'})},*/}
-      {/* eslint-disable-next-line max-len */}
-      {/*          { key: 'horizontalCenter', name: FormatMessage.string({id: 'toolbar.horizontalCenter'})},*/}
-      {/*          { key: 'alignRight', name: FormatMessage.string({id: 'toolbar.alignRight'})},*/}
-      {/*          { key: 'alignTop', name: FormatMessage.string({id: 'toolbar.alignTop'})},*/}
-      {/* eslint-disable-next-line max-len */}
-      {/*          { key: 'verticalCenter', name: FormatMessage.string({id: 'toolbar.verticalCenter'})},*/}
-      {/* eslint-disable-next-line max-len */}
-      {/*          { key: 'alignBottom', name: FormatMessage.string({id: 'toolbar.alignBottom'})},*/}
-      {/*          { key: 'alignRow', name: FormatMessage.string({id: 'toolbar.alignRow'})},*/}
-      {/* eslint-disable-next-line max-len */}
-      {/*          { key: 'alignColumn', name: FormatMessage.string({id: 'toolbar.alignColumn'})},*/}
-      {/*      ]}/>*/}
+      <GroupIcon
+        topStyle={{height: '24px'}}
+        dropType='all'
+        disable={activeTab?.type !== 'diagram' || !calcIsCellSelected(false)}
+        hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
+        groupKey='alignment'
+        title={FormatMessage.string({id: 'toolbar.alignment'})}
+        icon='fa-align-left'
+        onClick={iconClick}
+        dropMenu={[
+                { key: 'alignLeft', name: FormatMessage.string({id: 'toolbar.alignLeft'})},
+                { key: 'horizontalCenter', name: FormatMessage.string({id: 'toolbar.horizontalCenter'})},
+                { key: 'alignRight', name: FormatMessage.string({id: 'toolbar.alignRight'})},
+                { key: 'alignTop', name: FormatMessage.string({id: 'toolbar.alignTop'})},
+                { key: 'verticalCenter', name: FormatMessage.string({id: 'toolbar.verticalCenter'})},
+                { key: 'alignBottom', name: FormatMessage.string({id: 'toolbar.alignBottom'})},
+                { key: 'alignRow', style: {borderTop: '1px solid #DFE3EB'}, name: FormatMessage.string({id: 'toolbar.alignRow'})},
+                { key: 'alignColumn', name: FormatMessage.string({id: 'toolbar.alignColumn'})},
+            ]}/>
     </GroupIconGroup>
     <GroupIconGroup>
       <GroupIcon
