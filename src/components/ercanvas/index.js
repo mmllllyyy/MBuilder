@@ -689,6 +689,35 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         }),
       };
     };
+    graph.bindKey(['up','down', 'left', 'right'],(e) => {
+      const selectedCells = graph.getSelectedCells().filter(c => c.shape !== 'erdRelation');
+      if (selectedCells.length > 0) {
+        e.preventDefault();
+        const moveCells = (cells, offset) => {
+          if (cells) {
+            cells.forEach((c) => {
+              const { x, y } = c.getProp('position');
+              c.setProp('position', {
+                x: x + offset.x,
+                y: y + offset.y,
+              });
+              moveCells(c.children, offset);
+            });
+          }
+        };
+        graph.batchUpdate(() => {
+          let offset = null;
+          switch (e.keyCode) {
+            case 38: offset = {x: 0, y: -1};break;
+            case 39: offset = {x: 1, y: 0};break;
+            case 40: offset = {x: 0, y: 1};break;
+            case 37: offset = {x: -1, y: 0};break;
+            default: offset = {x: 0, y: 0};break;
+          }
+          moveCells(selectedCells, offset);
+        });
+      }
+    });
     graph.bindKey(['ctrl+c','command+c'], (e) => {
       const cells = graph.getSelectedCells();
       if (e.target.tagName !== 'TEXTAREA' && cells && cells.length) {
