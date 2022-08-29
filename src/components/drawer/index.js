@@ -9,7 +9,7 @@ import {getMemoryCache} from '../../lib/cache';
 import {CONFIG} from '../../lib/variable';
 
 export const Drawer = React.memo(({prefix, title, onClose, children, width,
-                                    bodyStyle, buttons}) => {
+                                    bodyStyle, buttons, maskClosable}) => {
   const currentPrefix = getPrefix(prefix);
   const ref = useRef(null);
   const containerRef = useRef(null);
@@ -36,7 +36,8 @@ export const Drawer = React.memo(({prefix, title, onClose, children, width,
     }
   };
   const onClick = (e) => {
-    if (containerRef.current && e.target.compareDocumentPosition(containerRef.current) === 20) {
+    if (containerRef.current &&
+        e.target.compareDocumentPosition(containerRef.current) === 20 && maskClosable) {
       updateStyle();
     }
   };
@@ -77,13 +78,28 @@ export const openDrawer = (com, params) => {
   const dom = document.createElement('div');
   document.body.appendChild(dom);
   const close = () => {
-    const result = ReactDom.unmountComponentAtNode(dom);
-    if (result) {
-      dom.parentElement.removeChild(dom);
+    const { beforeClose } = params;
+    const remove = () => {
+      const result = ReactDom.unmountComponentAtNode(dom);
+      if (result) {
+        dom.parentElement.removeChild(dom);
+      }
+    };
+    if (beforeClose && typeof beforeClose === 'function') {
+      const result = beforeClose();
+      if (result.then) {
+        result.then(() => {
+          remove();
+        });
+      } else {
+        result && remove();
+      }
+    } else {
+      remove();
     }
   };
   const DrawerCompose = () => {
-    const { title, width,bodyStyle, buttons } = params;
+    const { title, width,bodyStyle, buttons,  maskClosable = true } = params;
     const _iconClose = () => {
       const { onClose } = params;
       onClose && onClose();
@@ -95,6 +111,7 @@ export const openDrawer = (com, params) => {
           buttons={buttons}
           title={title}
           width={width}
+          maskClosable={maskClosable}
           bodyStyle={bodyStyle}
           onClose={_iconClose}
           >

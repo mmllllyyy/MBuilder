@@ -23,6 +23,7 @@ import LabelEditor from './LabelEditor';
 import FindEntity from './FindEntity';
 import clipCanvasEmptyPadding from './_util/clip_canvas';
 import * as align from '../../lib/position';
+import {getDataByTabId} from '../../lib/cache';
 
 const { Dnd } = Addon;
 
@@ -1254,6 +1255,22 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
           const entityChange = (cData) => {
             tabDataChange && tabDataChange(cData, tab);
           };
+          const beforeClose = () => {
+            return new Promise((resolve) => {
+              const tabData = getDataByTabId(tab.tabKey);
+              if (tabData && !tabData?.isInit) {
+                Modal.confirm({
+                  title: FormatMessage.string({id: 'saveConfirmTitle'}),
+                  message: FormatMessage.string({id: 'saveConfirm'}),
+                  onOk:() => {
+                    resolve();
+                  },
+                });
+              } else {
+                resolve();
+              }
+            });
+          };
           const _openDict = (...args) => {
             openDict && openDict(...args);
             drawer.close();
@@ -1271,6 +1288,8 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
             changes={changes}
             versionsData={versionsData}
           />, {
+            beforeClose,
+            maskClosable: false,
             title: cellData.defName || cellData.defKey,
             width: '80%',
             buttons: [
