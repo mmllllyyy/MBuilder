@@ -190,6 +190,30 @@ export const html = (dataSource, images, projectName, callBack) => {
     <meta charset="UTF-8">
     <title>${projectName}</title>
     <style>
+    * {
+        box-sizing: border-box;
+    }
+        html , body {
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          padding: 0;
+        }
+        .left {
+            display: inline-block;
+            width: 25%;
+            height: 100%;
+            overflow: auto;
+            border-right: 1px solid #DFE3EB;
+            padding: 10px
+        }
+        .right {
+            display: inline-block;
+            width: 75%;
+            height: 100%;
+            padding: 10px;
+            overflow: auto;
+        }
         .index {
             font-weight: bold;
             font-size: 25px;
@@ -248,5 +272,5 @@ export const html = (dataSource, images, projectName, callBack) => {
   const body = generateModuleBody(dataSource, images);
   const endTag = "</body>\n" +
     "</html>";
-  callBack && callBack(`${defaultData}${index}<hr>${header}<hr>${body}${endTag}`);
+  callBack && callBack(`${defaultData}<span class="left">${index}<hr>${header}</span><span  class="right">${body}</span>${endTag}`);
 };
