@@ -9,6 +9,7 @@ import { moveArrayPosition } from '../../lib/array_util';
 import { allType } from '../../lib/datasource_util';
 import {separator} from '../../../profile';
 import {firstUp} from '../../lib/string';
+import {tree2array} from '../../lib/tree';
 
 const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldNames,
                            contextMenuClick, prefix, menus = [], doubleMenuClick, getName,
@@ -305,6 +306,20 @@ const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldName
       </ul>
     );
   };
+  const jumpSimplePosition = (menuKey, type) => {
+    const arrayMenus = tree2array(menusDataRef.current);
+    const currentMenu = arrayMenus.filter(m => m.id === menuKey)[0];
+    if (currentMenu) {
+      const parents = (currentMenu.parents || []).map(p => p.id);
+      updateSelectedMenu([{
+        key: menuKey,
+        type: type,
+        parentKey: parents[0],
+      }]);
+      updateExpandMenu(parents);
+      setJumpKey({id: menuKey});
+    }
+  };
   const jumpPosition = (d, key, type) => {
     // 计算所有需要展开的父节点
     const group = type === 'modalAll' ? null : d.groups[0]; // 多个分组存在的话取第一个分组
@@ -374,6 +389,7 @@ const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldName
   useImperativeHandle(ref, () => {
     return {
       jumpPosition,
+      jumpSimplePosition,
       jumpDetail,
       restSelected: () => updateSelectedMenu([]),
     };

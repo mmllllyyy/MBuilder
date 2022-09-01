@@ -171,6 +171,7 @@ export default {
     emptyAppCode: '暂无程序代码，点击创建',
     hiddenGroup: '简单模式',
     hiddenGroupInfo: '可通过 设置/系统参数/模型默认显示模式 修改',
+    location: '定位到打开的标签页',
     moduleList: '数据模型',
     closeCurrent: '关闭当前',
     closeOthers: '关闭其他',

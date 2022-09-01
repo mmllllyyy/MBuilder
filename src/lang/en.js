@@ -171,6 +171,7 @@ export default {
     emptyAppCode: 'There is no data for now. Click to create a new appCode',
     hiddenGroup: 'SIMPLE',
     hiddenGroupInfo: 'It can be modified by setting / SystemParameter / default display label',
+    location: 'Navigate to the open tab',
     moduleList: 'Data Model',
     closeCurrent: 'close current',
     closeOthers: 'close others',

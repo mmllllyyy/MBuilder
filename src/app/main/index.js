@@ -195,6 +195,11 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       return pre === 'modalAll' ?  'modalGroup' : 'modalAll';
     });
   };
+  const onLocation = (e) => {
+    e.stopPropagation();
+    const activeArray = activeKeyRef.current?.split(separator) || [];
+    menuModelRef.current?.jumpSimplePosition(activeArray[0], activeArray[1]);
+  };
   const getCurrentCav = () => {
     return cavRefArray.current.filter(cav => activeKeyRef.current === cav.key)[0]?.cav;
   };
@@ -1485,6 +1490,19 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
                   <FormatMessage id='moduleList'/>
                 </span>
                 <span onClick={_groupMenuChange} className={`${currentPrefix}-home-menu-header-opt`}>
+                  {activeKey && <div className={`${currentPrefix}-home-menu-header-opt-position`} onClick={onLocation}>
+                    <Tooltip
+                      title={<div
+                        className={`${currentPrefix}-home-menu-header-opt-title`}
+                        >
+                        <FormatMessage id='location'/>
+                      </div>}
+                      force
+                      placement='top'
+                    >
+                      <Icon type='fa-crosshairs'/>
+                    </Tooltip>
+                  </div>}
                   <span>
                     <Tooltip
                       title={<div
