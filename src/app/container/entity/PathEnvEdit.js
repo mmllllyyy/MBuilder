@@ -47,6 +47,7 @@ export default React.memo(forwardRef(({prefix, data, config, template,
                 return {
                     base: envRef.current,
                     template: {
+                        ...envData.template,
                         [codeTemplate.defKey]: templateEnvRef.current
                             .filter(e => e.suffix).reduce((a, b) => {
                                 return {
