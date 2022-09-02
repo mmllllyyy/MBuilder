@@ -1320,10 +1320,10 @@ const generateIncreaseSql = (dataSource, group, dataTable, code, templateShow) =
         .map(t => {
           return {
             name: t,
-            suffix: getTemplateString(tempDataTable.env?.template?.[dataTypeSupports.defKey]?.[t]?.suffix || '', {
+            suffix: tempDataTable.env?.template?.[dataTypeSupports.defKey]?.[t]?.enable !== false ? (getTemplateString(tempDataTable.env?.template?.[dataTypeSupports.defKey]?.[t]?.suffix || '', {
               ...tempDataTable.env?.base || {},
               codeRoot: tempDataTable.env?.base?.codeRoot || camel(tempDataTable.defKey, true) || '',
-            }) || t,
+            }) || t) : '',
             code: getTemplateString(tData[t] || '', templateData),
           }
         });

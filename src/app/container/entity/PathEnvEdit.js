@@ -1,5 +1,5 @@
 import React, { forwardRef, useImperativeHandle, useState, useRef } from 'react';
-import {Input, FormatMessage, Icon, Modal, Tooltip, openModal, Button, Message} from 'components';
+import {Input, FormatMessage, Icon, Modal, Tooltip, openModal, Button, Message, Checkbox} from 'components';
 import fileMapping from '../../../lib/template/fileMapping';
 
 import {getPrefix} from '../../../lib/prefixUtil';
@@ -23,6 +23,7 @@ export default React.memo(forwardRef(({prefix, data, config, template,
         return {
             name: t,
             suffix: tData[t]?.suffix || '',
+            enable: tData[t]?.enable !== false,
         };
     }));
     const [customerEnv, setCustomerEnv] = useState(() => {
@@ -49,10 +50,14 @@ export default React.memo(forwardRef(({prefix, data, config, template,
                     template: {
                         ...envData.template,
                         [codeTemplate.defKey]: templateEnvRef.current
-                            .filter(e => e.suffix).reduce((a, b) => {
+                            .filter(e => e.suffix || e.enable === false)
+                            .reduce((a, b) => {
                                 return {
                                     ...a,
-                                    [b.name]: {suffix: b.suffix},
+                                    [b.name]: {
+                                        suffix: b.suffix,
+                                        enable: b.enable !== false,
+                                    },
                                 };
                             }, {}),
                     },
@@ -144,6 +149,7 @@ export default React.memo(forwardRef(({prefix, data, config, template,
                     return {
                         name: t,
                         suffix: tData[t]?.suffix || '',
+                        enable: tData[t]?.enable !== false,
                     };
                 }));
                 setCustomerEnv(() => {
@@ -293,12 +299,18 @@ export default React.memo(forwardRef(({prefix, data, config, template,
         <div className={`${currentPrefix}-entity-template-container`}>
           <div>
             <div>{FormatMessage.string({id: 'tableBase.template'})}</div>
-            <div style={{textAlign: 'left'}}>{FormatMessage.string({id: 'tableBase.suffix'})}</div>
+            <div style={{textAlign: 'left', paddingLeft: 28}}>{FormatMessage.string({id: 'tableBase.suffix'})}</div>
           </div>
           {templateEnv.map((t) => {
                 return <div key={t.name}>
                   <div>{t.name}</div>
-                  <div>
+                  <div className={`${currentPrefix}-entity-template-container-item-suffix`}>
+                    <span>
+                      <Checkbox
+                        defaultChecked={t.enable !== false}
+                        onChange={e => templateEnvChange(e.target.checked, 'enable', t.name)}
+                      />
+                    </span>
                     <Input
                       placeholder={fileMapping[t.name] || ''}
                       onChange={e => templateEnvChange(e.target.value, 'suffix', t.name)}

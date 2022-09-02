@@ -583,7 +583,7 @@ export const renameVersion = (oldFilePath, newFilePath, oldData, newData) => {
 
 export const saveAllTemplate = (data, filePath) => {
   try {
-    return Promise.all(data.map(d => {
+    return Promise.all(data.filter(d => d.suffix).map(d => {
       const file = path.join(filePath, d.suffix);
       ensureDirectoryExistence(dirname(file));
       return new Promise((res, rej) => {

@@ -321,8 +321,19 @@
     &-container {
       max-height: calc(35vh - 50px);
       overflow: auto;
+      &-item {
+        &-suffix {
+          display: flex;
+          flex-direction: row;
+          & > span:last-child {
+            flex-grow: 1;
+            margin-left: 20px;
+          }
+        }
+      }
       & > div {
         &:first-child {
+          z-index: 2;
           background: @background-color;
           position: sticky;
           top: 0;
