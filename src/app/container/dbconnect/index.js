@@ -41,7 +41,7 @@ export default React.memo(({prefix, dataSource, config, dataChange, lang}) => {
       if (d.defKey === key) {
         const dataTypeSupport = dataTypeSupports
           .filter(dataType => dataType.id === e.target.value)[0];
-        const data = getConnectData(dataTypeSupport.defKey);
+        const data = getConnectData(dataTypeSupport?.defKey);
         return {
           ...d,
           [name]: e.target.value,

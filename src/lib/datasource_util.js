@@ -395,7 +395,7 @@ export const getDemoDbConnect = () => {
     'hive-PostgreSQL': {
       defKey: 'Hive(PostgreSQL做metastore)',
       driverClass: 'org.postgresql.Driver',
-      url: 'jdbc:postgresql://IP地址:端口号/metastore?metaDb=default&hive-meta=PostgreSQL}'
+      url: 'jdbc:postgresql://IP地址:端口号/metastore?metaDb=default&hive-meta=PostgreSQL'
     }
   }
 };
