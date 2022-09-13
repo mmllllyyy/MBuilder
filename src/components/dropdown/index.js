@@ -66,7 +66,7 @@ export default React.memo(({children, trigger, prefix, menus, disable,
               className={`${currentPrefix}-dropdown-item ${currentPrefix}-dropdown-item-${m.disable ? 'disable' : 'normal'}`}
               onClick={e => onMenuClick(m, e)}
             >
-              {m.name}
+              {m.icon}{m.name}
             </div>;
           })
         }

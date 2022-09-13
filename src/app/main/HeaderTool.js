@@ -186,14 +186,14 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
         icon='fa-align-left'
         onClick={iconClick}
         dropMenu={[
-                { key: 'alignLeft', name: FormatMessage.string({id: 'toolbar.alignLeft'})},
-                { key: 'horizontalCenter', name: FormatMessage.string({id: 'toolbar.horizontalCenter'})},
-                { key: 'alignRight', name: FormatMessage.string({id: 'toolbar.alignRight'})},
-                { key: 'alignTop', name: FormatMessage.string({id: 'toolbar.alignTop'})},
-                { key: 'verticalCenter', name: FormatMessage.string({id: 'toolbar.verticalCenter'})},
-                { key: 'alignBottom', name: FormatMessage.string({id: 'toolbar.alignBottom'})},
-                { key: 'alignRow', style: {borderTop: '1px solid #DFE3EB'}, name: FormatMessage.string({id: 'toolbar.alignRow'})},
-                { key: 'alignColumn', name: FormatMessage.string({id: 'toolbar.alignColumn'})},
+                {icon: <span className={`${currentPrefix}-head-alignLeft`}/>, key: 'alignLeft', name: FormatMessage.string({id: 'toolbar.alignLeft'})},
+                {icon: <span className={`${currentPrefix}-head-horizontalCenter`}/>, key: 'horizontalCenter', name: FormatMessage.string({id: 'toolbar.horizontalCenter'})},
+                {icon: <span className={`${currentPrefix}-head-alignRight`}/>,  key: 'alignRight', name: FormatMessage.string({id: 'toolbar.alignRight'})},
+                {icon: <span className={`${currentPrefix}-head-alignTop`}/>, key: 'alignTop', name: FormatMessage.string({id: 'toolbar.alignTop'})},
+                {icon: <span className={`${currentPrefix}-head-verticalCenter`}/>, key: 'verticalCenter', name: FormatMessage.string({id: 'toolbar.verticalCenter'})},
+                {icon: <span className={`${currentPrefix}-head-alignBottom`}/>, key: 'alignBottom', name: FormatMessage.string({id: 'toolbar.alignBottom'})},
+                {icon: <span className={`${currentPrefix}-head-alignRow`}/>, key: 'alignRow', style: {borderTop: '1px solid #DFE3EB'}, name: FormatMessage.string({id: 'toolbar.alignRow'})},
+                {icon: <span className={`${currentPrefix}-head-alignColumn`}/>, key: 'alignColumn', name: FormatMessage.string({id: 'toolbar.alignColumn'})},
             ]}/>
     </GroupIconGroup>
     <GroupIconGroup>
