@@ -103,6 +103,39 @@ const refactorEntityFields = (fields, preDataSource, currentDataSource) => {
   return fields.map(f => ({...f, ...transform(f, mergeDataSource(preDataSource, currentDataSource), code)}));
 }
 
+
+/**
+ * 深度比较两个 obj 是否值相同<br/>
+ * 会比较 obj 的属性值是否相同<br/>
+ * 如果是数组，会按照顺序进行比对, 哪怕元素一样, 顺序不一样也会返回 false <br/>
+ * @param x
+ * @param y
+ * @returns {boolean|this is string[]}
+ */
+const deepCompareObj = (x, y) => {
+    // 如果x或y 都是 null 或者 undefined, 则直接返回 true
+    if (x === y) {
+        return true;
+    }
+    // 如果x或y 只有一个是 null 或者 undefined, 则直接返回 false
+    if (!x || !y) {
+        return false;
+    }
+
+    const xKeys = Object.keys(x);
+    const yKeys = Object.keys(y);
+    if (xKeys.length !== yKeys.length) {
+        return false;
+    }
+    return xKeys.every(key => {
+            if (typeof x[key] === 'object' && typeof y[key] === 'object') {
+                return deepCompareObj(x[key], y[key]);
+            }
+            return x[key] === y[key];
+        }
+    );
+};
+
 const compareObj = (current, pre, names, omitNames = [], refactor) => {
   const compareNames = names || [...new Set(Object.keys(current).concat(Object.keys(pre)))];
   return compareNames.filter(n => !omitNames.includes(n)).reduce((p, n) => {
@@ -113,6 +146,10 @@ const compareObj = (current, pre, names, omitNames = [], refactor) => {
     } else if (current[n] !== pre[n]) {
       if (refactor && (Array.isArray(current[n]) || Array.isArray(pre[n]))) {
         return p.concat(refactor(current[n], pre[n]));
+      }
+      if (deepCompareObj(current[n], pre[n])) {
+          // 如果前后值深度比较后相同, 则不进行处理
+          return p;
       }
       return p.concat({opt: 'update', data: n, pre: pre[n], new: current[n]});
     }
