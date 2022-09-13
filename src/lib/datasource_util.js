@@ -386,6 +386,16 @@ export const getDemoDbConnect = () => {
       defKey: 'SQLite',
       driverClass: 'org.sqlite.JDBC',
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.sqlite'}),
+    },
+    'hive-MySQL': {
+      defKey: 'Hive(MySQL做metastore)',
+      driverClass: 'com.mysql.cj.jdbc.Driver',
+      url: 'jdbc:mysql://IP地址:端口号/schema?useUnicode=true&characterEncoding=UTF-8&useSSL=false&metaDb=default&hive-meta=MySQL',
+    },
+    'hive-PostgreSQL': {
+      defKey: 'Hive(PostgreSQL做metastore)',
+      driverClass: 'org.postgresql.Driver',
+      url: 'jdbc:postgresql://IP地址:端口号/metastore?metaDb=default&hive-meta=PostgreSQL}'
     }
   }
 };

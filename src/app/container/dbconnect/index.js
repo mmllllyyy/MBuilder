@@ -26,17 +26,28 @@ export default React.memo(({prefix, dataSource, config, dataChange, lang}) => {
     dataChange && dataChange(defaultData.defKey, 'profile.default.dbConn');
   };
   const currentPrefix = getPrefix(prefix);
+  const getConnectData = (key) => {
+    const tempKey = key?.toLocaleLowerCase();
+    if(tempKey) {
+      if (tempKey === 'hive') {
+        return url['hive-MySQL'] || url['hive-PostgreSQL'] || {};
+      }
+      return url[tempKey] || {};
+    }
+    return {};
+  };
   const dbChange = (e, name, key) => {
     const newData = dbConn.map((d) => {
       if (d.defKey === key) {
         const dataTypeSupport = dataTypeSupports
           .filter(dataType => dataType.id === e.target.value)[0];
+        const data = getConnectData(dataTypeSupport.defKey);
         return {
           ...d,
           [name]: e.target.value,
           properties: name === 'type' ? {
-            driver_class_name: url[dataTypeSupport.defKey?.toLocaleLowerCase()]?.driverClass || '',
-            url: url[dataTypeSupport.defKey?.toLocaleLowerCase()]?.url || '',
+            driver_class_name: data?.driverClass || '',
+            url: data?.url || '',
             password: '',
             username: '',
           } : d.properties,
