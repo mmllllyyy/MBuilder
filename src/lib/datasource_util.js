@@ -2121,15 +2121,17 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity) => {
               const sourceOriginKey = (d.canvasData?.cells || []).filter(c => c.id === cell)[0];
               return getCurrentEntity(sourceOriginKey.originKey, port.split(separator)[0], 'entity');
             }
+            const sourcePort = getPort(c.source)?.refField;
+            const targetPort = getPort(c.target)?.refField;
             return {
               ...c,
               source: {
                 ...c.source,
-                port: `${getPort(c.source)?.refField}${separator}out`
+                port: sourcePort ? `${sourcePort}${separator}out` : c.source.port
               },
               target: {
                 ...c.target,
-                port: `${getPort(c.target)?.refField}${separator}in`
+                port: targetPort ? `${sourcePort}${separator}in` : c.target.port
               },
             }
           }
