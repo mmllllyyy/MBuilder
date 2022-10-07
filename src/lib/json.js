@@ -477,8 +477,7 @@ export const saveAsWordTemplate = () => {
   return copyFile(getDefaultWordTemplate(), [{name: 'PDManer-docx-tpl', extensions: ['docx']}]);
 };
 
-export const selectWordFile = (dataSource) => {
-  const template = _.get(dataSource, 'profile.generatorDoc.docTemplate');
+export const selectWordFile = (dataSource, template) => {
   const name = _.get(dataSource, 'name');
   let defaultPath = template || getDefaultWordTemplate();
   return new Promise((res, rej) => {

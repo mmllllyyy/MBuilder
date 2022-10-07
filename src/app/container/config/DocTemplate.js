@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import {Button, Icon, Input, openModal, Upload, FormatMessage, Tooltip, DownloadUrl, CodeEditor} from 'components';
+import {Button, Icon, Input, openModal, Upload, FormatMessage, CodeEditor} from 'components';
 import {getPrefix} from '../../../lib/prefixUtil';
 import model from '../../../lib/workModel.json';
-import { saveAsWordTemplate } from '../../../lib/middle';
 
 
-export default React.memo(({ prefix, dataSource, dataChange }) => {
+export default React.memo(({ prefix, dataSource, dataChange, onOk }) => {
   const [value, updateValue] = useState(dataSource?.profile?.generatorDoc?.docTemplate || '');
   const selectWordFile = () => {
     Upload('application/vnd.openxmlformats-officedocument.wordprocessingml.document', (file) => {
@@ -18,9 +17,6 @@ export default React.memo(({ prefix, dataSource, dataChange }) => {
   const onChange = (e) => {
     updateValue(e.target.value);
     dataChange && dataChange(e.target.value, 'profile.generatorDoc.docTemplate');
-  };
-  const saveTemplate = () => {
-    saveAsWordTemplate();
   };
   const _openModal = () => {
     let modal
@@ -43,29 +39,20 @@ export default React.memo(({ prefix, dataSource, dataChange }) => {
   const currentPrefix = getPrefix(prefix);
   return <div className={`${currentPrefix}-setting-doc-template`}>
     <div className={`${currentPrefix}-form-item`}>
-      <span
-        className={`${currentPrefix}-form-item-label`}
-        title={FormatMessage.string({id: 'config.DocTemplateLabel'})}
-      >
-        <FormatMessage id='config.DocTemplateLabel'/>
-        <Tooltip placement='top' title={FormatMessage.string({id: 'config.DocTemplatePlaceholder'})} force>
-          <span className={`${currentPrefix}-form-item-label-help`}>
-            <Icon type='icon-xinxi'/>
-          </span>
-        </Tooltip>
-      </span>
       <span className={`${currentPrefix}-form-item-component`}>
         <Input
           placeholder={FormatMessage.string({id: 'config.DocTemplatePlaceholder'})}
           onChange={onChange}
           value={value}
           suffix={<span className={`${currentPrefix}-setting-doc-template-opt`}>
-            <Icon type='fa-ellipsis-h' onClick={selectWordFile} title={FormatMessage.string({id: 'openFile'})}/>
-            <Button onClick={saveTemplate}>
-              <FormatMessage id='config.DocTemplateSaveAs'/>
+            <Button onClick={selectWordFile}>
+              <FormatMessage id='config.DocTemplatePicker'/>
             </Button>
             <Button onClick={_openModal}>
               <FormatMessage id='config.PreviewModal'/>
+            </Button>
+            <Button type='primary' onClick={onOk}>
+              <FormatMessage id='config.DocSave'/>
             </Button>
           </span>}
         />

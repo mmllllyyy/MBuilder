@@ -2,7 +2,7 @@ import React from 'react';
 import {getPrefix} from '../../../lib/prefixUtil';
 import JavaHome from './JavaHome';
 import SqlDelimiter from './SqlDelimiter';
-import DocTemplate from './DocTemplate';
+// import DocTemplate from './DocTemplate';
 import Language from './Language';
 // import Model from './Model';
 import RelationFieldSize from './RelationFieldSize';
@@ -22,7 +22,7 @@ export default React.memo(({prefix, ...restProps}) => {
     <AutoSave {...restProps}/>
     <AutoBackup {...restProps}/>
     <SqlDelimiter {...restProps}/>
-    <DocTemplate {...restProps}/>
+    {/*<DocTemplate {...restProps}/>*/}
     <Language {...restProps}/>
     {/*<Model {...restProps}/>*/}
     <RelationFieldSize {...restProps}/>
