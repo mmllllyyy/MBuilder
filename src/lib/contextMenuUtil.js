@@ -205,13 +205,36 @@ const resetOpt = (dataSource, menu, updateDataSource) => {
 }
 
 const editAllOpt = (dataSource, m, updateDataSource) => {
+  const name = allType.filter(t => t.type === m.dataType)[0]?.name || m.dataType;
+  const refName = name === 'entities' ? 'refEntities' : 'refViews';
   let modal;
   let tempDataSource;
   const dataChange = (data) => {
-    tempDataSource = data;
+    if (m.parentKey) {
+      tempDataSource = {
+        ...dataSource,
+        [name]: dataSource[name]?.map(d => {
+          const current = data[name].filter(c => c.id === d.id)[0];
+          if (current) {
+            return current;
+          }
+          return d;
+        }),
+        viewGroups: (data.viewGroups || []).map(v => {
+          if (v.id === m.parentKey) {
+            return {
+              ...v,
+              [refName]: data[name]?.map(d => d.id)?.filter(i => v[refName].includes(i)) || [],
+            }
+          }
+          return v;
+        }),
+      }
+    } else {
+      tempDataSource = data;
+    }
   }
   const onOK = () => {
-    const name = allType.filter(t => t.type === m.dataType)[0]?.name || m.dataType;
     if (tempDataSource) {
       const result = validateEmptyOrRepeat(tempDataSource[name] || [], 'defKey');
       if (result.length > 0) {
@@ -231,7 +254,17 @@ const editAllOpt = (dataSource, m, updateDataSource) => {
   const onCancel = () => {
     modal && modal.close();
   }
-  modal = openModal(<Quickedit dataSource={dataSource} dataType={m.dataType} dataChange={dataChange}/>, {
+  let defaultDataSource = {...dataSource};
+  if (m.parentKey) {
+    const viewGroup = (defaultDataSource.viewGroups || []).filter(v => v.id === m.parentKey)[0];
+    if (viewGroup) {
+      defaultDataSource = {
+        ...defaultDataSource,
+        [name]: viewGroup[refName].map(s => defaultDataSource[name].filter(d => d.id === s)[0])
+      }
+    }
+  }
+  modal = openModal(<Quickedit dataSource={defaultDataSource} name={name} dataChange={dataChange}/>, {
     bodyStyle: {width: '80%'},
     title: m.name || '',
     buttons: [<Button key='onOK' onClick={onOK} type='primary'>

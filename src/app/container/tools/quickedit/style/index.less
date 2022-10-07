@@ -6,20 +6,27 @@
   margin-bottom: 10px;
   padding: 0 10px 0 10px;
   &-sort {
+    margin-left: 5px;
     position: relative;
     display: inline-block;
-    width: 20px;
+    width: 22px;
     height: 15px;
+    &-picker {
+      color: @font-color !important;
+    }
+    i {
+      color: @third-font-color;
+    }
     i[class*=asc] {
       cursor: pointer;
       left: 0;
-      bottom: -5px;
+      bottom: -1px;
       position: absolute;
     }
     i[class*=desc] {
       cursor: pointer;
-      left: 0;
-      top: 0;
+      left: 8px;
+      top: 5px;
       position: absolute;
     }
   }
