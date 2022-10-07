@@ -1287,8 +1287,14 @@ const generateIncreaseSql = (dataSource, group, dataTable, code, templateShow) =
   // 构造新的数据表传递给模板
   const fields = (dataTable.fields || []);
   const indexes = (dataTable.indexes || []);
+  const other = {};
+  if (dataTable.refEntities) {
+    other.refEntities = (dataSource.entities || [])
+        .filter(e => dataTable.refEntities.includes(e.id)).map(e => e.defKey)
+  }
   const tempDataTable = {
     ...dataTable,
+    ...other,
     env: getDefaultEnv(dataTable),
     fields: templateShow === 'createIndex' ? fields : fields.map(field => {
       return {

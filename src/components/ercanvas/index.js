@@ -29,7 +29,7 @@ const { Dnd } = Addon;
 
 export default ({data, dataSource, renderReady, updateDataSource, validateTableStatus, prefix,
                   dataChange, openEntity, tabKey, activeKey, scaleChange, common, tabDataChange,
-                  changes, versionsData, save, getDataSource, openDict, selectionChanged,
+                  changes, versionsData, save, autoSave, getDataSource, openDict, selectionChanged,
                   jumpEntity, diagramKey, relationType, ...restProps}) => {
   const currentPrefix = getPrefix(prefix);
   const isInit = useRef(false);
@@ -414,6 +414,18 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
           }
         });
     dataChange && dataChange(graphRef.current.toJSON({diff: true}));
+    const recentColors = [...new Set((dataSourceRef.current.profile?.recentColors || [])
+        .concat(color.hex))];
+    const start = recentColors.length - 8 > 0 ? recentColors.length - 8 : 0;
+    const tempDataSource = {
+      ...dataSourceRef.current,
+      profile: {
+        ...dataSourceRef.current.profile,
+        recentColors: recentColors.slice(start, recentColors.length),
+      },
+    };
+    autoSave && autoSave(tempDataSource);
+    updateDataSource && updateDataSource(tempDataSource);
   };
   const getScaleNumber = () => {
     return graphRef.current.scale();

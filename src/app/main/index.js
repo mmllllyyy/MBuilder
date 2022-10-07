@@ -90,7 +90,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     || (menuContainerWidth - menuMinWidth);
   const configRef = useRef({});
   configRef.current = config;
-  const [groupType, updateGroupType] = useState(restProps.dataSource?.profile?.modelType || 'modalAll');
+  const [groupType, setGroupType] = useState(restProps.dataSource?.profile?.modelType || 'modalAll');
   const groupTypeRef = useRef(groupType);
   groupTypeRef.current = groupType;
   const [activeKey, updateActiveKey] = useState('');
@@ -124,6 +124,16 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
         }
       },
     });
+  };
+  const updateGroupType = (t) => {
+    restProps.autoSave({
+      ...dataSourceRef.current,
+      profile: {
+        ...dataSourceRef.current.profile,
+        modelType: t,
+      },
+    });
+    setGroupType(t);
   };
   useEffect(() => {
     if(isRefreshRef.current) {
@@ -191,9 +201,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
   };
   const _groupMenuChange = () => {
     (currentMenu.current || menuModelRef.current)?.restSelected?.();
-    updateGroupType((pre) => {
-      return pre === 'modalAll' ?  'modalGroup' : 'modalAll';
-    });
+    updateGroupType(groupTypeRef.current === 'modalAll' ?  'modalGroup' : 'modalAll');
   };
   const onLocation = (e) => {
     e.stopPropagation();
@@ -982,6 +990,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
         renderReady={cav => renderReady(cav, t.tabKey)}
         tabDataChange={(data, tab) => tabDataChange(data, tab || t, tab)}
         versionsData={restProps.versionsData[0]}
+        autoSave={restProps.autoSave}
       />;
     } else if (type === 'dict') {
       return <Dict

@@ -5,6 +5,24 @@
   overflow: auto;
   margin-bottom: 10px;
   padding: 0 10px 0 10px;
+  &-sort {
+    position: relative;
+    display: inline-block;
+    width: 20px;
+    height: 15px;
+    i[class*=asc] {
+      cursor: pointer;
+      left: 0;
+      bottom: -5px;
+      position: absolute;
+    }
+    i[class*=desc] {
+      cursor: pointer;
+      left: 0;
+      top: 0;
+      position: absolute;
+    }
+  }
   & > table {
     width: 100%;
     border-collapse: separate;
@@ -28,7 +46,7 @@
   &-item {
     &:hover {
       td {
-        background: @third-primary-color;
+        background: @fourth-primary-color;
         input, select {
           background: transparent;
         }
@@ -41,8 +59,10 @@
       width: 100%;
     }
     & > td:first-child {
+      cursor: pointer;
       padding: 2px;
       text-align: center;
+      user-select: none;
     }
     & > td:last-child {
       .@{prefix}-form-item-component {

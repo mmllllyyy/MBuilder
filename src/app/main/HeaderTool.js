@@ -1,6 +1,5 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
-import {FormatMessage, GroupIcon, Icon, SearchSuggest, Slider, NumberInput, Modal} from 'components';
-import { SketchPicker } from 'react-color';
+import {FormatMessage, GroupIcon, Icon, SearchSuggest, Slider, NumberInput, Modal, ColorPicker} from 'components';
 import numeral from 'numeral';
 import {validateNeedSave} from '../../lib/datasource_util';
 import { checkAlignEnable} from '../../lib/position';
@@ -150,10 +149,8 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
             left: -59,
             top: 53,
           }}
-        dropMenu={<SketchPicker
-          disableAlpha
-          presetColors={['#FFFFFF', '#BFBFBF', '#C00000', '#FFC000', '#F6941D', '#7030A0', '#136534', '#0070C0',
-          '#0D0D0D','#6698CC', '#FA5A5A', '#FFD966', '#F8CBAD', '#CB99C5', '#9ACC98', '#093299']}
+        dropMenu={<ColorPicker
+          recentColors={dataSource.profile?.recentColors || []}
           color={colorState.fontColor}
           onChange={color => _colorChange('fontColor', color)}
           />}
@@ -167,10 +164,8 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
             left: -59,
             top: 53,
           }}
-        dropMenu={<SketchPicker
-          disableAlpha
-          presetColors={['#FFFFFF', '#BFBFBF', '#C00000', '#FFC000', '#F6941D', '#7030A0', '#136534', '#0070C0',
-            '#0D0D0D','#6698CC', '#FA5A5A', '#FFD966', '#F8CBAD', '#CB99C5', '#9ACC98', '#093299']}
+        dropMenu={<ColorPicker
+          recentColors={dataSource.profile?.recentColors || []}
           color={colorState.fillColor}
           onChange={color => _colorChange('fillColor', color)}
           />}

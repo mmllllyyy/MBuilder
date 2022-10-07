@@ -824,6 +824,9 @@ components: {
         moreList: 'all',
     },
     listSelect: {
+        tableName: 'tableName',
+        useGroup: 'useGroup',
+        batchSelection: 'Batch selection',
         result: 'a total of {size} standard fields have been parsed, of which {repeat} already exists',
         remove: 'remove',
         repeatMessage: 'Selecting this data table will override the existing data table in the system',
@@ -833,6 +836,9 @@ components: {
         group: 'group',
         groupNotAllowEmpty: 'group not allow empty',
         all: 'all',
+    },
+    colorPicker: {
+        recent: 'Recent Colors',
     },
 },
 projectTemplate: {
