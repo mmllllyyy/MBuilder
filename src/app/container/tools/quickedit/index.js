@@ -1,19 +1,35 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {FormatMessage, Input, Icon} from 'components';
 
 import {getPrefix} from '../../../../lib/prefixUtil';
-import { allType } from '../../../../lib/datasource_util';
 import SelectGroup from '../../group/SelectGroup';
 import {separator} from '../../../../../profile';
 import './style/index.less';
 
-export default React.memo(({ prefix, dataSource, dataChange, dataType }) => {
+export default React.memo(({ prefix, dataSource, dataChange, name }) => {
     const [selected, setSelected] = useState([]);
-    const [currentSort, setCurrentSort] = useState('defKey');
-    const [sort, setSort] = useState({defKey: 'desc', defName: 'desc'});
+    const [,setSortKey] = useState('');
+    const [currentSort, setCurrentSort] = useState('');
+    const [sort, setSort] = useState({defKey: '', defName: ''});
     const [viewGroups, setViewGroups] = useState(dataSource?.viewGroups || []);
-    const dataSourceRef = useRef({...dataSource});
-    const name = allType.filter(t => t.type === dataType)[0]?.name || dataType;
+    const initRef = useRef(false);
+    const sortData = (data) => {
+        if (currentSort && (sort.defKey || sort.defName)) {
+            return [...data].sort((a, b) => {
+                const firstSort = sort[currentSort] === 'desc' ? a?.[currentSort]?.localeCompare(b?.[currentSort]) : b?.[currentSort]?.localeCompare(a?.[currentSort]);
+                if (firstSort === 0) {
+                    const otherName = currentSort === 'defKey' ? 'defName' : 'defKey';
+                    return sort[otherName] === 'desc' ? a?.[otherName]?.localeCompare(b?.[otherName]) : b?.[otherName]?.localeCompare(a?.[otherName]);
+                }
+                return firstSort;
+            });
+        }
+        return dataSource[name].map((d) => {
+            return data.filter(c => c.id === d.id)[0];
+        });
+    };
+    const dataSourceRef = useRef({...dataSource, [name]: sortData(dataSource[name])});
+    const originRef = useRef(dataSourceRef.current[name]);
     const currentPrefix = getPrefix(prefix);
     const refNames = `ref${name.replace(/\b(\w)(\w*)/g, ($0, $1, $2) => {
         return $1.toUpperCase() + $2.toLowerCase();
@@ -70,7 +86,7 @@ export default React.memo(({ prefix, dataSource, dataChange, dataType }) => {
                 return pre.concat(id);
             });
         } else if (e.shiftKey) {
-            const min = selected
+            const min = [...selected]
                 .sort((a, b) => dataSource[name]
                     .findIndex(d => d.id === a) - dataSource[name]
                     .findIndex(d => d.id === b))[0];
@@ -92,32 +108,63 @@ export default React.memo(({ prefix, dataSource, dataChange, dataType }) => {
       setSort(s);
       setCurrentSort(c);
     };
+    useEffect(() => {
+        if (initRef.current) {
+            originRef.current = dataSourceRef.current[name];
+            dataSourceRef.current = {
+                ...dataSourceRef.current,
+                [name]: sortData(dataSourceRef.current[name] || []),
+            };
+            dataChange && dataChange(dataSourceRef.current);
+            setSortKey(Math.uuid());
+        } else {
+            initRef.current = true;
+        }
+    }, [currentSort, sort]);
     return <div className={`${currentPrefix}-quick-edit`}>
       <table>
         <thead>
-          <th>{}</th>
-          <th>
-            <span onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'desc' ? 'asc' : 'desc'}), 'defKey')} className={`${currentPrefix}-quick-edit-sort`}><Icon type={`fa-sort-${sort.defKey}`}/></span>
-            {FormatMessage.string({id: 'tableBase.defKey'})}
-          </th>
-          <th>
-            <span onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'desc' ? 'asc' : 'desc'}), 'defName')} className={`${currentPrefix}-quick-edit-sort`}><Icon type={`fa-sort-${sort.defName}`}/></span>
-            {FormatMessage.string({id: 'tableBase.defName'})}
-          </th>
-          <th>{FormatMessage.string({id: 'tableBase.comment'})}</th>
-          <th>{FormatMessage.string({id: 'tableBase.group'})}</th>
+          <tr><th>{}</th>
+            <th>
+              {FormatMessage.string({id: 'tableBase.defKey'})}
+              <span
+                className={`${currentPrefix}-quick-edit-sort`}
+              >
+                <Icon
+                  className={sort.defKey === 'asc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                  type="fa-sort-asc"
+                  onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'asc' ? '' : 'asc'}), 'defKey')}
+                />
+                <Icon
+                  className={sort.defKey === 'desc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                  type="fa-sort-desc"
+                  onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'desc' ? '' : 'desc'}), 'defKey')}
+                />
+              </span>
+            </th>
+            <th>
+              {FormatMessage.string({id: 'tableBase.defName'})}
+              <span
+                className={`${currentPrefix}-quick-edit-sort`}
+              >
+                <Icon
+                  className={sort.defName === 'asc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                  type="fa-sort-asc"
+                  onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'asc' ? '' : 'asc'}), 'defName')}
+                  />
+                <Icon
+                  className={sort.defName === 'desc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                  type="fa-sort-desc"
+                  onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'desc' ? '' : 'desc'}), 'defName')}
+                />
+              </span>
+            </th>
+            <th>{FormatMessage.string({id: 'tableBase.comment'})}</th>
+            <th>{FormatMessage.string({id: 'tableBase.group'})}</th></tr>
         </thead>
         <tbody>
           {
-                (dataSourceRef.current[name] || dataSource[name] || [])
-                    .sort((a, b) => {
-                        const defKeySort = sort[currentSort] === 'desc' ? a?.[currentSort]?.split('')[0]?.localeCompare(b?.[currentSort]?.split('')[0]) : b?.[currentSort]?.split('')[0]?.localeCompare(a?.[currentSort]?.split('')[0]);
-                        if (defKeySort === 0) {
-                            const otherName = currentSort === 'defKey' ? 'defName' : 'defKey';
-                            return sort[otherName] === 'desc' ? a?.[otherName]?.split('')[0]?.localeCompare(b?.[otherName]?.split('')[0]) : b?.[otherName]?.split('')[0]?.localeCompare(a?.[otherName]?.split('')[0]);
-                        }
-                        return defKeySort;
-                    })
+                dataSourceRef.current[name]
                     .map((d, i) => {
                     const group = getGroup(d.id);
                     return <tr key={d.id} className={`${currentPrefix}-quick-edit-item ${selected.includes(d.id) ? `${currentPrefix}-table-selected` : ''}`}>

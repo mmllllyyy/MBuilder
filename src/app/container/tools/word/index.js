@@ -6,7 +6,6 @@ import DocTemplate from '../../config/DocTemplate';
 import './style/index.less';
 import {getPrefix} from '../../../../lib/prefixUtil';
 import { saveAsWordTemplate } from '../../../../lib/middle';
-import {clearAllTabData} from '../../../../lib/cache';
 
 export default React.memo(({prefix, dataSource, onOk, save, projectInfo}) => {
     const currentPrefix = getPrefix(prefix);
