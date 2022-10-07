@@ -823,6 +823,9 @@ export default {
             moreList: '全部',
         },
         listSelect: {
+            tableName: '表名',
+            useGroup: '所属分组',
+            batchSelection: '批量选择',
             result: '一共解析到{size}个标准字段，其中{repeat}个已经存在',
             remove: '移除',
             repeatMessage: '选择该数据表将会覆盖系统中原有数据表',
@@ -832,6 +835,9 @@ export default {
             group: '分组',
             groupNotAllowEmpty: '分组不能为空',
             all: '全选',
+        },
+        colorPicker: {
+            recent: '最近使用的颜色',
         },
     },
     projectTemplate: {

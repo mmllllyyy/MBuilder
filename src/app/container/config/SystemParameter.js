@@ -4,7 +4,7 @@ import JavaHome from './JavaHome';
 import SqlDelimiter from './SqlDelimiter';
 import DocTemplate from './DocTemplate';
 import Language from './Language';
-import Model from './Model';
+// import Model from './Model';
 import RelationFieldSize from './RelationFieldSize';
 import AutoSave from './AutoSave';
 import AutoBackup from './AutoBackup';
@@ -24,7 +24,7 @@ export default React.memo(({prefix, ...restProps}) => {
     <SqlDelimiter {...restProps}/>
     <DocTemplate {...restProps}/>
     <Language {...restProps}/>
-    <Model {...restProps}/>
+    {/*<Model {...restProps}/>*/}
     <RelationFieldSize {...restProps}/>
     <RelationType {...restProps}/>
   </div>;

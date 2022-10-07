@@ -5,7 +5,7 @@ const Option = Select.Option;
 
 const Item = React.memo(({prefix, d, onGroupChange, defaultSelected,
                            allowClear, notAllowEmpty, currentGroup, i, checked,
-                           checkBoxChange, group}) => {
+                           checkBoxChange, group, batchSelection}) => {
   return <tr
     className={`${prefix}-listselect-right-item`}
     key={d.id}
@@ -18,14 +18,18 @@ const Item = React.memo(({prefix, d, onGroupChange, defaultSelected,
         title={FormatMessage.string({id: 'components.listSelect.disable'})}
         type='icon-xinxi'
       />}
-      <Checkbox
-        onChange={e => checkBoxChange(e, d.id)}
-        checked={checked.includes(d.id)}
-      >
-        <span>
+      {
+        batchSelection ? <Checkbox
+          onChange={e => checkBoxChange(e, d.id)}
+          checked={checked.includes(d.id)}
+          >
+          <span>
+            {`${d.defKey}[${d.defName || d.defKey}]`}
+          </span>
+        </Checkbox> : <span>
           {`${d.defKey}[${d.defName || d.defKey}]`}
         </span>
-      </Checkbox>
+      }
     </td>
     <td>
       <Select
@@ -45,15 +49,16 @@ const Item = React.memo(({prefix, d, onGroupChange, defaultSelected,
     </td>
   </tr>;
 }, (pre, next) => {
-  return ((pre.checked.includes(pre.d.id) && next.checked.includes(next.d.id)) ||
+  return (((pre.checked.includes(pre.d.id) && next.checked.includes(next.d.id)) ||
     (!pre.checked.includes(pre.d.id) && !next.checked.includes(next.d.id))) &&
-    (pre.group === next.group);
+    (pre.group === next.group)) && (pre.batchSelection === next.batchSelection);
 });
 
 export default React.memo(({prefix, newData, onRemove, allowClear,
                              onGroupChange, notAllowEmpty, currentGroup, defaultSelected}) => {
   const [checked, setChecked] = useState([]);
   const [dataGroup, setDataGroup] = useState([]);
+  const [batchSelection, setBatchSelection] = useState(false);
   const _onGroupChange = (e, key) => {
     const keys = [].concat(key);
     setDataGroup((pre) => {
@@ -174,8 +179,17 @@ export default React.memo(({prefix, newData, onRemove, allowClear,
   const finalType = calcType();
   return <div className={`${prefix}-listselect-right`}>
     <div className={`${prefix}-listselect-right-opt`}>
+      <span className={`${prefix}-listselect-right-opt-batch`}>
+        <Checkbox
+          onChange={e => setBatchSelection(e.target.checked)}
+        >
+          <span>
+            {FormatMessage.string({id: 'components.listSelect.batchSelection'})}
+          </span>
+        </Checkbox>
+      </span>
       {
-        newData.length > 0 && <span className={`${prefix}-listselect-right-opt-selected`} onClick={() => _iconClick(finalType)}>
+        newData.length > 0 && batchSelection && <span className={`${prefix}-listselect-right-opt-selected`} onClick={() => _iconClick(finalType)}>
           <span className={`${prefix}-listselect-opt-${finalType}`}>
             {}
           </span>
@@ -184,18 +198,22 @@ export default React.memo(({prefix, newData, onRemove, allowClear,
           </span>
         </span>
       }
-      <IconTitle
-        disable={checked.filter(c => !defaultSelected.includes(c)).length === 0}
-        title={FormatMessage.string({id: 'components.listSelect.remove'})}
-        type='fa-minus'
-        onClick={() => onRemove(checked.filter(c => !defaultSelected.includes(c)))}
-      />
-      <IconTitle
-        disable={checked.length === 0}
-        title={FormatMessage.string({id: 'components.listSelect.group'})}
-        type='fa-object-group'
-        onClick={onPicker}
-      />
+      {
+        batchSelection && <IconTitle
+          disable={checked.filter(c => !defaultSelected.includes(c)).length === 0}
+          title={FormatMessage.string({id: 'components.listSelect.remove'})}
+          type='fa-minus'
+          onClick={() => onRemove(checked.filter(c => !defaultSelected.includes(c)))}
+          />
+      }
+      {
+        batchSelection && <IconTitle
+          disable={checked.length === 0}
+          title={FormatMessage.string({id: 'components.listSelect.group'})}
+          type='fa-object-group'
+          onClick={onPicker}
+          />
+      }
     </div>
     <div className={`${prefix}-listselect-right-container`}>
       {
@@ -204,10 +222,19 @@ export default React.memo(({prefix, newData, onRemove, allowClear,
               {FormatMessage.string({id: 'components.listSelect.empty'})}
             </span>
           </div>
-              : <table><tbody>
-                {newData.filter(d => !!d.defKey).map((d, i) => {
+              : <table>
+                <thead>
+                  <tr>
+                    <td>{}</td>
+                    <td>{FormatMessage.string({id: 'components.listSelect.tableName'})}</td>
+                    <td>{FormatMessage.string({id: 'components.listSelect.useGroup'})}</td>
+                  </tr>
+                </thead>
+                <tbody>
+                  {newData.filter(d => !!d.defKey).map((d, i) => {
                 const group = dataGroup.filter(dg => dg.id === d.id)[0]?.group || '';
                 return <Item
+                  batchSelection={batchSelection}
                   checkBoxChange={checkBoxChange}
                   checked={checked}
                   defaultSelected={defaultSelected}
@@ -223,7 +250,7 @@ export default React.memo(({prefix, newData, onRemove, allowClear,
                   group={group}
                 />;
               })}
-              </tbody></table>
+                </tbody></table>
         }
     </div>
   </div>;
