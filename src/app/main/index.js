@@ -24,6 +24,8 @@ import DbConnect from '../container/dbconnect';
 import DbReverseParse from '../container/tools/dbreverseparse';
 import ExportSql from '../container/tools/exportsql';
 import ImportPd from '../container/tools/importpd';
+import ImportExcel from '../container/tools/excel';
+import ExportWord from '../container/tools/word';
 import StandardField from '../container/standardfield';
 import HeaderTool from './HeaderTool';
 import MessageHelp from './MessageHelp';
@@ -345,47 +347,57 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     });
   };
   const exportWord = () => {
-    selectWordFile(dataSourceRef.current)
-      .then(([dir, template]) => {
-        genImg().then((imgDir) => {
-          restProps.openLoading(FormatMessage.string({id: 'toolbar.exportWordStep2'}));
-          connectDB(dataSourceRef.current, configRef.current, {
-            sinerFile: projectInfo,
-            docxTpl: template,
-            imgDir: imgDir,
-            imgExt: '.png',
-            outFile: dir,
-          }, 'GenDocx', (result) => {
-            if (result.status === 'FAILED') {
-              const termReady = (term) => {
-                term.write(typeof result.body === 'object' ? JSON.stringify(result.body, null, 2)
-                  : result.body);
-              };
-              restProps.closeLoading();
-              Modal.error({
-                bodyStyle: {width: '80%'},
-                contentStyle: {width: '100%', height: '100%'},
-                title: FormatMessage.string({id: 'optFail'}),
-                message: <div>
-                  <div style={{textAlign: 'center'}}><FormatMessage id='dbConnect.log'/><a onClick={showItemInFolder}>{getLogPath()}</a></div>
-                  <Terminal termReady={termReady}/>
-                </div>,
+    openModal(<ExportWord
+      save={restProps.save}
+      projectInfo={projectInfoRef.current}
+      dataSource={dataSourceRef.current}
+      onOk={(t) => {
+      selectWordFile(dataSourceRef.current, t)
+          .then(([dir, template]) => {
+            genImg().then((imgDir) => {
+              console.log(template);
+              restProps.openLoading(FormatMessage.string({id: 'toolbar.exportWordStep2'}));
+              connectDB(dataSourceRef.current, configRef.current, {
+                sinerFile: projectInfo,
+                docxTpl: template,
+                imgDir: imgDir,
+                imgExt: '.png',
+                outFile: dir,
+              }, 'GenDocx', (result) => {
+                if (result.status === 'FAILED') {
+                  const termReady = (term) => {
+                    term.write(typeof result.body === 'object' ? JSON.stringify(result.body, null, 2)
+                        : result.body);
+                  };
+                  restProps.closeLoading();
+                  Modal.error({
+                    bodyStyle: {width: '80%'},
+                    contentStyle: {width: '100%', height: '100%'},
+                    title: FormatMessage.string({id: 'optFail'}),
+                    message: <div>
+                      <div style={{textAlign: 'center'}}><FormatMessage id='dbConnect.log'/><a onClick={showItemInFolder}>{getLogPath()}</a></div>
+                      <Terminal termReady={termReady}/>
+                    </div>,
+                  });
+                } else {
+                  restProps.closeLoading();
+                  Modal.success({
+                    title: FormatMessage.string({
+                      id: 'toolbar.exportSuccess',
+                    }),
+                    message: FormatMessage.string({
+                      id: 'toolbar.exportPath',
+                      data: {path: dir},
+                    }),
+                  });
+                }
               });
-            } else {
-              restProps.closeLoading();
-              Modal.success({
-                title: FormatMessage.string({
-                  id: 'toolbar.exportSuccess',
-                }),
-                message: FormatMessage.string({
-                  id: 'toolbar.exportPath',
-                  data: {path: dir},
-                }),
-              });
-            }
+            });
           });
-        });
-      });
+    }}/>, {
+      bodyStyle: { width: '70%' },
+      title: FormatMessage.string({id: 'toolbar.exportWord'}),
+    });
   };
   const exportImg = () => {
     const cavRef = getCurrentCav();
@@ -521,6 +533,11 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
         });
       }
       return result;
+    });
+  };
+  const importFromExcel = () => {
+    openModal(<ImportExcel/>, {
+      title: FormatMessage.string({id: 'toolbar.importExcel'}),
     });
   };
   const importFromPb = (type) => {
@@ -1204,6 +1221,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       case 'saveAs': saveProject(true);break;
       case 'pdman': importFromPDMan('pdman');break;
       case 'importDDL': importFromPb('DDL');break;
+      case 'excel': importFromExcel();break;
       case 'chiner': importFromPDMan('chiner');break;
       case 'PDManer': importFromPDMan('PDManer');break;
       case 'powerdesigner': importFromPb('PD');break;

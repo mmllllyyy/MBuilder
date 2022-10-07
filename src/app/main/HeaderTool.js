@@ -228,6 +228,7 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
             { key: 'PDManer', name: FormatMessage.string({id: 'toolbar.importPDManer'}) },
             { key: 'powerdesigner', name: FormatMessage.string({id: 'toolbar.importPowerDesigner'}) },
             { key: 'db', name: FormatMessage.string({id: 'toolbar.importDb'}) },
+            { key: 'excel', name: FormatMessage.string({id: 'toolbar.importExcel'}) },
             { key: 'importDDL', name: FormatMessage.string({id: 'toolbar.importDDL'}) },
             { style: { borderTop: '1px solid #DFE3EB' },
               key: 'domains',
