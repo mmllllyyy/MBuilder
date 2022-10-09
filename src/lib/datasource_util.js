@@ -562,6 +562,7 @@ export const validateFields = (fields) => {
     domain: f?.domain || f?.dbType,
     refDict: f?.refDict || '',
     extProps: f?.extProps || {},
+    notes: f?.notes || {}
   }))
 };
 
@@ -693,6 +694,7 @@ export const getEmptyEntity = (fields = [], properties = {}) => {
     comment: '',
     properties,
     nameTemplate: '{defKey}[{defName}]',
+    notes: {},
     headers: getFullColumns()
       .map(h => ({
         freeze: !!(h.newCode === 'defKey' ||  h.newCode === 'defName'),
