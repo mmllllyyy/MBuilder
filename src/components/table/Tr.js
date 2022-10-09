@@ -26,12 +26,26 @@ export default React.memo(({f, i, expand, onMouseOver, tempHeaders, calcPosition
     className={getClass}
   >
     <td
-      style={{userSelect: 'none', cursor: disableDragRow ? 'pointer' : 'move', ...otherStyle}}
+      style={{userSelect: 'none', cursor: disableDragRow ? 'pointer' : 'move', ...otherStyle, color: f.notes?.fontColor}}
       onClick={e => tableRowClick(e, f.id)}
       onMouseDown={onMouseDown}
     >
       <span>
         <span>
+          {
+              f.notes?.tags?.length > 0 && <Component.Tooltip
+                force
+                placement='top'
+                title={<div className={`${currentPrefix}-note-tag-list`}>
+                  {
+                  f.notes?.tags?.map((t, index) => {
+                    return <div>{`${index + 1}.${t.content}`}</div>;
+                  })
+                }
+                </div>}>
+                <Component.Icon type='fa-tags'/>
+              </Component.Tooltip>
+          }
           {i + 1}
         </span>
         {

@@ -35,6 +35,8 @@ import {
 // 专门处理左侧菜单 右键菜单数据
 import { separator } from '../../profile';
 import demoProject from './template/教学管理系统.pdma.json';
+import * as Component from 'components';
+import Note from '../app/container/tools/note';
 
 const opt = [{
   key: 'add',
@@ -66,7 +68,11 @@ const opt = [{
 },
   {
     key: 'reset',
-    icon: 'fa-mail-reply '
+    icon: 'fa-mail-reply'
+  },
+  {
+    key: 'notes',
+    icon: 'fa-tags'
   }]; // 所有菜单操作的的KEY;
 
 const normalOpt = ['add', 'copy', 'cut', 'paste', 'delete'];
@@ -75,9 +81,9 @@ const domainChildNormalOpt = ['add', 'copy', 'paste', 'delete'];
 const menusType = {
   groups: ['add', 'edit', 'clear', 'delete'],
   entities: normalOpt.concat('all'),
-  entity: normalOpt.concat('move', 'all'),
+  entity: normalOpt.concat('move', 'all', 'notes'),
   views: normalOpt.concat('all'),
-  view: normalOpt.concat('move', 'all'),
+  view: normalOpt.concat('move', 'all', 'notes'),
   diagrams: normalOpt,
   diagram: normalOpt.concat('move', 'edit'),
   dicts: normalOpt.concat('all'),
@@ -163,10 +169,66 @@ export const dealMenuClick = (dataSource, menu, updateDataSource, tabClose, call
     case 'move': moveOpt(dataSource, menu, updateDataSource); break;
     case 'all': editAllOpt(dataSource, menu, updateDataSource); break;
     case 'reset': resetOpt(dataSource, menu, updateDataSource); break;
+    case 'notes': notesOpt(dataSource, menu, updateDataSource); break;
     default:break;
   }
 };
 
+const notesOpt = (dataSource, menu, updateDataSource) => {
+  const otherMenus = menu.otherMenus || [];
+  let modal;
+  let changeData;
+  let notes = otherMenus.filter(m => m.type === 'entity' || m.type === 'view')
+      .map(o => {
+        const names = o.type === 'entity' ? 'entities' : 'views';
+        return {
+          ...dataSource[names].filter(d => d.id === o.key)[0],
+          type: o.type,
+        };
+      })
+      .map(d => _.pick(d, ['notes', 'id', 'type']));
+  const dataChange = (d) => {
+    changeData = d;
+  };
+  const updateNotes = (data, type) => {
+    return data.map(e => {
+      const n = notes.filter(n => n.id === e.id && n.type === type)[0];
+      if (n) {
+        return {
+          ...e,
+          notes: changeData,
+        };
+      }
+      return e;
+    })
+  }
+  const onOk = () => {
+    if (changeData) {
+      updateDataSource({
+        ...dataSource,
+        entities: updateNotes(dataSource.entities || [], 'entity'),
+        views: updateNotes(dataSource.views || [], 'view'),
+      })
+    }
+    modal && modal.close();
+  };
+  const onCancel = () => {
+    modal && modal.close();
+  };
+  modal = Component.openModal(<Note
+      data={notes}
+      dataChange={dataChange}
+  />, {
+    bodyStyle: {width: '80%'},
+    title: Component.FormatMessage.string({id: 'standardFields.selectGroup'}),
+    buttons: [<Component.Button type='primary' key='ok' onClick={onOk}>
+      <Component.FormatMessage id='button.ok'/>
+    </Component.Button>,
+      <Component.Button key='cancel' onClick={onCancel}>
+        <Component.FormatMessage id='button.cancel'/>
+      </Component.Button>],
+  });
+}
 const resetOpt = (dataSource, menu, updateDataSource) => {
   Modal.confirm({
     title: FormatMessage.string({id: 'resetConfirmTitle'}),

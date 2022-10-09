@@ -22,6 +22,7 @@ import {separator} from '../../../profile';
 import FormatMessage from '../formatmessage';
 import { ConfigContent, TableContent } from '../../lib/context';
 import StandardGroupSelect from '../../app/container/standardfield/StandardGroupSelect';
+import Note from '../../app/container/tools/note';
 
 const empty = [];
 
@@ -207,6 +208,54 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
         hideInGraph: c.relationNoShow,
       };
     }));
+  };
+  const updateNote = () => {
+    let modal;
+    let changeData;
+    let notes = fieldsRef.current
+        .filter(f => selectedFieldsRef.current.includes(f.id))
+        .map(d => _.pick(d, ['notes', 'id']));
+    const dataChange = (d) => {
+      changeData = d;
+    };
+    const onOk = () => {
+      if (changeData) {
+        const ids = notes.map(n => n.id);
+        const tempFields = fieldsRef.current.map((f) => {
+          if (ids.includes(f.id)) {
+            return {
+              ...f,
+              notes: changeData,
+            };
+          }
+          return f;
+        });
+        updateTableData((pre) => {
+          return {
+            ...pre,
+            fields: tempFields,
+          };
+        });
+        tableDataChange && tableDataChange(tempFields, 'fields');
+      }
+      modal && modal.close();
+    };
+    const onCancel = () => {
+      modal && modal.close();
+    };
+    modal = Component.openModal(<Note
+      data={notes}
+      dataChange={dataChange}
+    />, {
+      bodyStyle: {width: '80%'},
+      title: Component.FormatMessage.string({id: 'standardFields.selectGroup'}),
+      buttons: [<Component.Button type='primary' key='ok' onClick={onOk}>
+        <Component.FormatMessage id='button.ok'/>
+      </Component.Button>,
+        <Component.Button key='cancel' onClick={onCancel}>
+          <Component.FormatMessage id='button.cancel'/>
+        </Component.Button>],
+    });
   };
   const calcShiftSelected = (fieldKey) => {
     let selected = [...selectedFieldsRef.current];
@@ -934,6 +983,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                 <Component.IconTitle disable={selectedFields.length === 0} title={Component.FormatMessage.string({id: 'tableEdit.hiddenSelectedFields'})} type='fa-eye-slash' onClick={() => updateFieldsHideInGraph(true)}/>
                 {!disableAddStandard && <Component.IconTitle disable={selectedFields.length === 0} title={Component.FormatMessage.string({id: 'tableEdit.addStandardFields'})} type='icon-ruku' onClick={addStandardFields}/>}
                 {!disableHeaderReset && <Component.IconTitle title={Component.FormatMessage.string({id: 'tableEdit.resetHeaders'})} type='fa-sort-amount-desc' onClick={resetTableHeaders}/>}
+                <Component.IconTitle disable={selectedFields.length === 0} title={Component.FormatMessage.string({id: 'tableEdit.note'})} type='fa-tags' onClick={updateNote}/>
               </span>
             }
             {ExtraOpt && <span className={`${currentPrefix}-table-opt-extra`}><ExtraOpt

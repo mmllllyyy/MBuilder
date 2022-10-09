@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import './style/index.less';
 import ButtonGroup from './Group';
@@ -15,6 +15,9 @@ const Button = React.memo(({ key, prefix, type, active, children, onClick, disab
     }
   };
   const currentPrefix = getPrefix(prefix);
+  useEffect(() => {
+    updateStatus(disable ? 'disable' : 'normal');
+  }, [disable]);
   return (
     <span
       style={style}
