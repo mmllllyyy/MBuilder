@@ -21,7 +21,7 @@ const Input = React.memo(({rows = 3, cols = 20, prefix,
       preventEnter && e.stopPropagation();
     }
   };
-  return (<textarea onKeyDown={onKeyDown} className={`${currentPrefix}-textarea`} style={style} value={tempValue} rows={rows} cols={cols} onChange={_onChange}/>);
+  return (<textarea placeholder={restProps.placeholder} onKeyDown={onKeyDown} className={`${currentPrefix}-textarea`} style={style} value={tempValue} rows={rows} cols={cols} onChange={_onChange}/>);
 });
 
 export default Input;

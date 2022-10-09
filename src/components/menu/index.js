@@ -1,8 +1,9 @@
 import React, {useState, useRef, useImperativeHandle, forwardRef, useEffect} from 'react';
 import _ from 'lodash/object';
 
-import ContextMenu from 'components/contextmenu';
+import ContextMenu from '../contextmenu';
 import Icon from '../icon';
+import Tooltip from '../tooltip';
 import './style/index.less';
 import {getPrefix} from '../../lib/prefixUtil';
 import { moveArrayPosition } from '../../lib/array_util';
@@ -279,9 +280,24 @@ const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldName
             >
               <span
                 id={`chiner-${child[defKey]}`}
-                style={{paddingLeft: 8 * (offsetNumber + 1)}}
+                style={{paddingLeft: 8 * (offsetNumber + 1), color: child.notes?.fontColor}}
                 className={`${currentPrefix}-menu-container-fold-item-name-child`}
               >
+                {
+                    child.notes?.tags?.length > 0 && <Tooltip
+                      force
+                      offsetLeft={30}
+                      placement='top'
+                      title={<div className={`${currentPrefix}-note-tag-list`}>
+                        {
+                          child.notes?.tags?.map((t, index) => {
+                              return <div>{`${index + 1}.${t.content}`}</div>;
+                            })
+                          }
+                      </div>}>
+                      <Icon type='fa-tags' style={{marginRight: 5}}/>
+                    </Tooltip>
+                }
                 {name}
               </span>
               {
