@@ -27,7 +27,7 @@ import Note from '../../app/container/tools/note';
 const empty = [];
 
 const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, search,
-                               dataSource, customerHeaders, disableHeaderIcon, tableDataChange,
+                               dataSource, customerHeaders, tableDataChange,
                                defaultEmptyField, validate, disableCopyAndCut, onTableRowClick,
                                onAdd, ExtraOpt, style, hiddenHeader, getRestData,
                                className, expand, otherOpt = true, disableHeaderReset,
@@ -501,12 +501,14 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
         const { current } = tableRef;
         // 如果选中的是表格
         if (e.keyCode === 67 && selectedFields.length > 0) {
+          e.stopPropagation();
           Copy(fields.filter(f => selectedFields.includes(f.id)).map(f => _.omit(f, 'children')),
               Component.FormatMessage.string({id: 'copySuccess'}));
           current && current.focus({
             preventScroll: true,
           });
         } else if(e.keyCode === 86) {
+          e.stopPropagation();
           Paste((value) => {
             try {
               let pasteFields = JSON.parse(value);
@@ -979,8 +981,8 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
             </span>
             {
               otherOpt && <span className={`${currentPrefix}-table-opt-other`}>
-                <Component.IconTitle disable={selectedFields.length === 0} title={Component.FormatMessage.string({id: 'tableEdit.showSelectedFields'})} type='fa-eye' onClick={() => updateFieldsHideInGraph(false)}/>
-                <Component.IconTitle disable={selectedFields.length === 0} title={Component.FormatMessage.string({id: 'tableEdit.hiddenSelectedFields'})} type='fa-eye-slash' onClick={() => updateFieldsHideInGraph(true)}/>
+                {!isView && <Component.IconTitle disable={selectedFields.length === 0} title={Component.FormatMessage.string({id: 'tableEdit.showSelectedFields'})} type='fa-eye' onClick={() => updateFieldsHideInGraph(false)}/>}
+                {!isView && <Component.IconTitle disable={selectedFields.length === 0} title={Component.FormatMessage.string({id: 'tableEdit.hiddenSelectedFields'})} type='fa-eye-slash' onClick={() => updateFieldsHideInGraph(true)}/>}
                 {!disableAddStandard && <Component.IconTitle disable={selectedFields.length === 0} title={Component.FormatMessage.string({id: 'tableEdit.addStandardFields'})} type='icon-ruku' onClick={addStandardFields}/>}
                 {!disableHeaderReset && <Component.IconTitle title={Component.FormatMessage.string({id: 'tableEdit.resetHeaders'})} type='fa-sort-amount-desc' onClick={resetTableHeaders}/>}
                 <Component.IconTitle disable={selectedFields.length === 0} title={Component.FormatMessage.string({id: 'tableEdit.note'})} type='fa-tags' onClick={updateNote}/>
@@ -1021,10 +1023,10 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
               {finalTempHeaders.map((h, i) => {
                 const freezeStyle = (h?.freeze && freeze) ?
                     { position: 'sticky', ...calcPosition(h, i) } : {};
-                let type = 'fa-eye';
-                if (h.hideInGraph) {
-                  type = 'fa-eye-slash';
-                }
+                // let type = 'fa-eye';
+                // if (h.hideInGraph) {
+                //   type = 'fa-eye-slash';
+                // }
                 const thClass = selectedColumns.includes(h?.refKey)
                     ? `${currentPrefix}-table-selected` : '';
                 return <th
@@ -1041,11 +1043,14 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                 >
                   <span style={{width: columnWidth[h?.refKey] ? columnWidth[h?.refKey] - 3 : 'auto'}}>
                     {h?.value}
-                    {!disableHeaderIcon && h?.refKey !== 'extProps' && isView && <Component.Icon
-                      onClick={e => headerIconClick(e, h?.refKey, 'hideInGraph', !h.hideInGraph)}
-                      type={type}
-                      style={{ marginLeft: 5,cursor: 'pointer' }}
-                    />}
+                    {/*{!disableHeaderIcon && h?.refKey !== 'extProps' && isView &&*/}
+                    {/*    <Component.Icon*/}
+                    {/*  onClick={*/}
+                    {/*      e => headerIconClick(e, h?.refKey, 'hideInGraph', !h.hideInGraph)*/}
+                    {/*    }*/}
+                    {/*  type={type}*/}
+                    {/*  style={{ marginLeft: 5,cursor: 'pointer' }}*/}
+                    {/*/>}*/}
                     {freeze &&
                     ((i < freezeCount.left) ||
                         (i > (finalTempHeaders.length - freezeCount.right - 1)))
@@ -1069,6 +1074,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                 return true;
               }).map((f, i) => (
                 <Tr
+                  isView={isView}
                   entities={dataSource?.entities}
                   openDict={openDict}
                   selectedColumns={selectedColumns}
