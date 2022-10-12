@@ -842,6 +842,7 @@ components: {
     },
     colorPicker: {
         recent: 'Recent Colors',
+        reset: 'Reset',
     },
 },
 projectTemplate: {

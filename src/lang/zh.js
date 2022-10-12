@@ -841,6 +841,7 @@ export default {
         },
         colorPicker: {
             recent: '最近使用的颜色',
+            reset: '恢复默认',
         },
     },
     projectTemplate: {

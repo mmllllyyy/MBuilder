@@ -150,6 +150,7 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
             top: 53,
           }}
         dropMenu={<ColorPicker
+          restColor='#000000a6'
           recentColors={dataSource.profile?.recentColors || []}
           color={colorState.fontColor}
           onChange={color => _colorChange('fontColor', color)}
@@ -165,6 +166,7 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
             top: 53,
           }}
         dropMenu={<ColorPicker
+          restColor='#DDE5FF'
           recentColors={dataSource.profile?.recentColors || []}
           color={colorState.fillColor}
           onChange={color => _colorChange('fillColor', color)}

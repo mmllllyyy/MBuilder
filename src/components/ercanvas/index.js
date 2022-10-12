@@ -39,6 +39,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
   const dndRef = useRef(null);
   const interactingRef = useRef(true);
   const dataSourceRef = useRef(dataSource);
+  const isDoneInit = useRef(false);
   dataSourceRef.current = dataSource;
   const currentColor = useRef({
     selected: '#1890FF', // 选中色
@@ -795,9 +796,9 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       redo();
     });
     graph.on('render:done', () => {
-      if (!isInit.current) {
+      if (!isDoneInit.current) {
         graphRef.current.centerContent();
-        isInit.current = true;
+        isDoneInit.current = true;
       }
     });
     graphRef.current = graph;
