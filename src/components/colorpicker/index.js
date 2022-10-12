@@ -20,7 +20,7 @@ export default React.memo(({prefix, color, onChange, recentColors, restColor}) =
         <div>
           {
                 recentColors.map((r) => {
-                    return <div key={r} title={r} style={{background: r}} className={`${currentPrefix}-color-picker-footer-item`}>{}</div>;
+                    return <div onClick={() => onChange({hex: r})} key={r} title={r} style={{background: r}} className={`${currentPrefix}-color-picker-footer-item`}>{}</div>;
                 })
             }
         </div>
