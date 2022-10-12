@@ -1167,7 +1167,7 @@ export  const calcNodeData = (preData, nodeData, dataSource, groups) => {
       .map(f => ({...f, ...transform(f, dataSource), extProps: Object.keys(f.extProps || {}).length}));
   // 计算表头的宽度
   const headerText = `${nodeData.defKey}${nodeData.count > 0 ? `:${nodeData.count}` : ''}(${nodeData.defName})`;
-  const headerWidth = getTextWidth(headerText, 12, 'bold') + 20;
+  const headerWidth = getTextWidth(headerText, 12, 'bold') + 20 + (nodeData.comment ? 16 : 0);
   // 计算每一列最长的内容
   const maxWidth = {};
   const defaultWidth = {
