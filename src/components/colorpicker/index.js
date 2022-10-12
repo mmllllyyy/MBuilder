@@ -5,7 +5,7 @@ import {getPrefix} from '../../lib/prefixUtil';
 
 import './style/index.less';
 
-export default React.memo(({prefix, color, onChange, recentColors}) => {
+export default React.memo(({prefix, color, onChange, recentColors, restColor}) => {
     const currentPrefix = getPrefix(prefix);
     return <div className={`${currentPrefix}-color-picker`}>
       <SketchPicker
@@ -24,6 +24,7 @@ export default React.memo(({prefix, color, onChange, recentColors}) => {
                 })
             }
         </div>
+        <div><a onClick={() => onChange({hex: restColor})}><FormatMessage id='components.colorPicker.reset'/></a></div>
       </div>
     </div>;
 });
