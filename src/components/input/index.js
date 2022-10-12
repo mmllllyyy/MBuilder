@@ -20,17 +20,19 @@ const Input = React.memo(forwardRef(({ prefix ,defaultValue, suffix, placeholder
     }
 
   };
-  const _onBlur = (e) => {
-    const { onBlur, onChange } = restProps;
-    e.target.value = e.target.value.trim();
-    onBlur && onBlur(e);
-    onChange && onChange(e);
-    setDefaultValue(e.target.value);
-  };
   let tempValue = stateValue;
   if ('value' in restProps) {
     tempValue = restProps.value;
   }
+  const _onBlur = (e) => {
+    const { onBlur, onChange } = restProps;
+    e.target.value = e.target.value.trim();
+    onBlur && onBlur(e);
+    if (e.target.value !== tempValue) {
+      onChange && onChange(e);
+      setDefaultValue(e.target.value);
+    }
+  };
   const onDragStart = (e) => {
     e.preventDefault();
     e.stopPropagation();

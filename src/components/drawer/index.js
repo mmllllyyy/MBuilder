@@ -14,10 +14,7 @@ export const Drawer = React.memo(({prefix, title, onClose, children, width,
   const ref = useRef(null);
   const containerRef = useRef(null);
   const updateStyle = () => {
-    containerRef.current.style.transform = 'translateX(-100%)';
-    setTimeout(() => {
-      onClose && onClose();
-    }, 300);
+    onClose && onClose();
   };
   const _iconClose = () => {
     updateStyle();
