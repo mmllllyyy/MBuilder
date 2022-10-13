@@ -1,14 +1,14 @@
 import React, {useEffect, useState, useRef} from 'react';
-import {SketchPicker} from 'react-color';
-import {Button, FormatMessage, Modal, Text} from 'components';
+import {Button, FormatMessage, Modal, Text, ColorPicker} from 'components';
 
 import './style/index.less';
 import {getPrefix} from '../../../../lib/prefixUtil';
 
-export default React.memo(({data, prefix, dataChange}) => {
+export default React.memo(({data, prefix, dataChange, dataSource, updateDataSource}) => {
     const isInit = useRef(false);
     const [current, setCurrent] = useState('');
     const [value, setValue] = useState('');
+    const [recentColors, setRecentColors] = useState(dataSource.profile?.recentColors || []);
     const [notes, setNotes] = useState(() => {
         if ([...new Set(data.map(d => (d.notes?.tags || []).join('')))].length === 1) {
             return data[0].notes?.tags || [];
@@ -21,6 +21,20 @@ export default React.memo(({data, prefix, dataChange}) => {
         }
         return '';
     });
+    const _setColor = (c) => {
+        setColor(c);
+        let tempRecentColors = [...new Set(recentColors.concat(c))];
+        const start = tempRecentColors.length - 8 > 0 ? tempRecentColors.length - 8 : 0;
+        tempRecentColors = tempRecentColors.slice(start, tempRecentColors.length);
+        setRecentColors(tempRecentColors);
+        updateDataSource && updateDataSource({
+            ...dataSource,
+            profile: {
+                ...dataSource.profile,
+                recentColors: tempRecentColors,
+            },
+        });
+    };
     const currentPrefix = getPrefix(prefix);
     useEffect(() => {
         if (isInit.current === true) {
@@ -102,17 +116,15 @@ export default React.memo(({data, prefix, dataChange}) => {
       <div className={`${currentPrefix}-note-right`}>
         <div><span><FormatMessage id='note.noteColor'/></span></div>
         <div>
-          <SketchPicker
-            disableAlpha
-            presetColors={['#FFFFFF', '#BFBFBF', '#C00000', '#FFC000', '#F6941D', '#7030A0', '#136534', '#0070C0',
-                  '#0D0D0D','#6698CC', '#FA5A5A', '#FFD966', '#F8CBAD', '#CB99C5', '#9ACC98', '#093299']}
+          <ColorPicker
+            restColor='#000000a6'
+            recentColors={recentColors}
             color={color}
-            onChange={c => setColor(c.hex)}
+            onChange={c => _setColor(c.hex)}
           />
         </div>
         <div>
           <span style={{color}}><FormatMessage id='note.noteFontColor'/></span>
-          <a style={{marginLeft: 5}} onClick={() => setColor('')}><FormatMessage id='note.clear'/></a>
         </div>
       </div>
     </div>;

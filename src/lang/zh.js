@@ -891,6 +891,5 @@ export default {
         edit: '编辑',
         remove: '移除',
         noteFontColor: '标注文字颜色',
-        clear: '清除',
     },
 };
