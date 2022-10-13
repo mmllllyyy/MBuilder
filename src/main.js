@@ -119,20 +119,21 @@ function createWindow() {
   ipcMain.on("jarPath", (event) => {
     let jarPath = '';
     if (process.env.CHINER_NODE_ENV === 'development') {
-      jarPath = path.join(__dirname, '../public/jar/chiner-java.jar');
+      jarPath = path.join(__dirname, '../public/jar/pdmaner-java.jar');
     } else {
-      jarPath = path.join(__dirname, '../../app.asar.unpacked/build/jar/chiner-java.jar')
+      jarPath = path.join(__dirname, '../../app.asar.unpacked/build/jar/pdmaner-java.jar')
     }
     event.returnValue = jarPath;
   });
-  ipcMain.on("docx", (event) => {
-    let docx = '';
+  ipcMain.on("template", (event, {ext, name}) => {
+    let template = '';
+    const fileName = `${name}.${ext}`;
     if (process.env.CHINER_NODE_ENV === 'development') {
-      docx = path.join(__dirname, '../public/file/chiner-docx-tpl.docx');
+      template = path.join(__dirname, `../public/file/${fileName}`);
     } else {
-      docx = path.join(__dirname, '../../app.asar.unpacked/build/file/chiner-docx-tpl.docx')
+      template = path.join(__dirname, `../../app.asar.unpacked/build/file/${fileName}`)
     }
-    event.returnValue = docx;
+    event.returnValue = template;
   });
   let menu;
   // 设置菜单

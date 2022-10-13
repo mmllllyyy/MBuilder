@@ -22,7 +22,7 @@ const deleteFile = json.deleteFile;
 const dirname = json.dirname;
 const saveFile = json.saveFile;
 const saveTempImages = json.saveTempImages;
-const saveAsWordTemplate = json.saveAsWordTemplate;
+const saveAsTemplate = json.saveAsTemplate;
 const selectWordFile = json.selectWordFile;
 const writeLog = json.writeLog;
 const showItemInFolder = json.showItemInFolder;
@@ -57,7 +57,7 @@ export {
   dirname,
   saveFile,
   saveTempImages,
-  saveAsWordTemplate,
+  saveAsTemplate,
   selectWordFile,
   writeLog,
   showItemInFolder,

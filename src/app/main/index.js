@@ -535,8 +535,78 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       return result;
     });
   };
+  const dealParseFile = (result, type) => {
+    if (result.status === 'FAILED') {
+      const termReady = (term) => {
+        term.write(typeof result.body === 'object' ? JSON.stringify(result.body, null, 2)
+            : result.body);
+      };
+      Modal.error({
+        bodyStyle: {width: '80%'},
+        contentStyle: {width: '100%', height: '100%'},
+        title: FormatMessage.string({id: 'optFail'}),
+        message: <div>
+          <div style={{textAlign: 'center'}}><FormatMessage id='dbConnect.log'/><a onClick={showItemInFolder}>{getLogPath()}</a></div>
+          <Terminal termReady={termReady}/>
+        </div>,
+      });
+      restProps.closeLoading();
+    } else {
+      restProps.closeLoading();
+      const entities = (result.body?.tables || result.body || []).map((t) => {
+        const fields = (t.fields || []).map(f => ({...f, id: Math.uuid()}));
+        return {
+          ...t,
+          id: Math.uuid(),
+          fields,
+        };
+      });
+      let modal;
+      const onCancel = () => {
+        modal.close();
+      };
+      const onOk = () => {
+        const importData = importPdRef.current.getData()
+            .reduce((a, b) => a.concat((b.fields || [])
+                .map(f => ({
+                  ...f,
+                  group: b.id,
+                }))), []);
+        const domains = calcDomains(result.body?.domains || [], dataSourceRef.current.dataTypeMapping?.mappings, 'defKey');
+        const finallyDomains = mergeData(dataSourceRef.current?.domains || [],
+            domains,false, false);
+        injectDataSource(mergeDataSource(dataSourceRef.current,
+            {domains}, calcDomain(importData, null, finallyDomains)), modal);
+      };
+      modal = openModal(<ImportPd
+        data={entities}
+        ref={importPdRef}
+        dataSource={dataSourceRef.current}
+      />, {
+        bodyStyle: {width: '80%'},
+        buttons: [
+          <Button type='primary' key='ok' onClick={onOk}><FormatMessage id='button.ok'/></Button>,
+          <Button key='cancel' onClick={onCancel}><FormatMessage id='button.cancel'/></Button>],
+        title: FormatMessage.string({id: `toolbar.${type}`}),
+      });
+    }
+  };
   const importFromExcel = () => {
-    openModal(<ImportExcel/>, {
+    let model;
+    const onPicker = () => {
+      Upload('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', (file) => {
+        model && model.close();
+        restProps.openLoading();
+        connectDB(dataSourceRef.current, configRef.current, {
+          excelFile: file.path,
+        }, 'ParseDictExcel', (result) => {
+          dealParseFile(result);
+        });
+      }, (f) => {
+        return f.name.endsWith('.xlsx');
+      }, false);
+    };
+    model = openModal(<ImportExcel onPicker={onPicker}/>, {
       title: FormatMessage.string({id: 'toolbar.importExcel'}),
     });
   };
@@ -546,62 +616,8 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       connectDB(dataSourceRef.current, configRef.current, {
         [type === 'PD' ? 'pdmFile' : 'ddlFile']: data.path,
       }, type === 'PD' ? 'ParsePDMFile' : 'ParseDDLToTableImpl', (result) => {
-        if (result.status === 'FAILED') {
-          const termReady = (term) => {
-            term.write(typeof result.body === 'object' ? JSON.stringify(result.body, null, 2)
-                : result.body);
-          };
-          Modal.error({
-            bodyStyle: {width: '80%'},
-            contentStyle: {width: '100%', height: '100%'},
-            title: FormatMessage.string({id: 'optFail'}),
-            message: <div>
-              <div style={{textAlign: 'center'}}><FormatMessage id='dbConnect.log'/><a onClick={showItemInFolder}>{getLogPath()}</a></div>
-              <Terminal termReady={termReady}/>
-            </div>,
-          });
-          restProps.closeLoading();
-        } else {
-          restProps.closeLoading();
-          const entities = ((type === 'PD' ? result.body?.tables : result.body) || []).map((t) => {
-            const fields = (t.fields || []).map(f => ({...f, id: Math.uuid()}));
-            return {
-              ...t,
-              id: Math.uuid(),
-              fields,
-            };
-          });
-          let modal;
-          const onCancel = () => {
-            modal.close();
-          };
-          const onOk = () => {
-            const importData = importPdRef.current.getData()
-              .reduce((a, b) => a.concat((b.fields || [])
-                .map(f => ({
-                  ...f,
-                  group: b.id,
-                }))), []);
-            const domains = calcDomains(result.body?.domains || [], dataSourceRef.current.dataTypeMapping?.mappings, 'defKey');
-            const finallyDomains = mergeData(dataSourceRef.current?.domains || [],
-                domains,false, false);
-            injectDataSource(mergeDataSource(dataSourceRef.current,
-                {domains}, calcDomain(importData, null, finallyDomains)), modal);
-          };
-          modal = openModal(<ImportPd
-            data={entities}
-            ref={importPdRef}
-            dataSource={dataSourceRef.current}
-          />, {
-            bodyStyle: {width: '80%'},
-            buttons: [
-              <Button type='primary' key='ok' onClick={onOk}><FormatMessage id='button.ok'/></Button>,
-              <Button key='cancel' onClick={onCancel}><FormatMessage id='button.cancel'/></Button>],
-            title: FormatMessage.string({id: `toolbar.${type === 'PD' ? 'importPowerDesigner' : 'importDDL'}`}),
-          });
-        }
+        dealParseFile(result, type === 'PD' ? 'importPowerDesigner' : 'importDDL');
       });
-      //console.log(data);
     }, (file) => {
       const result = type === 'PD' ? (file.name.endsWith('.pdm') || file.name.endsWith('.PDM')) : file.name.endsWith('.sql');
       if (!result) {
