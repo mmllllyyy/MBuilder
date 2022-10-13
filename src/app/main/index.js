@@ -599,7 +599,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
         restProps.openLoading();
         connectDB(dataSourceRef.current, configRef.current, {
           excelFile: file.path,
-        }, 'ParseDictExcel', (result) => {
+        }, 'ParseExcelFileImpl', (result) => {
           dealParseFile(result);
         });
       }, (f) => {
