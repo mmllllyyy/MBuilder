@@ -216,6 +216,8 @@ const notesOpt = (dataSource, menu, updateDataSource) => {
     modal && modal.close();
   };
   modal = Component.openModal(<Note
+      updateDataSource={updateDataSource}
+      dataSource={dataSource}
       data={notes}
       dataChange={dataChange}
   />, {

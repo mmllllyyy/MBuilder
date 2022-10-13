@@ -892,7 +892,6 @@ projectTemplate: {
         edit: 'edit',
         remove: 'remove',
         noteFontColor: 'note font color',
-        clear: 'clear',
     },
 };
 

@@ -244,6 +244,8 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
       modal && modal.close();
     };
     modal = Component.openModal(<Note
+      dataSource={getDataSource()}
+      updateDataSource={updateDataSource}
       data={notes}
       dataChange={dataChange}
     />, {
