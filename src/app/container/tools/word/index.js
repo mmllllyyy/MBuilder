@@ -5,7 +5,7 @@ import {FormatMessage, Icon, Message} from 'components';
 import DocTemplate from '../../config/DocTemplate';
 import './style/index.less';
 import {getPrefix} from '../../../../lib/prefixUtil';
-import { saveAsWordTemplate } from '../../../../lib/middle';
+import { saveAsTemplate } from '../../../../lib/middle';
 
 export default React.memo(({prefix, dataSource, onOk, save, projectInfo}) => {
     const currentPrefix = getPrefix(prefix);
@@ -44,7 +44,7 @@ export default React.memo(({prefix, dataSource, onOk, save, projectInfo}) => {
           <div><DocTemplate dataSource={dataSource} dataChange={dataChange} onOk={_onOk}/></div>
           <div>
             <Icon type='fa-file-word-o'/>
-            <a onClick={saveAsWordTemplate}><FormatMessage id='word.download'/></a>
+            <a onClick={() => saveAsTemplate('PDManer-docx-tpl', 'docx')}><FormatMessage id='word.download'/></a>
           </div>
         </div>
       </div>

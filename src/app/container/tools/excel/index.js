@@ -3,11 +3,12 @@ import React from 'react';
 import { Icon, FormatMessage } from 'components';
 import './style/index.less';
 import {getPrefix} from '../../../../lib/prefixUtil';
+import {saveAsTemplate} from '../../../../lib/middle';
 
-export default React.memo(({prefix}) => {
+export default React.memo(({prefix, onPicker}) => {
     const currentPrefix = getPrefix(prefix);
     return <div className={`${currentPrefix}-import-excel`}>
-      <div className={`${currentPrefix}-import-excel-upload`}>
+      <div onClick={onPicker} className={`${currentPrefix}-import-excel-upload`}>
         <span
           className={`${currentPrefix}-import-excel-upload-button`}
             >
@@ -21,7 +22,7 @@ export default React.memo(({prefix}) => {
         </div>
         <div>
           <Icon type='fa-file-excel-o'/>
-          <a>{FormatMessage.string({id: 'excel.download'})}</a>
+          <a onClick={() => saveAsTemplate('PDManer-excel-tpl', 'xlsx')}>{FormatMessage.string({id: 'excel.download'})}</a>
         </div>
       </div>
     </div>;

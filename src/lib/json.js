@@ -469,17 +469,17 @@ export const saveTempImages = (images) => {
   });
 };
 
-const getDefaultWordTemplate = () => {
-  return ipcRenderer.sendSync('docx');
+const getDefaultTemplate = (ext, name) => {
+  return ipcRenderer.sendSync('template', {ext, name});
 }
 
-export const saveAsWordTemplate = () => {
-  return copyFile(getDefaultWordTemplate(), [{name: 'PDManer-docx-tpl', extensions: ['docx']}]);
+export const saveAsTemplate = (name, ext) => {
+  return copyFile(getDefaultTemplate(ext, name), [{name: name, extensions: [ext]}]);
 };
 
 export const selectWordFile = (dataSource, template) => {
   const name = _.get(dataSource, 'name');
-  let defaultPath = template || getDefaultWordTemplate();
+  let defaultPath = template || getDefaultTemplate('docx', 'PDManer-docx-tpl');
   return new Promise((res, rej) => {
     openFileOrDirPath([], ['openDirectory']).then((dir) => {
       res([`${dir}${path.sep}${name}-${moment().format('YYYYMDHHmmss')}.docx`, defaultPath]);
