@@ -43,7 +43,7 @@ export default React.memo(({f, i, expand, onMouseOver, tempHeaders, calcPosition
                   })
                 }
                 </div>}>
-                <Component.Icon type='fa-tags'/>
+                <Component.Icon type='fa-tags' className={`${currentPrefix}-table-td-tag`}/>
               </Component.Tooltip>
           }
           {i + 1}
