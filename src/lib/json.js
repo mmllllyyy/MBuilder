@@ -135,7 +135,9 @@ export const saveJsonPromiseAs = (data, refactor) => {
         return path.replace(/\.json$/g, `.${projectSuffix}.json`);
       }
       return path;
-    }, {}, refactor).then(({filePath}) => res(filePath)).catch(err => rej(err));
+    }, {
+      defaultPath: typeof data === 'string' ? '' : data.name,
+    }, refactor).then(({filePath}) => res(filePath)).catch(err => rej(err));
   });
 };
 
@@ -436,6 +438,7 @@ export const connectDB = (dataSource, config, params = {}, cmd, cb) => {
 export const copyFile = (defaultPath, filters) => {
   return new Promise((res, rej) => {
     dialog.showSaveDialog({
+      defaultPath: (filters || [])[0]?.name,
       filters: filters || []
     }).then(({filePath}) => {
       if (filePath) {

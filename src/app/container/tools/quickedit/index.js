@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {FormatMessage, Input, Icon} from 'components';
+import {FormatMessage, Input} from 'components';
 
 import {getPrefix} from '../../../../lib/prefixUtil';
 import SelectGroup from '../../group/SelectGroup';
@@ -126,37 +126,41 @@ export default React.memo(({ prefix, dataSource, dataChange, name }) => {
         <thead>
           <tr><th>{}</th>
             <th>
-              {FormatMessage.string({id: 'tableBase.defKey'})}
-              <span
-                className={`${currentPrefix}-quick-edit-sort`}
+              <span>
+                <span>
+                  {FormatMessage.string({id: 'tableBase.defKey'})}
+                </span>
+                <span
+                  className={`${currentPrefix}-quick-edit-sort`}
               >
-                <Icon
-                  className={sort.defKey === 'asc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
-                  type="fa-sort-asc"
-                  onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'asc' ? '' : 'asc'}), 'defKey')}
+                  <span
+                    className={sort.defKey === 'asc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                    onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'asc' ? '' : 'asc'}), 'defKey')}
                 />
-                <Icon
-                  className={sort.defKey === 'desc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
-                  type="fa-sort-desc"
-                  onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'desc' ? '' : 'desc'}), 'defKey')}
+                  <span
+                    className={sort.defKey === 'desc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                    onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'desc' ? '' : 'desc'}), 'defKey')}
                 />
+                </span>
               </span>
             </th>
             <th>
-              {FormatMessage.string({id: 'tableBase.defName'})}
-              <span
-                className={`${currentPrefix}-quick-edit-sort`}
+              <span>
+                <span>
+                  {FormatMessage.string({id: 'tableBase.defName'})}
+                </span>
+                <span
+                  className={`${currentPrefix}-quick-edit-sort`}
               >
-                <Icon
-                  className={sort.defName === 'asc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
-                  type="fa-sort-asc"
-                  onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'asc' ? '' : 'asc'}), 'defName')}
-                  />
-                <Icon
-                  className={sort.defName === 'desc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
-                  type="fa-sort-desc"
-                  onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'desc' ? '' : 'desc'}), 'defName')}
+                  <span
+                    className={sort.defName === 'asc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                    onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'asc' ? '' : 'asc'}), 'defName')}
                 />
+                  <span
+                    className={sort.defName === 'desc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                    onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'desc' ? '' : 'desc'}), 'defName')}
+                />
+                </span>
               </span>
             </th>
             <th>{FormatMessage.string({id: 'tableBase.comment'})}</th>

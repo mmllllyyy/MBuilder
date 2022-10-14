@@ -5,29 +5,39 @@
   overflow: auto;
   margin-bottom: 10px;
   padding: 0 10px 0 10px;
+  th {
+    & > span {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+    }
+  }
   &-sort {
     margin-left: 5px;
     position: relative;
-    display: inline-block;
-    width: 22px;
-    height: 15px;
     &-picker {
-      color: @font-color !important;
+      opacity: 1 !important;
     }
-    i {
-      color: @third-font-color;
-    }
-    i[class*=asc] {
+    & > span {
       cursor: pointer;
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      position: absolute;
+      opacity: 0.5;
+    }
+    & > span:first-child {
+      background-image: url("./img.png");
+      background-position: -3px -2px;
+      bottom: 0;
       left: 0;
-      bottom: -1px;
-      position: absolute;
     }
-    i[class*=desc] {
-      cursor: pointer;
-      left: 8px;
-      top: 5px;
-      position: absolute;
+    & > span:last-child {
+      background-image: url("./img.png");
+      background-position: -10.5px 9px;
+      left: 0;
+      top: 0;
     }
   }
   & > table {
