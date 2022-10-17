@@ -510,6 +510,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
             preventScroll: true,
           });
         } else if(e.keyCode === 86) {
+          e.preventDefault();
           e.stopPropagation();
           Paste((value) => {
             try {
