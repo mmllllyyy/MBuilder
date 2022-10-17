@@ -1302,7 +1302,7 @@ const generateIncreaseSql = (dataSource, group, dataTable, code, templateShow) =
         ...transform(field, dataSource, code, 'id', type),
       }
     }),
-    indexes: templateShow === 'createIndex' ? indexes.map(i => {
+    indexes: (indexes || []).map(i => {
       return {
         ...i,
         fields: (i.fields || []).map(f => {
@@ -1312,7 +1312,7 @@ const generateIncreaseSql = (dataSource, group, dataTable, code, templateShow) =
           };
         }),
       }
-    }) : indexes,
+    }),
   };
   const name = templateShow === 'createView' ? 'view' : 'entity';
   const templateData = {
