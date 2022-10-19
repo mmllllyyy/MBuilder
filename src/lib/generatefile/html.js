@@ -16,6 +16,7 @@ const dictItemList = '字典条目清单';
 const name = '名称';
 const code = '代码';
 const dataType = '数据类型';
+const length = '长度';
 const main = '主键';
 const remark = '备注';
 
@@ -78,7 +79,7 @@ const generateTableColumnListTable = (dataSource, groupKey, tableKey, nameType) 
    */
   const defaultDb = _object.get(dataSource, 'profile.default.dbs', '');
   let tableString = `<table border="1" cellspacing="0">\n`;
-  tableString += `<tr class="first-tr"><td>${code}</td><td>${name}</td>${nameType !== 'dicts' ? `<td>${dataType}${defaultDb}</td><td>${main}</td>` : ''}<td>${remark}</td></tr>\n`;
+  tableString += `<tr class="first-tr"><td>${code}</td><td>${name}</td>${nameType !== 'dicts' ? `<td>${dataType}${defaultDb}</td><td>${length}</td><td>${main}</td>` : ''}<td>${remark}</td></tr>\n`;
   const viewGroups = _object.get(dataSource, 'viewGroups', []);
   viewGroups.forEach((group) => {
     if (group.id === groupKey) {
@@ -91,8 +92,8 @@ const generateTableColumnListTable = (dataSource, groupKey, tableKey, nameType) 
             if (nameType === 'dicts') {
               tableString += `<tr><td>${field.defKey}</td><td>${field.defName || ''}</td><td>${field.intro || ''}</td></tr>\n`;
             } else {
-              const fieldType = transform(field, dataSource).type;
-              tableString += `<tr><td>${field.defKey}</td><td>${field.defName || ''}</td><td>${fieldType}</td><td>${field.primaryKey && '√' || ''}</td><td>${field.comment || ''}</td></tr>\n`;
+              const fieldData = transform(field, dataSource);
+              tableString += `<tr><td>${field.defKey}</td><td>${field.defName || ''}</td><td>${fieldData.type}</td><td>${fieldData.len}</td><td>${field.primaryKey && '√' || ''}</td><td>${field.comment || ''}</td></tr>\n`;
             }
            });
         }
