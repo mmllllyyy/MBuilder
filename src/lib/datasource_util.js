@@ -1551,6 +1551,35 @@ export const transformationData = (oldDataSource) => {
       }
     }
   }
+
+  if (compareVersion('4.2.0', oldDataSource.version.split('.'))){
+    // 某些低版本数据修复
+    const columns = getFullColumns().map(c => ({refKey: c.newCode, hideInGraph: c.relationNoShow}));
+    const resetField = (d) => {
+      return {
+        ...d,
+        headers: d.headers?.length !== 16 ? columns.map((c, i) => {
+          return {
+            ...(d.headers || []).filter(h => h.refKey === c.refKey)[0] || {...c, hideInGraph: true},
+            freeze: i === 0
+          };
+        }) : d.headers,
+        fields: (d.fields || []).map(f => {
+          if (typeof f.extProps === 'number') {
+            return {
+              ...f,
+              extProps: {},
+            }
+          }
+          return f;
+        })
+      }
+    };
+    tempDataSource = {
+      ...tempDataSource,
+      entities: (tempDataSource.entities || []).map(e => resetField(e)),
+    }
+  }
     return tempDataSource;
 };
 
