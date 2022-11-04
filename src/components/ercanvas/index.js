@@ -704,7 +704,9 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       };
     };
     graph.bindKey(['up','down', 'left', 'right'],(e) => {
-      const selectedCells = graph.getSelectedCells().filter(c => c.shape !== 'erdRelation');
+      const selectedCells = graph.getSelectedCells()
+          .filter(c => c.shape !== 'erdRelation')
+          .filter(c => !c.getProp('editable'));
       if (selectedCells.length > 0) {
         e.preventDefault();
         const moveCells = (cells, offset) => {
