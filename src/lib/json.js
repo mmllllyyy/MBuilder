@@ -572,15 +572,17 @@ export const updateAllVersion = (versionData, info, dataSource) => {
 export const renameVersion = (oldFilePath, newFilePath, oldData, newData) => {
   const oldVersionDir = path.join(path.dirname(oldFilePath), `.version_${oldData.name}`);
   const newVersionDir = path.join(path.dirname(newFilePath), `.version_${newData.name}`);
-  if (oldVersionDir) {
-    ensureDirectoryExistence(newVersionDir);
+  if (fs.existsSync(oldVersionDir)) {
+    if (oldVersionDir) {
+      ensureDirectoryExistence(newVersionDir);
+    }
+    fs.readdirSync(oldVersionDir)
+        .filter(f => f.endsWith('.json') && !f.startsWith('.'))
+        .forEach(f => {
+          fs.renameSync(path.join(oldVersionDir, f), path.join(newVersionDir , f));
+        });
+    deleteDirectoryFile(oldVersionDir);
   }
-  fs.readdirSync(oldVersionDir)
-      .filter(f => f.endsWith('.json') && !f.startsWith('.'))
-      .forEach(f => {
-        fs.renameSync(path.join(oldVersionDir, f), path.join(newVersionDir , f));
-  });
-  deleteDirectoryFile(oldVersionDir);
 };
 
 export const saveAllTemplate = (data, filePath) => {
