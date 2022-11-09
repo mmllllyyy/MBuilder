@@ -38,17 +38,17 @@ const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldName
       return [item];
     }
     const minIndex = Math.min(...selectedMenu.map(m => menu.children.findIndex((c) => {
-      return c.defKey === m.key;
+      return c.id === m.key;
     })));
     const currentIndex = menu.children.findIndex((c) => {
-      return item.key === c.defKey;
+      return item.key === c.id;
     });
     if (minIndex >= 0) {
      selected = menu.children.map((m, i) => {
        if ((i >= currentIndex && i <= minIndex) || (i >= minIndex && i <= currentIndex)) {
          return {
            ...item,
-           key: m.defKey,
+           key: m.id,
          };
        }
        return null;
