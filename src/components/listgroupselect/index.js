@@ -11,6 +11,7 @@ export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
                                         data, groups, prefix, formatResult, arrayData,
                                         defaultSelected = []}, ref) => {
   const tempSelected = unRepeated(defaultSelected);
+  const searchDataRef = useRef([]);
   const currentPrefix = getPrefix(prefix);
   const currentGroup = useMemo(() => {
     return groups
@@ -26,6 +27,19 @@ export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
   const repeatData = useMemo(() => currentData.map(f => f.defKey)
       .filter(f => newData.map(n => n.defKey).includes(f)), [data, groups]);
   const [checked, setChecked] = useState([...tempSelected]);
+  const [type, setType] = useState('normal');
+  const getType = (d) => {
+    if(d.every(s => checked.includes(s.id))) {
+      return 'all';
+    } else if(d.some(s => checked.includes(s.id))) {
+      return 'ind';
+    } else {
+      return 'normal';
+    }
+  };
+  useEffect(() => {
+    setType(getType(searchDataRef.current));
+  }, [checked]);
   useEffect(() => {
     setChecked([...tempSelected]);
   }, [newDataKeys]);
@@ -51,12 +65,15 @@ export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
       },
     };
   }, []);
-  const _iconClick = (type) => {
-    if (type === 'all') {
-      setChecked([...tempSelected || []]);
+  const _iconClick = (t) => {
+    if (t === 'all') {
+      setChecked((pre) => {
+        return [...new Set([...tempSelected || []]
+            .concat(pre.filter(p => searchDataRef.current.findIndex(d => d.id === p) < 0)))];
+      });
     } else {
-      setChecked(() => {
-        return [...new Set(importDataRef.current.map(d => d.id))];
+      setChecked((pre) => {
+        return [...new Set(pre.concat(searchDataRef.current.map(d => d.id)))];
       });
     }
   };
@@ -85,16 +102,10 @@ export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
       return pre.concat(id);
     });
   };
-  const calcType = () => {
-    // normal all ind
-    if (checked.length === newDataKeys.length) {
-      return 'all';
-    } else if (checked.length === 0) {
-      return 'normal';
-    }
-    return 'ind';
+  const onSearch = (searchData) => {
+    setType(getType(searchData));
+    searchDataRef.current = searchData;
   };
-  const type = calcType();
   return <div className={`${currentPrefix}-listselect`}>
     <div className={`${currentPrefix}-listselect-opt`}>
       <span className={`${currentPrefix}-listselect-opt-${type}`} onClick={() => _iconClick(type)}>
@@ -110,6 +121,7 @@ export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
         newData={newData}
         checkBoxChange={_checkBoxChange}
         repeatData={repeatData}
+        onSearch={onSearch}
       />
       <Right
         defaultSelected={tempSelected}

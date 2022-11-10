@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {Checkbox, FormatMessage, SearchInput} from 'components';
 
 const Item = React.memo(({prefix, repeatData, checkBoxChange, checked, d, i, defaultSelected}) => {
@@ -22,12 +22,19 @@ const Item = React.memo(({prefix, repeatData, checkBoxChange, checked, d, i, def
 });
 
 export default React.memo(({prefix, newData, checkBoxChange,
-                             repeatData, checked, defaultSelected}) => {
-  const [searchValue, setFilterValue] = useState('');
+                             repeatData, checked, defaultSelected, onSearch}) => {
+  const [filterData, setFilterData] = useState(newData);
   const _onChange = (e) => {
-    setFilterValue(e.target.value);
+    const value = e.target.value || '';
+    setFilterData(() => {
+      const reg = new RegExp((value).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
+      return newData.filter(d => (!!d.defKey)
+          && (reg.test(d.defKey || '') || reg.test(d.defName || '')));
+    });
   };
-  const reg = new RegExp((searchValue || '').replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
+  useEffect(() => {
+    onSearch(filterData);
+  }, [filterData]);
   return <div className={`${prefix}-listselect-left`}>
     <div className={`${prefix}-listselect-left-search`}>
       <SearchInput
@@ -39,8 +46,7 @@ export default React.memo(({prefix, newData, checkBoxChange,
       <table>
         <tbody>
           {
-          newData.filter(d => (!!d.defKey)
-            && (reg.test(d.defKey || '') || reg.test(d.defName || ''))).map((d, i) => {
+            filterData.map((d, i) => {
             return <Item
               defaultSelected={defaultSelected}
               i={i}
