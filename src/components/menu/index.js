@@ -66,7 +66,9 @@ const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldName
       }
     } else if(e.shiftKey) {
       // 自动选择连续
-      tempSelectedMenu = calcShiftSelected({key, type, parentKey}, menu);
+      if (menu) {
+        tempSelectedMenu = calcShiftSelected({key, type, parentKey}, menu);
+      }
     } else {
       tempSelectedMenu = tempSelectedMenu.some(s => s.key === key) ? [] : [{key, type, parentKey}];
     }

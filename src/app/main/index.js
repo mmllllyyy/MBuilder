@@ -297,7 +297,8 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
   };
   const _contextMenuClick = (e, m, callback) => {
     dealMenuClick(restProps?.dataSource, m, restProps?.update, _tabClose,
-        callback, restProps?.updateAllVersion);
+        // eslint-disable-next-line no-use-before-define
+        callback, restProps?.updateAllVersion, genImg);
   };
   const sliderChange = (percent) => {
     const cavRef = cavRefArray.current.filter(cav => activeKeyRef.current === cav.key)[0]?.cav;
@@ -319,29 +320,37 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     const cavRef = getCurrentCav();
     cavRef.redo();
   };
-  const genImg = (useBase = false) => {
+  const genImg = (useBase = false, filterDiagrams = []) => {
+    const currentDiagrams = dataSourceRef.current?.diagrams || [];
+    const diagrams = filterDiagrams.length === 0 ? currentDiagrams
+        : currentDiagrams.filter(d => filterDiagrams.includes(d.id));
     return new Promise((resolve) => {
-      const length = dataSourceRef.current.diagrams?.length || 0;
+      const length = diagrams.length || 0;
       let count = 0;
       restProps.openLoading(FormatMessage.string({
         id: 'toolbar.exportWordStep1',
         data: { count, length },
       }));
-      imgAll(dataSourceRef.current, () => {
+      imgAll({
+        ...dataSourceRef.current,
+        diagrams,
+      }, () => {
         count += 1;
         restProps.openLoading(FormatMessage.string({
           id: 'toolbar.exportWordStep1',
           data: { count, length },
         }));
       }, useBase).then((res) => {
+        restProps.closeLoading();
         resolve(res);
+      }).catch(() => {
+        restProps.closeLoading();
       });
     });
   };
   const generateSimpleFile = (fileType) => {
     generateFile(fileType, dataSourceRef.current, (callback) => {
       genImg(true).then((res) => {
-        restProps.closeLoading();
         callback(res);
       });
     });
@@ -355,7 +364,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       selectWordFile(dataSourceRef.current, t)
           .then(([dir, template]) => {
             genImg().then((imgDir) => {
-              console.log(template);
+              //console.log(template, imgDir);
               restProps.openLoading(FormatMessage.string({id: 'toolbar.exportWordStep2'}));
               connectDB(dataSourceRef.current, configRef.current, {
                 sinerFile: projectInfo,

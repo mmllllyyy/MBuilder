@@ -37,6 +37,8 @@ import { separator } from '../../profile';
 import demoProject from './template/教学管理系统.pdma.json';
 import * as Component from 'components';
 import Note from '../app/container/tools/note';
+import {saveImages} from './middle';
+import moment from 'moment';
 
 const opt = [{
   key: 'add',
@@ -73,6 +75,10 @@ const opt = [{
   {
     key: 'notes',
     icon: 'fa-tags'
+  },
+  {
+    key: 'img',
+    icon: 'fa-file-image-o'
   }]; // 所有菜单操作的的KEY;
 
 const normalOpt = ['add', 'copy', 'cut', 'paste', 'delete'];
@@ -84,8 +90,8 @@ const menusType = {
   entity: normalOpt.concat('move', 'all', 'notes'),
   views: normalOpt.concat('all'),
   view: normalOpt.concat('move', 'all', 'notes'),
-  diagrams: normalOpt,
-  diagram: normalOpt.concat('move', 'edit'),
+  diagrams: normalOpt.concat('img'),
+  diagram: normalOpt.concat('move', 'edit', 'img'),
   dicts: normalOpt.concat('all'),
   dict: normalOpt.concat('move', 'all'),
   domains: domainNormalOpt,
@@ -156,7 +162,7 @@ export const getMenus = (key, type, selectedMenu, parentKey, groupType) => {
   });
 };
 
-export const dealMenuClick = (dataSource, menu, updateDataSource, tabClose, callback, updateAllVersion) => {
+export const dealMenuClick = (dataSource, menu, updateDataSource, tabClose, callback, updateAllVersion, genImg) => {
   const { key } = menu;
   switch (key) {
     case 'add': addOpt(dataSource, menu, updateDataSource, {}, null, null, callback, updateAllVersion); break;
@@ -170,9 +176,41 @@ export const dealMenuClick = (dataSource, menu, updateDataSource, tabClose, call
     case 'all': editAllOpt(dataSource, menu, updateDataSource); break;
     case 'reset': resetOpt(dataSource, menu, updateDataSource); break;
     case 'notes': notesOpt(dataSource, menu, updateDataSource); break;
+    case 'img': imgOpt(dataSource, menu, genImg); break;
     default:break;
   }
 };
+
+const imgOpt = (dataSource, menu, genImg) => {
+  const type = menu.dataType;
+  const parentKey = menu.parentKey;
+  const otherMenus = menu.otherMenus || [];
+  const refactorFileName = (images) => {
+    return images.map(i => {
+      const diagram = dataSource.diagrams.filter(d => d.id === i.fileName)[0] || {};
+      return {
+        ...i,
+        fileName: `${dataSource.name}-${diagram.defKey}[${diagram.defName || diagram.defKey}]-${moment().format('YYYYMDHHmmss')}`
+      }
+    })
+  }
+  if (type === 'diagrams') {
+    if (parentKey) {
+      const keys = dataSource.viewGroups.filter(v => v.id === parentKey)[0]?.refDiagrams || [];
+      genImg(true, keys).then((images) => {
+        saveImages(refactorFileName(images))
+      });
+    } else {
+      genImg(true, []).then((images) => {
+        saveImages(refactorFileName(images))
+      });
+    }
+  } else {
+    genImg(true, otherMenus.filter(m => m.type === type).map(m => m.key)).then((images) => {
+      saveImages(refactorFileName(images))
+    });
+  }
+}
 
 const notesOpt = (dataSource, menu, updateDataSource) => {
   const otherMenus = menu.otherMenus || [];

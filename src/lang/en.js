@@ -193,6 +193,7 @@ export default {
             reset: 'Restore default settings',
             rename: 'rename',
             notes: 'notes',
+            img: 'export img',
         },
         groups: 'group',
         entities: 'entities',

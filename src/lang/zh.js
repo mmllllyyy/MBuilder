@@ -193,6 +193,7 @@ export default {
             reset: '恢复默认',
             rename: '重命名',
             notes: '标注',
+            img: '导出图片',
         },
         groups: '分组',
         entities: '数据表组',
