@@ -250,10 +250,10 @@ export default React.memo(({prefix, importProject, createProject, openTemplate,
               <div className={`${currentPrefix}-home-container-body-right-list-title`}>
                 <FormatMessage id='home.allProject'/>
               </div>
-              <div onClick={() => openUrl('https://www.wjx.cn/vj/PIZj3DI.aspx')} className={`${currentPrefix}-home-container-body-right-ad`}>
+              <div onClick={() => openUrl('http://101.37.169.10/home')} className={`${currentPrefix}-home-container-body-right-ad`}>
                 <Icon type='fa-bullhorn'/>
                 <span>
-                  企业版预订登记，前999名，享受最低三折起折扣优惠
+                  企业版已正式发布，欢迎采购！！！
                 </span>
               </div>
             </div>
