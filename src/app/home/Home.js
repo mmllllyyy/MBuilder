@@ -253,7 +253,7 @@ export default React.memo(({prefix, importProject, createProject, openTemplate,
               <div onClick={() => openUrl('http://101.37.169.10/home')} className={`${currentPrefix}-home-container-body-right-ad`}>
                 <Icon type='fa-bullhorn'/>
                 <span>
-                  企业版已正式发布，欢迎采购！！！
+                  企业版已正式发布，BS架构，支持团队协作，私有化部署，欢迎了解
                 </span>
               </div>
             </div>
