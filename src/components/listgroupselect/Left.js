@@ -23,7 +23,10 @@ const Item = React.memo(({prefix, repeatData, checkBoxChange, checked, d, i, def
 
 export default React.memo(({prefix, newData, checkBoxChange,
                              repeatData, checked, defaultSelected, onSearch}) => {
-  const [filterData, setFilterData] = useState(newData);
+  const [filterData, setFilterData] = useState([]);
+  useEffect(() => {
+    setFilterData(newData);
+  }, [newData]);
   const _onChange = (e) => {
     const value = e.target.value || '';
     setFilterData(() => {
