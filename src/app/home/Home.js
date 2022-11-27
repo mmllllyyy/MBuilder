@@ -250,7 +250,7 @@ export default React.memo(({prefix, importProject, createProject, openTemplate,
               <div className={`${currentPrefix}-home-container-body-right-list-title`}>
                 <FormatMessage id='home.allProject'/>
               </div>
-              <div onClick={() => openUrl('https://gitee.com/robergroup/pdmaner/blob/master/PDMaas.md')} className={`${currentPrefix}-home-container-body-right-ad`}>
+              <div onClick={() => openUrl('https://my.oschina.net/skymozn/blog/5599806')} className={`${currentPrefix}-home-container-body-right-ad`}>
                 <Icon type='fa-bullhorn'/>
                 <span>
                   企业版已正式发布，BS架构，支持团队协作，私有化部署，欢迎了解
