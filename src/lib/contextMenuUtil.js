@@ -874,6 +874,13 @@ const domainData = [
   }
 ];
 
+const getEntityData = (dataSource, data) => {
+  const allKeys = [...new Set((data.reduce((p, n) => {
+    return p.concat((n.canvasData?.cells || []).filter(c => c.shape === 'table' && c.originKey) .map(c => c.originKey))
+  }, [])))];
+  return dataSource.entities.filter(e => allKeys.includes(e.id));
+};
+
 const copyOpt = (dataSource, menu, type = 'copy', cb) => {
   const { otherMenus = [], groupType, dataType } = menu;
   let tempTypeData = [];
@@ -926,7 +933,12 @@ const copyOpt = (dataSource, menu, type = 'copy', cb) => {
     if (cb) {
       cb({ type, data: tempTypeData });
     } else {
-      Copy({ type, data: tempTypeData }, FormatMessage.string({id: `${type}Success`}));
+      // 如果是复制关系图，需要将关系图下的表也同时带上
+      const other = {};
+      if(dataType === 'diagram' || dataType === 'diagrams') {
+        other.otherData = getEntityData(dataSource, tempTypeData);
+      }
+      Copy({ type, data: tempTypeData, ...other }, FormatMessage.string({id: `${type}Success`}));
     }
   } else {
     Message.warring({title: FormatMessage.string({id: `${type}Warring`})});
@@ -1001,6 +1013,49 @@ const getOptConfig = (dataType, dataSource) => {
     .map(config => optConfigMap[config])[0];
 };
 
+const injectEntities = (dataSource, entities, data) => {
+  const currentEntities = dataSource.entities || [];
+  // 找出重复的表替换
+  const sameEntity = [];
+  // 不存在的表新增
+  const newEntity = [];
+  entities.forEach(e => {
+    const current = currentEntities.filter(c => c.defKey === e.defKey)[0];
+    if (current) {
+      if (current.id !== e.id) {
+        sameEntity.push({oldId: e.id, newId: current.id})
+      }
+    } else {
+      newEntity.push(e);
+    }
+  });
+  return {
+    data: data.map(d => {
+      return {
+        ...d,
+        canvasData: {
+          ...d.canvasData,
+          cells: (d.canvasData.cells || []).map(c => {
+            if (c.shape === 'table' && c.originKey) {
+              const currentChange = sameEntity.filter(e => e.oldId === c.originKey)[0];
+              if (currentChange) {
+                return {
+                  ...c,
+                  originKey: currentChange.newId,
+                };
+              }
+              return c;
+            }
+            return c;
+          })
+        }
+      };
+    }),
+    newEntity,
+    sameEntity
+  }
+}
+
 const pasteOpt = (dataSource, menu, updateDataSource) => {
   const { dataType, parentKey } = menu;
   Paste((value) => {
@@ -1030,7 +1085,7 @@ const pasteOpt = (dataSource, menu, updateDataSource) => {
       let tempCodeTemplates = [];
       const codeTemplates = (dataSource.profile.codeTemplates || []);
       const allKeys = oldData.map(e => e.defKey);
-      const realData = newData
+      let realData = newData
         .map((e) => {
           const key = validateKey(e.defKey, allKeys);
           allKeys.push(key);
@@ -1053,11 +1108,19 @@ const pasteOpt = (dataSource, menu, updateDataSource) => {
       if (realData.length === 0) {
         Message.warring({title: FormatMessage.string({id: 'pasteWarring'})});
       } else {
+        let injectData;
+        if (dataType === 'diagrams' && data.otherData) {
+          injectData = injectEntities(dataSource, data.otherData, realData);
+          realData = injectData.data;
+        }
         const mainKeys = config.mainKey.split('.');
         let tempNewData = {};
         if (mainKeys.length > 1) {
           tempNewData = _.set(dataSource, mainKeys, oldData.concat(realData));
         } else {
+          if (injectData) {
+            tempNewData.entities = (dataSource.entities || []).concat(injectData.newEntity);
+          }
           tempNewData[config.mainKey] = oldData.concat(realData);
         }
         if (dataType === 'dataType' || dataType === 'appCode') {
@@ -1069,9 +1132,14 @@ const pasteOpt = (dataSource, menu, updateDataSource) => {
             ...tempNewData,
             viewGroups: newGroupData ? newGroupData.map((v) => {
               if (v.id === parentKey) {
+                const otherGroup = {};
+                if (injectData) {
+                  otherGroup.refEntities = v.refEntities.concat((injectData.newEntity || []).concat(injectData.sameEntity || []).map(e => e.id || e.newId));
+                }
                 return {
                   ...v,
                   [config.viewRefs]: (v[config.viewRefs] || []).concat(realData.map(e => e[config.key])),
+                  ...otherGroup,
                 }
               }
               return v;
