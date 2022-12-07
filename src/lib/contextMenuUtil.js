@@ -30,7 +30,7 @@ import {
   defaultTemplate,
   validateItemInclude,
   emptyDataTypeSupport,
-  allType, validateEmptyOrRepeat, transformFieldType, resetHeader,
+  allType, validateEmptyOrRepeat, transformFieldType, resetHeader, transform,
 } from './datasource_util';
 // 专门处理左侧菜单 右键菜单数据
 import { separator } from '../../profile';
@@ -881,6 +881,49 @@ const getEntityData = (dataSource, data) => {
   return dataSource.entities.filter(e => allKeys.includes(e.id));
 };
 
+export const getCopyRealData = (dataSource, data) => {
+  // 为了使粘贴数据时 数据域 数据字典 UI建议 能够尽可能的匹配到数据 需要将ID转换成defKey
+  const db = _.get(dataSource, 'profile.default.db', _.get(dataSource, 'profile.dataTypeSupports[0].id'));
+  return data.map(d => {
+    return {
+      ...d,
+      fields: (d.fields || []).map(f => {
+        return {
+          ...f,
+          otherData: _.pick(transform(f, dataSource, db), ['domainData', 'refDictData', 'uiHintData', 'type']),
+        }
+      })
+    }
+  })
+}
+
+export const putCopyRealData = (dataSource, data) => {
+  const getDataId = (currentData, copyData, id) => {
+    if (!currentData.some(c => c.id === id)) {
+      if(copyData) {
+        return currentData.filter(c => (c.defKey === copyData.defKey) || (c.defName === copyData.defName))[0]?.id;
+      }
+      return null;
+    }
+    return id;
+  };
+  return {
+    ...data,
+    fields: (data.fields || []).map(f => {
+      const domain = getDataId(dataSource.domains || [], f.otherData?.domainData, f.domain);
+      return {
+        ..._.omit(f, ['otherData']),
+        type: (domain ? null : f.otherData?.type) || f.type,
+        len: domain ? '' : f.len,
+        scale: domain ? '' : f.scale,
+        domain: domain || null,
+        refDict: getDataId(dataSource.dicts || [], f.otherData?.refDictData, f.refDict),
+        uiHint: getDataId(dataSource.profile?.uiHint || [], f.otherData?.uiHintData, f.uiHint),
+      }
+    })
+  }
+};
+
 const copyOpt = (dataSource, menu, type = 'copy', cb) => {
   const { otherMenus = [], groupType, dataType } = menu;
   let tempTypeData = [];
@@ -936,7 +979,10 @@ const copyOpt = (dataSource, menu, type = 'copy', cb) => {
       // 如果是复制关系图，需要将关系图下的表也同时带上
       const other = {};
       if(dataType === 'diagram' || dataType === 'diagrams') {
-        other.otherData = getEntityData(dataSource, tempTypeData);
+        other.otherData = getCopyRealData(dataSource, getEntityData(dataSource, tempTypeData));
+      } else if (dataType === 'entities' || dataType === 'entity' || dataType === 'view' || dataType === 'views') {
+        tempTypeData = getCopyRealData(dataSource, tempTypeData);
+        console.log(tempTypeData);
       }
       Copy({ type, data: tempTypeData, ...other }, FormatMessage.string({id: `${type}Success`}));
     }
@@ -1098,6 +1144,12 @@ const pasteOpt = (dataSource, menu, updateDataSource) => {
                   applyFor: id,
                 };
               }));
+          } else if (dataType === 'entities' || dataType === 'entity' || dataType === 'view' || dataType === 'views') {
+            return {
+              ...putCopyRealData(dataSource, e),
+              id,
+              defKey: key,
+            };
           }
           return {
             ...e,
@@ -1110,7 +1162,7 @@ const pasteOpt = (dataSource, menu, updateDataSource) => {
       } else {
         let injectData;
         if (dataType === 'diagrams' && data.otherData) {
-          injectData = injectEntities(dataSource, data.otherData, realData);
+          injectData = injectEntities(dataSource, data.otherData.map(d => putCopyRealData(dataSource, d)), realData);
           realData = injectData.data;
         }
         const mainKeys = config.mainKey.split('.');

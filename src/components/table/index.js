@@ -23,6 +23,7 @@ import FormatMessage from '../formatmessage';
 import { ConfigContent, TableContent } from '../../lib/context';
 import StandardGroupSelect from '../../app/container/standardfield/StandardGroupSelect';
 import Note from '../../app/container/tools/note';
+import {getCopyRealData, putCopyRealData} from '../../lib/contextMenuUtil';
 
 const empty = [];
 
@@ -504,7 +505,11 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
         // 如果选中的是表格
         if (e.keyCode === 67 && selectedFields.length > 0) {
           e.stopPropagation();
-          Copy(fields.filter(f => selectedFields.includes(f.id)).map(f => _.omit(f, 'children')),
+          Copy(getCopyRealData(dataSource, [
+              {
+                fields: fields.filter(f => selectedFields.includes(f.id)).map(f => _.omit(f, 'children')),
+              },
+              ])[0]?.fields || [],
               Component.FormatMessage.string({id: 'copySuccess'}));
           current && current.focus({
             preventScroll: true,
@@ -520,7 +525,8 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                 pasteFields = validate(pasteFields.map(f => _.omit(f, 'id')));
               } else {
                 // 使用默认的校验
-                pasteFields = validateFields(pasteFields);
+                pasteFields = validateFields(putCopyRealData(dataSource,
+                    {fields: pasteFields}).fields || []);
               }
               // 过滤重复字段
               const fieldKeys = fields.map(f => f.defKey);
