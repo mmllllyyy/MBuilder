@@ -2067,7 +2067,7 @@ export const resetHeader = (dataSource, e, freeze) => {
   })
 };
 
-export const mergeDataSource = (oldDataSource, newDataSource, selectEntity) => {
+export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, ignoreProps) => {
   // 合并项目
   // 合并数据类型/代码模板/数据类型匹配
   const dataTypeSupports = oldDataSource.profile?.dataTypeSupports || [];
@@ -2217,6 +2217,24 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity) => {
       return Object.keys(f).reduce((p, n) => {
         const nameIndex = names.findIndex(name => name === n);
         if (nameIndex > -1) {
+          if (ignoreProps && type === 'entity') {
+            const entity = (entities || []).filter(e => e.defKey === d.defKey)[0];
+            if (entity) {
+              const field = (entity.fields || []).filter(field => field.defKey === f.defKey)[0];
+              if (field) {
+                // 获取当前存在的字段的数据域/数据字典/UI建议/标注/拓展属性
+                let otherProps = {};
+                if (nameIndex === 0) {
+                  otherProps = _.pick(field, ['notes', 'extProps']);
+                }
+                return {
+                  ...p,
+                  ...otherProps,
+                  [n]: field[n],
+                }
+              }
+            }
+          }
           const nameData = (namesData[nameIndex] || []).filter(name => name.old === p[n])[0];
           return {
             ...p,

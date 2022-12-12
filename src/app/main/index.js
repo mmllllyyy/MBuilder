@@ -486,7 +486,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
                     ...f,
                     group: b.id,
                   }))), []);
-          injectDataSource(mergeDataSource(dataSourceRef.current, newData, importData), modal);
+          injectDataSource(mergeDataSource(dataSourceRef.current, newData, importData, false), modal);
         };
         const allRefEntities = newData.viewGroups.reduce((a, b) => a.concat(b.refEntities), []);
         modal = openModal(<ImportPd
@@ -585,7 +585,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
         const finallyDomains = mergeData(dataSourceRef.current?.domains || [],
             domains,false, false);
         injectDataSource(mergeDataSource(dataSourceRef.current,
-            {domains}, calcDomain(importData, null, finallyDomains)), modal);
+            {domains}, calcDomain(importData, null, finallyDomains), true), modal);
       };
       modal = openModal(<ImportPd
         data={entities}
@@ -783,7 +783,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       };
       const onOk = (data, dbKey) => {
         injectDataSource(mergeDataSource(dataSourceRef.current, {},
-            calcDomain(data, dbKey, dataSourceRef.current.domains || [])), modal);
+            calcDomain(data, dbKey, dataSourceRef.current.domains || []), true), modal);
       };
       modal = openModal(<DbReverseParse
         config={configRef.current}

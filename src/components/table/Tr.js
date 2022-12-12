@@ -39,7 +39,7 @@ export default React.memo(({f, i, expand, onMouseOver, tempHeaders, calcPosition
                 title={<div className={`${currentPrefix}-note-tag-list`}>
                   {
                   f.notes?.tags?.map((t, index) => {
-                    return <div>{`${index + 1}.${t.content}`}</div>;
+                    return <div key={t.content}>{`${index + 1}.${t.content}`}</div>;
                   })
                 }
                 </div>}>
