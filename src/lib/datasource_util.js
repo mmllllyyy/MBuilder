@@ -61,7 +61,7 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
       message = FormatMessage.string({
         id: 'defKeyValidateMessage',
         data: {
-          name: `${FormatMessage.string({id: `menus.${t.type}`})}[${t.oldData.defName || t.oldData.defKey}]`,
+          name: `${FormatMessage.string({id: `menus.${t.type}`})}[${t.oldData?.defName || t.oldData?.defKey}]`,
         }});
     }
     if (t.type === 'entity' || t.type === 'view') {
