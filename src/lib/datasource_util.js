@@ -2292,7 +2292,7 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
           showInGraphCount += 1;
         }
         return {
-          ...calcField(f, ['uiHint', 'refDict', 'domain'], [tempUiHint, tempUiHint, tempDomains]),
+          ...calcField(f, ['uiHint', 'refDict'], [tempUiHint, tempUiHint]),
           hideInGraph: maxCount > showInGraphCount ? f.hideInGraph : true
         }
       })

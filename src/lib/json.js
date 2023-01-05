@@ -622,3 +622,7 @@ export const saveAllTemplate = (data, filePath) => {
     return Promise.reject(e);
   }
 };
+
+export const extractFile = (filePath) => {
+  return readNormalFile(filePath);
+};

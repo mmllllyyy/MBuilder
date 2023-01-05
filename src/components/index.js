@@ -46,3 +46,5 @@ export { default as VersionListBar } from './versionListBar';
 export { default as VersionInfoBar } from './versionListBar/versionInfoBar';
 export { default as List } from './list';
 export { default as ColorPicker } from './colorpicker';
+export { default as Compare } from './compare';
+export { default as CompareList } from './compare/CompareList';

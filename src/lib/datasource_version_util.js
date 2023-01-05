@@ -147,7 +147,7 @@ const compareObj = (current, pre, names, omitNames = [], refactor) => {
       if (refactor && (Array.isArray(current[n]) || Array.isArray(pre[n]))) {
         return p.concat(refactor(current[n], pre[n]));
       }
-      if (deepCompareObj(current[n], pre[n])) {
+      if (typeof current[n] === 'object' && deepCompareObj(current[n], pre[n])) {
           // 如果前后值深度比较后相同, 则不进行处理
           return p;
       }
@@ -281,6 +281,175 @@ export const getMessageByChanges = (changes, dataSource) => {
   }
 };
 
+export const simplePackageChanges = (currentDataSource, preDataSource, db, needRefactor) => {
+  const setNull = (data) => {
+    if (data.length > 0) {
+      return data;
+    }
+    return null;
+  };
+  const ignoreCase = (data) => {
+    // 忽略名字和类型的大小写
+    return data.map(d => {
+      return {
+        ...d,
+        defKey: d.defKey?.toLocaleLowerCase(),
+        originDefKey: d.defKey,
+        fields: (d.fields || []).map(f => {
+          return {
+            ...f,
+            defKey: f.defKey?.toLocaleLowerCase(),
+            originDefKey: f.defKey,
+            originType: f.type,
+            type: f.type?.toLocaleLowerCase(),
+            len: f.len === null ? '' : f.len,
+            scale: f.scale === null ? '' : f.scale,
+          }
+        })
+      }
+    })
+  };
+  const currentDb = db || _.get(currentDataSource, 'profile.default.db', currentDataSource.profile?.dataTypeSupports[0]?.id);
+  const currentData = ignoreCase(currentDataSource.entities.map(e => {
+    return {
+      ...e,
+      fields: (e.fields || [])
+          .map(f => ({...f, ...transform(f, mergeDataSource(preDataSource, currentDataSource), currentDb)}))
+    }
+  }));
+  const currentDbData = currentDataSource.profile?.dataTypeSupports?.filter(d => d.id === currentDb)[0];
+  const preDb = preDataSource.profile?.dataTypeSupports?.filter(d => d?.defKey?.toLocaleLowerCase() === currentDbData?.defKey?.toLocaleLowerCase())[0]?.id
+      || _.get(preDataSource, 'profile.default.db', preDataSource.profile?.dataTypeSupports[0]?.id);
+  const preData = ignoreCase(needRefactor ? (preDataSource.entities || []).map(e => {
+    return {
+      ...e,
+      fields: (e.fields || [])
+          .map(f => ({...f, ...transform(f, mergeDataSource(preDataSource, currentDataSource),  preDb)}))
+    }
+  }) : preDataSource.entities);
+  const allData = currentData.concat(preData);
+  const type = 'entity';
+  return allData.reduce((p, n) => {
+    if (currentData.findIndex(c => c.defKey === n.defKey) < 0) {
+      return p.concat({opt: 'delete', data: {...n, type}, type});
+    } else if (preData.findIndex(c => c.defKey === n.defKey) < 0) {
+      return p.concat({opt: 'add', data: {...n, type}, type});
+    } else if (p.findIndex(c => c.data.baseInfo?.defKey === n.defKey) < 0){
+      const cData = currentData.filter(c => c.defKey === n.defKey)[0];
+      const pData = preData.filter(c => c.defKey === n.defKey)[0];
+      // 1.比较基础信息
+      let baseChanged, fieldChanged;
+      const baseNames = ['defKey', 'defName'];
+      const baseChanges = compareObj(cData, pData, baseNames);
+      if (baseChanges.length > 0) {
+        baseChanged = {
+          before: _.pick({
+            ...pData,
+            defKey: pData.originDefKey,
+          }, baseNames),
+          after:  _.pick({
+            ...cData,
+            defKey: cData.originDefKey,
+          }, baseNames)
+        }
+      }
+      // 2.字段调整
+      const fieldsChange = compareArray(cData.fields, pData.fields, 'field',
+          ['defName', 'comment', 'type', 'len', 'scale'], [], 'defKey');
+      if (fieldsChange.length > 0) {
+        fieldChanged = {
+          fieldAdded: setNull(fieldsChange.filter(c => c.opt === 'add').map(c => {
+            const index = cData.fields.findIndex(f => f.id === c.data.id);
+            return {
+              ...c.data,
+              index,
+              defKey: c.data.originDefKey,
+              type: c.data.originType,
+              beforeFieldKey: cData.fields[index + 1]?.originDefKey || null,
+              afterFieldKey: cData.fields[index - 1]?.originDefKey || null,
+            }
+          })),
+          fieldRemoved: setNull(fieldsChange.filter(c => c.opt === 'delete').map(c => ({
+            ...c.data,
+            defKey: c.data.originDefKey,
+            type: c.data.originType,
+          }))),
+          fieldModified: setNull(fieldsChange.filter(c => c.opt === 'update').map(c => {
+            const cF = (cData.fields || []).filter(f => f.defKey === c.data.defKey)[0];
+            const pF = (pData.fields || []).filter(f => f.defKey === c.data.defKey)[0];
+            const otherAfter = {};
+            const otherBefore = {};
+            if ('type' in c.data.after) {
+              otherAfter.type = cF.originType;
+              otherBefore.type = pF.originType;
+            }
+            return {
+              ...c.data,
+              defKey: cF.originDefKey || c.defKey,
+              after: {
+                ...c.data.after,
+                ...otherAfter,
+              },
+              before: {
+                ...c.data.before,
+                ...otherBefore,
+              }
+            }
+          }))
+        }
+      }
+      if (baseChanged || fieldChanged) {
+        return p.concat({
+          type,
+          opt: 'update',
+          data: {
+            id: cData.id,
+            baseInfo: _.pick(cData, baseNames),
+            baseChanged: baseChanged || null,
+            fieldAdded: null,
+            fieldRemoved: null,
+            fieldModified: null,
+            propAdded: null,
+            propRemoved: null,
+            propModified: null,
+            refEntityAdd: null,
+            refEntityRemoved: null,
+            indexAdded: null,
+            indexRemoved: null,
+            indexModified: null,
+            ...fieldChanged,
+            fullFields: (cData.fields || []).map(f => ({
+              ...f,
+              defKey:f.originDefKey,
+              type: f.originType,
+            })),
+            newIndexes: cData.indexes || [],
+          },
+        });
+      }
+      return p;
+    }
+    return p;
+  }, []).map(d => {
+    if (d.opt !== 'update') {
+      return {
+        ...d,
+        data: {
+          ...d.data,
+          defKey: d.data.originDefKey,
+          fields: (d.data.fields || []).map(f => {
+            return {
+              ...f,
+              defKey: f.originDefKey,
+              type: f.originType,
+            }
+          })
+        }
+      }
+    }
+    return d;
+  });
+};
 
 export const packageChanges = (currentDataSource, preDataSource) => {
   const assembling = (current = [], pre = [], type) => {

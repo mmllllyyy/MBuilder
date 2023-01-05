@@ -11,7 +11,7 @@ import FormatMessage from '../formatmessage';
 
 const VersionListBar = React.memo((props) => {
   const { prefix, onSelected, getLatelyDataSource, autoSave, projectInfo,
-    saveVersion, versionsData, removeVersion, menuType } = props;
+    saveVersion, versionsData, removeVersion, menuType, style } = props;
   const [selectedData, setSelectedData] = useState({});
   const selectedDataRef = useRef({});
   selectedDataRef.current = selectedData;
@@ -119,7 +119,7 @@ const VersionListBar = React.memo((props) => {
     _onCreated(o);
   };
   return (
-    <div className={`${currentPrefix}-version-list`}>
+    <div className={`${currentPrefix}-version-list`} style={style}>
       {
         sortData.length === 0 ? <div onClick={() => _onCreated()} className={`${currentPrefix}-version-list-empty`}>
           <FormatMessage id='versionData.empty'/>

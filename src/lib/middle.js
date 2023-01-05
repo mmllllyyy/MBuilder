@@ -36,6 +36,7 @@ const renameVersion = json.renameVersion;
 const saveAllTemplate = json.saveAllTemplate;
 const updateAllVersion = json.updateAllVersion;
 const saveImages = json.saveImages;
+const extractFile = json.extractFile;
 
 export {
   saveJsonPromise,
@@ -71,6 +72,7 @@ export {
   renameVersion,
   saveAllTemplate,
   updateAllVersion,
-  saveImages
+  saveImages,
+  extractFile
 };
 

@@ -13,7 +13,7 @@ import {
   FormatMessage,
   Checkbox, Tooltip, Upload, Terminal, Download,
   VersionListBar,
-  VersionInfoBar, List,
+  VersionInfoBar, List, Compare, CompareList,
 } from 'components';
 import Dict from '../container/dict';
 import Entity from '../container/entity';
@@ -110,7 +110,9 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
   const cavRefArray = useRef([]);
   const headerToolRef = useRef(null);
   const [menuType, setMenuType] = useState('1');
+  const [versionType, setVersionType] = useState('1');
   const currentVersionRef = useRef(null);
+  const currentMetaRef = useRef(null);
   const projectInfoRef = useRef(projectInfo);
   projectInfoRef.current = projectInfo;
   const refreshProject = () => {
@@ -486,7 +488,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
                     ...f,
                     group: b.id,
                   }))), []);
-          injectDataSource(mergeDataSource(dataSourceRef.current, newData, importData, false),
+          injectDataSource(mergeDataSource(dataSourceRef.current, newData, importData, true),
               modal);
         };
         const allRefEntities = newData.viewGroups.reduce((a, b) => a.concat(b.refEntities), []);
@@ -1436,17 +1438,36 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
   const getLatelyDataSource = () => {
     return updateAllData(dataSourceRef.current, injectTempTabs.current.concat(tabsRef.current));
   };
+  const mergeFromMeta = (data, meta, nextDataSource) => {
+    if (meta) {
+      injectDataSource(mergeDataSource(dataSourceRef.current, {},
+          calcDomain(data, meta, dataSourceRef.current.domains || []), true));
+    } else {
+      injectDataSource(mergeDataSource(dataSourceRef.current, nextDataSource, data, true));
+    }
+  };
   const renderOperatingFloor = () => {
     return (
       <>
-        <VersionInfoBar
-          getLatelyDataSource={getLatelyDataSource}
-          versionsData={restProps.versionsData}
-          dataSource={restProps.dataSource}
-          style={{display: (menuType === '4') ? 'flex' : 'none'}}
-          ref={currentVersionRef}
-          empty={<MessageHelp prefix={currentPrefix}/>}
-          />
+        {
+          (menuType === '4') && (versionType === '1') && <VersionInfoBar
+            getLatelyDataSource={getLatelyDataSource}
+            versionsData={restProps.versionsData}
+            dataSource={restProps.dataSource}
+            ref={currentVersionRef}
+            empty={<MessageHelp prefix={currentPrefix}/>}
+            />
+        }
+        {
+          (menuType === '4') && (versionType === '2') && <CompareList
+            mergeFromMeta={mergeFromMeta}
+            closeLoading={restProps.closeLoading}
+            openLoading={restProps.openLoading}
+            config={config}
+            dataSource={restProps.dataSource}
+            ref={currentMetaRef}
+            />
+        }
         <AppCodeEdit
           updateDataSource={restProps.update}
           empty={<MessageHelp prefix={currentPrefix}/>}
@@ -1503,6 +1524,9 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
   };
   const setCurrentVersion = (v, i) => {
     currentVersionRef.current?.setVersion(v, restProps.versionsData[i + 1]);
+  };
+  const setCurrentMeta = (m, isCustomer) => {
+    currentMetaRef.current?.setMeta(m, isCustomer);
   };
   return <Loading visible={common.loading} title={common.title}>
     <HeaderTool
@@ -1661,21 +1685,39 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
               className={`${currentPrefix}-home-menu-container`}
             >
               <div className={`${currentPrefix}-home-menu-header`}>
-                <span className={`${currentPrefix}-home-menu-header-title`}>
-                  <FormatMessage id='versionTab'/>
+                <span className={`${currentPrefix}-home-menu-header-version`}>
+                  <span
+                    className={`${currentPrefix}-home-menu-header-version-${versionType === '1' ? 'checked' : 'normal'}`}
+                    onClick={() => setVersionType('1')}
+                 >
+                    <FormatMessage id='versionData.modelVersion'/>
+                  </span>
+                  <span
+                    className={`${currentPrefix}-home-menu-header-version-${versionType === '2' ? 'checked' : 'normal'}`}
+                    onClick={() => setVersionType('2')}
+                >
+                    <FormatMessage id='versionData.dbDiff'/>
+                  </span>
                 </span>
               </div>
-              <VersionListBar
-                menuType={menuType}
-                projectInfo={projectInfo}
-                autoSave={restProps.autoSave}
-                versionsData={restProps.versionsData}
-                getLatelyDataSource={getLatelyDataSource}
-                saveVersion={restProps.saveVersion}
-                dataSource={restProps.dataSource}
-                removeVersion={restProps.removeVersion}
-                onSelected={setCurrentVersion}
-              />
+              {
+                  versionType === '1' ? <VersionListBar
+                    menuType={menuType}
+                    projectInfo={projectInfo}
+                    autoSave={restProps.autoSave}
+                    versionsData={restProps.versionsData}
+                    getLatelyDataSource={getLatelyDataSource}
+                    saveVersion={restProps.saveVersion}
+                    dataSource={restProps.dataSource}
+                    removeVersion={restProps.removeVersion}
+                    onSelected={setCurrentVersion}
+                  /> : <Compare
+                    updateDataSource={restProps.update}
+                    menuType={menuType}
+                    onSelected={setCurrentMeta}
+                    dataSource={restProps.dataSource}
+                  />
+              }
             </div>
           </TabItem>
         </Tab>

@@ -250,6 +250,28 @@
         background: @background-color;
       }
     }
+    &-version {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      font-size: 12px;
+      font-weight: bold;
+      & > span {
+        cursor: pointer;
+      }
+      & > span + span {
+        margin-left: 20px;
+      }
+      &-checked {
+        color: @primary-color;
+        border-bottom: 2px solid @primary-color;
+      }
+      &-normal {
+        border-bottom: 2px solid transparent;
+      }
+    }
   }
   &-menu-empty {
     display: flex;
