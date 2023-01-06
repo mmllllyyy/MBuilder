@@ -2,10 +2,9 @@
   "name": "empty",
   "describe": "empty",
   "avatar": "",
-  "version": "4.1.5",
-  "createdTime": "2022-10-6 08:21:56",
-  "updatedTime": "2022-10-6 10:07:27",
-  "dbConns": [],
+  "version": "4.2.2",
+  "createdTime": "2023-1-2 14:47:34",
+  "updatedTime": "2023-1-2 14:55:41",
   "profile": {
     "default": {
       "db": "29D1CE08-4C35-4D2D-AAA9-23D93305B52E",
@@ -161,6 +160,10 @@
         "id": "77BD85E5-9D0D-4096-8427-CBA306FC9C6A"
       },
       {
+        "defKey": "GBase",
+        "id": "56F4B55B-F0B8-4049-9E6B-50B95C1D793A"
+      },
+      {
         "defKey": "MaxCompute",
         "id": "11D1FB71-A587-4217-89BA-611B8A1F83E0"
       },
@@ -169,32 +172,8 @@
         "id": "B363BE0B-F852-49B8-9B2E-F6D2174DEAC1"
       },
       {
-        "defKey": "JAVA",
-        "id": "797A1496-D649-4261-89B4-544132EC3F36"
-      },
-      {
-        "defKey": "JavaMybatis",
-        "id": "895CFD1D-4273-4D32-A2C4-CAC70200AB5B"
-      },
-      {
-        "defKey": "JavaMybatisPlus",
-        "id": "A2EE7B4A-CE62-4290-B00C-B26C1BF18073"
-      },
-      {
-        "defKey": "C#",
-        "id": "F3AC2415-E86B-40C6-9FEB-F4B7937D2C30"
-      },
-      {
         "defKey": "Hive",
         "id": "81CCA482-3F4D-4EAC-8CF9-F5E7BC098AD2"
-      },
-      {
-        "defKey": "Golang",
-        "id": "B91D99E0-9B7C-416C-8737-B760957DAF09"
-      },
-      {
-        "defKey": "Rust",
-        "id": "BDF457FD-9F98-4AC3-A705-7587B00A3BAB"
       }
     ],
     "codeTemplates": [
@@ -344,6 +323,17 @@
         "applyFor": "BDF457FD-9F98-4AC3-A705-7587B00A3BAB",
         "type": "appCode",
         "struct": "use chrono::{DateTime, Local};\nuse serde::{Deserialize, Serialize};\n$blankline\n/// {{=it.entity.defName}}\n#[derive(Serialize, Deserialize, Debug, Clone)]\n{{  var today=new Date();\n    var fullYear=today.getFullYear();\n    var month=today.getMonth() + 1;\n    var days=today.getDate();\n    \n    var pkVarName = \"undefinedId\";\n    var pkDataType = \"String\";\n    it.entity.fields.forEach(function(field){\n        if(field.primaryKey){\n            pkVarName = it.func.camel(field.defKey,false);\n            pkDataType = field[\"type\"];\n            return;\n        }\n    });\n    \n    var pkgName = it.entity.env.base.nameSpace;\n    var beanClass = it.entity.env.base.codeRoot;\n    var beanVarName = beanClass.charAt(0).toLowerCase()+beanClass.slice(1);\n    \n}}\npub struct {{=beanClass}} {\n    {{~it.entity.fields:field:index}}\n    {{\n        let fieldDateType = field.type;\n        if(!field.notNull){\n            fieldDateType = 'Option<'+fieldDateType+'>';\n        }\n    }}/// {{=field.defName}}\n    pub {{=it.func.camel(field.defKey,false)}}: {{=fieldDateType}},\n    {{~}}\n}\n"
+      },
+      {
+        "applyFor": "56F4B55B-F0B8-4049-9E6B-50B95C1D793A",
+        "type": "dbDDL",
+        "createTable": "CREATE TABLE {{=it.entity.defKey}}(\n{{ pkList = [] ; }}\n{{~it.entity.fields:field:index}}\n    {{? field.primaryKey }}{{ pkList.push(field.defKey) }}{{?}}\n    {{=field.defKey}} {{=field.type}}{{?field.len>0}}{{='('}}{{=field.len}}{{?field.scale>0}}{{=','}}{{=field.scale}}{{?}}{{=')'}}{{?}}{{= field.defaultValue ? it.func.join(' DEFAULT ',field.defaultValue,' ') : '' }}{{= field.notNull ? ' NOT NULL' : '' }}{{= field.autoIncrement ? '' : '' }}{{= index < it.entity.fields.length-1 ? ',' : ( pkList.length>0 ? ',' :'' ) }}\n{{~}}\n{{? pkList.length >0 }}\n    PRIMARY KEY ({{~pkList:pkName:i}}{{= pkName }}{{= i<pkList.length-1 ? ',' : '' }}{{~}})\n{{?}}\n);\n$blankline\n{{? it.entity.defKey || it.entity.defName}}COMMENT ON TABLE {{=it.entity.defKey}} IS '{{=it.func.join(it.entity.defName,it.entity.comment,';')}}';{{?}}\n{{~it.entity.fields:field:index}}\n{{? field.defName || field.comment}}COMMENT ON COLUMN {{=it.entity.defKey}}.{{=field.defKey}} IS '{{=it.func.join(field.defName,field.comment,';')}}';{{?}}\n{{~}}",
+        "createView": "CREATE VIEW {{=it.view.defKey}} AS\nSELECT \n{{~it.view.fields:field:index}}\n    {{=field.refEntity}}.{{=field.refEntityField}} AS {{=field.defKey}}{{= index < it.view.fields.length-1 ? ',' : ''}}\n{{~}}\nFROM {{~it.view.refEntities:refEntity:index}}{{=refEntity}}{{= index < it.view.refEntities.length-1 ? ',' : ''}}{{~}};\n$blankline",
+        "deleteTable": "DROP TABLE IF EXISTS {{=it.entity.defKey}};",
+        "createIndex": "{{~ it.entity.indexes:index}}\nCREATE {{? index.unique}}UNIQUE {{?}}INDEX {{=index.defKey}} ON {{=it.entity.defKey}}({{ fieldsKeys = index.fields.map(function(field){return field.fieldDefKey}) ; }}{{=it.func.join(...fieldsKeys,',')}});\n{{~}}",
+        "deleteIndex": "{{~ it.entity.indexes:index}}\nDROP INDEX {{=index.defKey}} ;\n{{~}}",
+        "message": "{{\n    let createEntities = it.changes.filter(function(row){return (row.opt==='add'&&row['type']==='entity');});\n    let dropEntities   = it.changes.filter(function(row){return (row.opt==='delete'&&row['type']==='entity');});\n    let modifyEntities = it.changes.filter(function(row){return (row.opt==='update'&&row['type']==='entity');});\n    \n    function baseChanged(beforeAfter){\n        if(beforeAfter == null){\n            return '';\n        }\n        let ret = [];\n        let before = beforeAfter.before || {\"defKey\":\"\",\"defName\":\"\",\"comment\":\"\"};\n        let after = beforeAfter.after || {\"defKey\":\"\",\"defName\":\"\",\"comment\":\"\"};\n        if(before.defKey !== after.defKey){\n            ret.push('代码:'+(before.defKey||'NULL')+'->'+(after.defKey||'NULL'));\n        }\n        if(before.defName !== after.defName){\n            ret.push('显示名称:'+(before.defName||'NULL')+'->'+(after.defName||'NULL'));\n        }\n        if(before.comment !== after.comment){\n            ret.push('说明:'+(before.comment||'NULL')+'->'+(after.comment||'NULL'));\n        }\n        if(ret.length>0){\n            return '    基本信息:\\n\\t'+ret.join('\\n\\t');\n        }\n        return '';\n    };\n    \n    function buildAddedDesc(entity){\n        let ret = [];\n        let fieldAdded = entity.data.fieldAdded||[];\n        \n        for (let field of fieldAdded) { \n            let row = [];\n            row.push(field.defKey+'['+field.defName+']');\n            ret.push(row.join(\"\"))\n        }\n        return ret;\n    };\n    \n    function buildRemovedDesc(entity){\n        let ret = [];\n        let fieldRemoved = entity.data.fieldRemoved||[];\n        \n        for (let field of fieldRemoved) { \n            let row = [];\n            row.push(field.defKey+'['+field.defName+']');\n            ret.push(row.join(\"\"))\n        }\n        return ret;\n    };\n    \n    function buildModifiedDesc(entity){\n        let ret = [];\n        let fieldModified = entity.data.fieldModified||[];\n        \n        for (let field1 of fieldModified) { \n            let row = [];\n            let field = field1.before;\n            row.push(field.defKey+'['+field.defName+']');\n            ret.push(row.join(\"\"))\n        }\n        return ret;\n    };\n}}\n{{? createEntities && createEntities.length > 0}}\n/* -------------------------------------------------- */\n创建表：\n{{~ createEntities:entity}}\n    {{=entity.data.defKey}}[{{=entity.data.defName}}]\n{{~}}\n{{?}}\n\n\n{{? dropEntities && dropEntities.length > 0}}\n/* -------------------------------------------------- */\n删除表：\n{{~ dropEntities:entity}}\n    {{=entity.data.defKey}}[{{=entity.data.defName}}]\n{{~}}\n{{?}}\n\n\n{{? modifyEntities && modifyEntities.length > 0}}\n{{~ modifyEntities:entity}}\n/* -------------------------------------------------- */\n修改表：{{=entity.data.baseInfo.defKey}}[{{=entity.data.baseInfo.defName}}]{{let changeText=baseChanged(entity.data.baseChanged);}}\n{{=baseChanged(entity.data.baseChanged)}}\n    {{? entity.data.fieldAdded && entity.data.fieldAdded.length > 0}}\n    添加字段：\n    {{='\\t'}}{{=buildAddedDesc(entity).join('\\n\\t')}}\n    {{?}}{{? entity.data.fieldRemoved && entity.data.fieldRemoved.length > 0}}\n    删除字段：\n    {{='\\t'}}{{=buildRemovedDesc(entity).join('\\n\\t')}}\n    {{?}}{{? entity.data.fieldModified && entity.data.fieldModified.length > 0}}\n    修改字段：\n    {{='\\t'}}{{=buildModifiedDesc(entity).join('\\n\\t')}}\n    {{?}}{{\n        /*计算是否调整了属性*/\n        let propAdded = entity.data.propAdded || [];\n        let propRemoved = entity.data.propRemoved || [];\n        let propModified = entity.data.propModified || [];\n        let changed = propAdded.length>0 || propRemoved.length>0 || propModified.length>0;\n        /*计算关联是否调整*/\n        let refEntityAdd = entity.data.refEntityAdd || [];\n        let refEntityRemoved = entity.data.refEntityRemoved || [];\n        let relaArray = [];\n        for (let rela of refEntityAdd) {\n            relaArray.push('\\n\\t建立关联:'+rela.defKey+'['+rela.defName+']');\n        }\n        for (let rela of refEntityRemoved) {\n            relaArray.push('\\n\\t解除关联:'+rela.defKey+'['+rela.defName+']');\n        }\n        /*索引是否修改过*/\n        let indexChanged = entity.data.indexChanged;\n    }}\n{{=indexChanged?'\\n\\t更改了索引':''}}\n{{=changed?'\\n\\t更改了属性':''}}\n{{=relaArray.length>0?relaArray.join(''):''}}\n{{~}}\n{{?}}",
+        "update": "{{\n    let createEntities = it.changes.filter(function(row){return (row.opt==='add'&&row['type']==='entity');});\n    let dropEntities   = it.changes.filter(function(row){return (row.opt==='delete'&&row['type']==='entity');});\n    let modifyEntities = it.changes.filter(function(row){return (row.opt==='update'&&row['type']==='entity');});\n    \n    function baseChangedDDL(beforeAfter){\n        if(beforeAfter == null){\n            return '';\n        }\n        let ret = [];\n        let before = beforeAfter.before || {\"defKey\":\"\",\"defName\":\"\",\"comment\":\"\"};\n        let after = beforeAfter.after || {\"defKey\":\"\",\"defName\":\"\",\"comment\":\"\"};\n        if(before.defKey !== after.defKey){\n            ret.push(`ALTER TABLE ${before.defKey} RENAME TO ${after.defKey}`);\n        }\n        let commentText = '';\n        let commentChanged = false;\n        if(before.defName !== after.defName){\n            commentText = after.defName;\n            commentChanged = true;\n        }\n        if(before.comment !== after.comment){\n            commentChanged = true;\n            if(commentText){\n                commentText = (commentText+ ';'+after.comment)\n            }else{\n                commentText = after.comment\n            }\n        }\n        if(commentChanged){\n            let myText = `COMMENT ON TABLE ${after.defKey} IS '${commentText}'`;\n            ret.push(myText);\n        }\n        let baseText = '-- 基本信息:\\n';\n        return baseText+ret.join(';\\n')+';';\n    };\n    \n    function buildAddedDDL(entity){\n        let ret = [];\n        let fieldAdded = entity.data.fieldAdded||[];\n        if(fieldAdded.length == 0){\n            return '';\n        }\n        \n        let firstDDL = `ALTER TABLE ${entity.data.baseInfo.defKey}`;\n        for (let field of fieldAdded) { \n            let ddlItem = `ADD (${field.defKey} ${field.dbType}`;\n            /*处理数据类型长度*/\n            if(field.len>0){\n                ddlItem += ('('+field.len);\n                if(parseInt(field.scale)>0){\n                    ddlItem += (','+field.scale);\n                }\n                ddlItem += ')';\n            }\n            let defaultValue = field.defaultValue;\n            defaultValue = (defaultValue==null)?\"\":(\"\"+defaultValue);\n            if(defaultValue.length>0){\n                ddlItem += (' DEFAULT ' + defaultValue);\n            }\n            if(field.notNull){\n                ddlItem += ' NOT NULL';\n            }\n            ddlItem += ')';\n            ret.push(`${firstDDL} ${ddlItem}`);\n            \n            /*处理字段注释*/\n            let fieldComments = [];\n            if(field.defName != null &&field.defName.length>0){\n                fieldComments.push(field.defName);\n            }\n            if(field.comment != null &&field.comment.length>0){\n                fieldComments.push(field.comment);\n            }\n            let commentText = fieldComments.join(';');\n            if(commentText != null && commentText.length > 0){\n                let commentDDL = `COMMENT ON COLUMN ${entity.data.baseInfo.defKey}.${field.defKey} IS '${commentText}'`;\n                 ret.push(commentDDL);\n            }\n        }\n        return '\\n'+ret.join(';\\n');\n    };\n    \n    function buildRemovedDDL(entity){\n        let ret = [];\n        let fieldRemoved = entity.data.fieldRemoved||[];\n        if(fieldRemoved.length == 0){\n            return '';\n        }\n        \n        let firstDDL = `ALTER TABLE ${entity.data.baseInfo.defKey}`;\n        for (let field of fieldRemoved) { \n            ret.push(`${firstDDL} DROP COLUMN ${field.defKey}`);\n        }\n        return '\\n'+ret.join(';\\n');\n    };\n    \n    function buildModifiedDDL(entity){\n        let ret = [];\n        let fieldModified = entity.data.fieldModified||[];\n        \n        let firstDDL = `ALTER TABLE ${entity.data.baseInfo.defKey}`;\n        for (let field of fieldModified) { \n            let changeDDL = '';\n            let before = field.before || {};\n            let after = field.after || {};\n            if(before.defKey !== after.defKey){\n                let renameText = `ALTER TABLE ${entity.data.baseInfo.defKey} RENAME COLUMN ${before.defKey} TO ${after.defKey};`;\n                ret.push(renameText);\n            }\n            /*如果没有变化，则不生成变更语句*/\n            if(before.dbType === after.dbType \n            && before['len'] === after['len'] \n            && before.scale === after.scale\n            && before.primaryKey === after.primaryKey\n            && before.notNull === after.notNull\n            && before.autoIncrement === after.autoIncrement\n            && before.defaultValue === after.defaultValue){\n                continue;\n            }\n            changeDDL += ('MODIFY ('+after.defKey+'');\n            changeDDL += (' '+after.dbType);\n            if(after.len>0){\n                changeDDL += ('('+after.len);\n                if(parseInt(after.scale)>0){\n                    changeDDL += (','+after.scale);\n                }\n                changeDDL += ')';\n            }\n            let defaultValue = after.defaultValue;\n            defaultValue = (defaultValue==null)?\"\":(\"\"+defaultValue);\n            if(defaultValue.length>0){\n                changeDDL += (' DEFAULT ' + defaultValue);\n            }\n            \n            if(after.notNull){\n                changeDDL += ' NOT NULL';\n            }\n            changeDDL += ')';\n            ret.push(`${firstDDL} ${changeDDL};`);\n        }\n        return ret;\n    };\n}}\n{{? createEntities && createEntities.length > 0}}\n/* --------------- 创建表 --------------- */\n{{~ createEntities:entity}}\n{{=it.func.createDDL(entity.data,entity['type'])}}\n{{~}}\n{{?}}\n\n\n{{? dropEntities && dropEntities.length > 0}}\n/* --------------- 删除表 --------------- */\n{{~ dropEntities:entity}}\n{{=it.func.dropDDL(entity.data,entity['type'])}}\n{{~}}\n{{?}}\n\n\n{{? modifyEntities && modifyEntities.length > 0}}\n{{~ modifyEntities:entity}}\n/* --------------- 修改表 --------------- */\n-- 修改表：{{=entity.data.baseInfo.defKey}}[{{=entity.data.baseInfo.defName}}]\n{{=baseChangedDDL(entity.data.baseChanged)}}\n{{? entity.data.fieldModified && entity.data.fieldModified.length > 0}}\n-- 修改字段：\n{{=buildModifiedDDL(entity).join('\\n')}}\n{{?}}{{\n/*索引是否修改过*/\nlet indexChanged = entity.data.indexChanged;\n}}\n{{? indexChanged }}\n{{=it.func.indexRebuildDDL(entity.data.baseInfo,entity.data.newIndexes,entity.data.fullFields,entity['type'])}}\n{{?}}\n\n{{? entity.data.fieldAdded && entity.data.fieldAdded.length > 0}}\n-- 添加字段：\n{{=buildAddedDDL(entity)}};\n{{?}}\n\n{{? entity.data.fieldRemoved && entity.data.fieldRemoved.length > 0}}\n-- 删除字段：\n{{=buildRemovedDDL(entity)}};\n{{?}}\n{{~}}\n{{?}}"
       }
     ],
     "generatorDoc": {
@@ -866,7 +856,8 @@
         "F3AC2415-E86B-40C6-9FEB-F4B7937D2C30": "string",
         "81CCA482-3F4D-4EAC-8CF9-F5E7BC098AD2": "string",
         "B91D99E0-9B7C-416C-8737-B760957DAF09": "string",
-        "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "String"
+        "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "String",
+        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "VARCHAR"
       },
       {
         "defKey": "double",
@@ -888,7 +879,8 @@
         "F3AC2415-E86B-40C6-9FEB-F4B7937D2C30": "decimal",
         "81CCA482-3F4D-4EAC-8CF9-F5E7BC098AD2": "double",
         "B91D99E0-9B7C-416C-8737-B760957DAF09": "*float64",
-        "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "f64"
+        "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "f64",
+        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "DECIMAL"
       },
       {
         "defKey": "int",
@@ -910,7 +902,8 @@
         "F3AC2415-E86B-40C6-9FEB-F4B7937D2C30": "float",
         "81CCA482-3F4D-4EAC-8CF9-F5E7BC098AD2": "int",
         "B91D99E0-9B7C-416C-8737-B760957DAF09": "*int",
-        "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "i32"
+        "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "i32",
+        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "INTEGER"
       },
       {
         "defKey": "date",
@@ -932,7 +925,8 @@
         "F3AC2415-E86B-40C6-9FEB-F4B7937D2C30": "DateTime",
         "81CCA482-3F4D-4EAC-8CF9-F5E7BC098AD2": "timestamp",
         "B91D99E0-9B7C-416C-8737-B760957DAF09": "*time.Time",
-        "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "DateTime<Local>"
+        "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "DateTime<Local>",
+        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "DATE"
       },
       {
         "defKey": "bytes",
@@ -953,7 +947,8 @@
         "A2EE7B4A-CE62-4290-B00C-B26C1BF18073": "byte[]",
         "F3AC2415-E86B-40C6-9FEB-F4B7937D2C30": "binary",
         "81CCA482-3F4D-4EAC-8CF9-F5E7BC098AD2": "binary",
-        "B91D99E0-9B7C-416C-8737-B760957DAF09": "[]byte"
+        "B91D99E0-9B7C-416C-8737-B760957DAF09": "[]byte",
+        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "BYTE"
       },
       {
         "defKey": "largeText",
@@ -975,7 +970,8 @@
         "F3AC2415-E86B-40C6-9FEB-F4B7937D2C30": "string",
         "81CCA482-3F4D-4EAC-8CF9-F5E7BC098AD2": "string",
         "B91D99E0-9B7C-416C-8737-B760957DAF09": "string",
-        "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "String"
+        "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "String",
+        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "TEXT"
       }
     ]
   },
@@ -1302,17 +1298,5 @@
       "id": "F30202B9-4B5D-4CE7-87CE-B3890C84D3F2"
     }
   ],
-  "dbConn": [
-    {
-      "defKey": "D4843C6A-F7EC-480D-A8DB-4F6655F65F92",
-      "defName": "local-mysql",
-      "type": "29D1CE08-4C35-4D2D-AAA9-23D93305B52E",
-      "properties": {
-        "driver_class_name": "com.mysql.cj.jdbc.Driver",
-        "url": "jdbc:mysql://127.0.0.1: 3306/are?characterEncoding=UTF-8&useSSL=false&useUnicode=true&serverTimezone=UTC",
-        "password": "fmx2022",
-        "username": "root"
-      }
-    }
-  ]
+  "dbConn": []
 }
