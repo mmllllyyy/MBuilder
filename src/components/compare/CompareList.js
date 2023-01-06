@@ -83,7 +83,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
             } catch (e) {
                 Modal.error({
                     title: FormatMessage.string({id: 'optFail'}),
-                    message: '无效的元数据',
+                    message: FormatMessage.string({id: 'components.compare.invalidMetaData'}),
                 });
             }
         };
@@ -189,12 +189,12 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
     };
     const getStatus = (sourceEntity, metaEntity) => {
         if(metaEntity.defKey && !metaDataFields.filter(m => m.defKey === metaEntity.defKey)[0]) {
-            return <span className={`${currentPrefix}-compare-list-container-content-list-item-wait`}>
+            return [<span className={`${currentPrefix}-compare-list-container-content-list-item-wait`}>
               <span>
                 <Icon type='fa-clock-o'/>
               </span>
               <span><FormatMessage id='components.compare.wait'/></span>
-            </span>;
+            </span>, 'wait'];
         } else if (!(sourceEntity.defKey && metaEntity.defKey)
             || changes.filter(c => c.opt === 'update')
                 .some(c =>
@@ -202,19 +202,19 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                     === sourceEntity.defKey?.toLocaleLowerCase()) ||
                 (c.data.baseInfo?.defKey?.toLocaleLowerCase()
                     === metaEntity.defKey?.toLocaleLowerCase()))) {
-            return <span className={`${currentPrefix}-compare-list-container-content-list-item-diff`}>
+            return [<span className={`${currentPrefix}-compare-list-container-content-list-item-diff`}>
               <span>
                 <Icon type='fa-times-circle-o'/>
               </span>
               <span><FormatMessage id='components.compare.diff'/></span>
-            </span>;
+            </span>, 'diff'];
         }
-        return <span className={`${currentPrefix}-compare-list-container-content-list-item-same`}>
+        return [<span className={`${currentPrefix}-compare-list-container-content-list-item-same`}>
           <span>
             <Icon type='fa-check-circle-o'/>
           </span>
           <span><FormatMessage id='components.compare.same'/></span>
-        </span>;
+        </span>, 'same'];
     };
     const _setExpand = (defKey) => {
         setExpand((pre) => {
@@ -434,9 +434,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                             const metaEntityData = (metaDataFields || [])
                                 .filter(e => e.defKey?.toLocaleLowerCase()
                                     === d?.toLocaleLowerCase())[0] || {};
-                              const isWaitScan = metaEntity.defKey &&
-                                  // eslint-disable-next-line max-len
-                                  !metaDataFields.filter(m => m.defKey === metaEntity.defKey)[0];
+                            const [statusCom, status] = getStatus(sourceEntity, metaEntity);
                               return [<tr key={d} className={`${currentPrefix}-compare-list-container-content-list-item`}>
                                 <td>
                                   {
@@ -450,11 +448,11 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                 </td>
                                 <td>
                                   {
-                                      isWaitScan ? '' : <a onClick={() => _setExpand(d)}>{FormatMessage.string({id: `components.compare.${expand.includes(d) ? 'fold' : 'view'}`})}</a>
+                                      status === 'wait' ? '' : <a onClick={() => _setExpand(d)}>{FormatMessage.string({id: `components.compare.${expand.includes(d) ? 'fold' : 'view'}`})}</a>
                                     }
                                 </td>
                                 <td>
-                                  {getStatus(sourceEntity, metaEntity)}
+                                  {statusCom}
                                 </td>
                                 <td>
                                   <span>{sourceEntity.defKey}</span>
@@ -473,11 +471,13 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                           >
                                             <FormatMessage id="components.compare.scan"/>
                                           </a>}
-                                          {!isWaitScan && <>{ !isCustomerMeta && <span className={`${currentPrefix}-compare-list-container-content-list-item-line`}>{}</span>}<a
-                                            onClick={() => _mergeFromMeta(metaEntity.defKey)}
-                                          >
-                                            <FormatMessage id='components.compare.mergeToModel'/>
-                                          </a></>}
+                                          {status !== 'wait' && <>{ !isCustomerMeta && (status !== 'same') && <span className={`${currentPrefix}-compare-list-container-content-list-item-line`}>{}</span>}
+                                              {status !== 'same' && <a
+                                                onClick={() => _mergeFromMeta(metaEntity.defKey)}
+                                              >
+                                                <FormatMessage
+                                                  id="components.compare.mergeToModel"/>
+                                              </a>}</>}
                                         </span>
                                     }
                                 </td>

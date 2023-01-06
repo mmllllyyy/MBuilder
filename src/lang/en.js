@@ -911,6 +911,7 @@ components: {
         extractMetadata: 'Extract Metadata',
         customerMetaHelp: 'The user-defined metadata request or metadata file data must be in JSON format and must at least contain the entities attribute',
         customerMeta: 'Customer Metadata',
+        invalidMetaData: 'Invalid MetaData',
     },
 },
 projectTemplate: {

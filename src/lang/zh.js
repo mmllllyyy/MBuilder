@@ -910,6 +910,7 @@ export default {
             extractMetadata: '提取元数据',
             customerMetaHelp: '自定义的元数据请求或者元数据文件数据必须是JSON格式，且必须至少包含entities属性',
             customerMeta: '自定义元数据',
+            invalidMetaData: '无效的元数据',
         },
     },
     projectTemplate: {
