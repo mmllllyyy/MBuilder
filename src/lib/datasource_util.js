@@ -338,64 +338,79 @@ export const validateKey = (key, fields) => {
 export const getDemoDbConnect = () => {
   return {
     mysql: {
-      defKey: 'MySQL',
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.mysql_defKey'}),
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.mysql'}),
       driverClass: 'com.mysql.cj.jdbc.Driver',
     },
+    'mysql-information_schema': {
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.mysql-information_schema_defKey'}),
+      url: FormatMessage.string({id: 'dbConnect.demoDbConnect.mysql_schema'}),
+      driverClass: 'com.mysql.cj.jdbc.Driver',
+    },
     oracle: {
-      defKey: 'ORACLE',
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.oracle_defKey'}),
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.oracle'}),
       driverClass: 'oracle.jdbc.driver.OracleDriver',
     },
+    'oracle-all_tables': {
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.oracle-all_tables_defKey'}),
+      url: FormatMessage.string({id: 'dbConnect.demoDbConnect.oracle_all_tables'}),
+      driverClass: 'oracle.jdbc.driver.OracleDriver',
+    },
     sqlserver: {
-      defKey:`SQLServer${FormatMessage.string({id: 'dbConnect.demoDbConnect.sqlserverTitle'})}`,
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.sqlserver_defKey'}),
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.sqlserver'}),
       driverClass: 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
     },
     postgresql: {
-      defKey: 'PostgreSQL',
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.postgresql_defKey'}),
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.postgresql'}),
       driverClass: 'org.postgresql.Driver',
     },
     db2: {
-      defKey: 'DB2',
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.db2_defKey'}),
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.db2'}),
       driverClass: 'com.ibm.db2.jcc.DB2Driver',
     },
     dm: {
-      defKey: 'DM(达梦)',
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.dm_defKey'}),
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.dm'}),
       driverClass: 'dm.jdbc.driver.DmDriver',
     },
     gaussdb: {
-      defKey: 'GuassDB',
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.gaussdb_defKey'}),
       driverClass: 'org.postgresql.Driver',
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.guassdb'}),
     },
     kingbase: {
-      defKey: 'Kingbase(人大金仓)',
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.kingbase_defKey'}),
       driverClass: 'com.kingbase8.Driver',
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.kingbase'}),
     },
     maxcompute: {
-      defKey: 'MaxCompute',
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.maxcompute_defKey'}),
       driverClass: 'com.aliyun.odps.jdbc.OdpsDriver',
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.maxcompute'}),
     },
     sqlite: {
-      defKey: 'SQLite',
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.sqlite_defKey'}),
       driverClass: 'org.sqlite.JDBC',
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.sqlite'}),
     },
     'hive-MySQL': {
-      defKey: 'Hive(MySQL做metastore)',
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.hive-MySQL_defKey'}),
       driverClass: 'com.mysql.cj.jdbc.Driver',
-      url: 'jdbc:mysql://IP地址:端口号/schema?useUnicode=true&characterEncoding=UTF-8&useSSL=false&metaDb=default&hive-meta=MySQL',
+      url: FormatMessage.string({id: 'dbConnect.demoDbConnect.hive_MySQL'}),
     },
     'hive-PostgreSQL': {
-      defKey: 'Hive(PostgreSQL做metastore)',
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.hive-PostgreSQL_defKey'}),
       driverClass: 'org.postgresql.Driver',
-      url: 'jdbc:postgresql://IP地址:端口号/metastore?metaDb=default&hive-meta=PostgreSQL'
+      url: FormatMessage.string({id: 'dbConnect.demoDbConnect.hive_PostgreSQL'})
+    },
+    'gbase': {
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.gbase_defKey'}),
+      driverClass: 'com.gbasedbt.jdbc.Driver',
+      url: FormatMessage.string({id: 'dbConnect.demoDbConnect.GBase'})
     }
   }
 };
