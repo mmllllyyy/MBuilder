@@ -5,7 +5,11 @@ import _ from 'lodash/object';
 import {connectDB, getLogPath, showItemInFolder, extractFile} from '../../lib/middle';
 import {getPrefix} from '../../lib/prefixUtil';
 import {getChanges, simplePackageChanges} from '../../lib/datasource_version_util';
-import {transform} from '../../lib/datasource_util';
+import {
+    transform,
+    getEmptyEntity,
+    validateItem,
+} from '../../lib/datasource_util';
 
 export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                           openLoading, closeLoading, mergeFromMeta}, ref) => {
@@ -66,7 +70,11 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
         const analysisData = (d) => {
             try {
                 const data = JSON.parse(d);
-                if(!data.entities || !Array.isArray(data.entities)) {
+                const emptyEntity = getEmptyEntity();
+                if(!data.entities || !Array.isArray(data.entities) ||
+                    (data.entities || []).some((e) => {
+                    return !validateItem(e, emptyEntity);
+                })) {
                     throw Error();
                 }
                 setCustomerDataSource(data);
