@@ -250,10 +250,10 @@ export default React.memo(({prefix, importProject, createProject, openTemplate,
               <div className={`${currentPrefix}-home-container-body-right-list-title`}>
                 <FormatMessage id='home.allProject'/>
               </div>
-              <div onClick={() => openUrl('https://my.oschina.net/skymozn/blog/5599806')} className={`${currentPrefix}-home-container-body-right-ad`}>
+              <div onClick={() => openUrl('http://pdmaas.pdmaner.com')} className={`${currentPrefix}-home-container-body-right-ad`}>
                 <Icon type='fa-bullhorn'/>
                 <span>
-                  企业版已正式发布，BS架构，支持团队协作，私有化部署，欢迎了解
+                  公云SaaS版，私云企业版，均已正式发布，支持多人团队协作，欢迎了解
                 </span>
               </div>
             </div>

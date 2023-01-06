@@ -100,12 +100,32 @@
       &-content {
         flex-grow: 1;
         overflow: auto;
+        margin: 5px;
         &-empty {
           text-align: center;
           height: 100%;
           padding-top: 200px;
         }
         &-list {
+          & > table {
+            margin: 0 !important;
+            border-top: transparent !important;
+          }
+          & > table > thead > tr {
+            & > td {
+              border-top: 1px solid @primary-border-color;
+              position: sticky;
+              top: 0;
+              z-index: 2;
+              background: @background-color;
+            }
+          }
+          & > table > thead > tr:nth-child(2) {
+            & > td {
+              border-top: none;
+              top: 27px;
+            }
+          }
           &-item {
             &:nth-child(2n) {
               td {
@@ -142,7 +162,11 @@
                 background: @tr-background;
               }
             }
+             & > tbody > tr > td:first-child {
+               text-align: center;
+             }
             td {
+              white-space: nowrap;
               border-bottom: 1px solid @primary-border-color;
               border-right: 1px solid @primary-border-color;
               padding: 2px 5px;

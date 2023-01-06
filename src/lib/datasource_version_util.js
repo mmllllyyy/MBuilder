@@ -290,6 +290,13 @@ export const simplePackageChanges = (currentDataSource, preDataSource, db, needR
   };
   const ignoreCase = (data) => {
     // 忽略名字和类型的大小写
+    const parseNumber = (d) => {
+      const n = parseInt(d, 10);
+      if (isNaN(n)) {
+        return d;
+      }
+      return n;
+    }
     return data.map(d => {
       return {
         ...d,
@@ -302,8 +309,8 @@ export const simplePackageChanges = (currentDataSource, preDataSource, db, needR
             originDefKey: f.defKey,
             originType: f.type,
             type: f.type?.toLocaleLowerCase(),
-            len: f.len === null ? '' : f.len,
-            scale: f.scale === null ? '' : f.scale,
+            len: f.len === null ? '' : parseNumber(f.len),
+            scale: f.scale === null ? '' : parseNumber(f.scale),
           }
         })
       }

@@ -1439,11 +1439,36 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     return updateAllData(dataSourceRef.current, injectTempTabs.current.concat(tabsRef.current));
   };
   const mergeFromMeta = (data, meta, nextDataSource) => {
+    const refactorFields = (addData) => {
+      return addData.map((d) => {
+        const currentData = (dataSourceRef.current.entities || [])
+            .filter(e => e.defKey?.toLocaleLowerCase() === d.defKey?.toLocaleLowerCase())[0];
+        if (currentData) {
+          return {
+            ...d,
+            defKey: currentData.defKey,
+            fields: (d.fields || []).map((f) => {
+              const currentField = (currentData.fields || [])
+                  .filter(e => e.defKey?.toLocaleLowerCase() === d.defKey?.toLocaleLowerCase())[0];
+              if (currentField) {
+                return {
+                  ...f,
+                  defKey: currentField.defKey,
+                };
+              }
+              return f;
+            }),
+          };
+        }
+        return d;
+      });
+    };
     if (meta) {
       injectDataSource(mergeDataSource(dataSourceRef.current, {},
-          calcDomain(data, meta, dataSourceRef.current.domains || []), true));
+          refactorFields(calcDomain(data, meta, dataSourceRef.current.domains || [])), true));
     } else {
-      injectDataSource(mergeDataSource(dataSourceRef.current, nextDataSource, data, true));
+      injectDataSource(mergeDataSource(dataSourceRef.current, nextDataSource, refactorFields(data),
+          true));
     }
   };
   const renderOperatingFloor = () => {
@@ -1630,7 +1655,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
             >
               <div className={`${currentPrefix}-home-menu-header`}>
                 <span className={`${currentPrefix}-home-menu-header-title`}>
-                  <FormatMessage id='project.domains'/>
+                  <FormatMessage id='project.dataType'/>
                 </span>
               </div>
               <Menu

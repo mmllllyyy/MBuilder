@@ -125,7 +125,18 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
             } else {
                 setMetaDataFields((pre) => {
                     return pre.filter(p => data.body.findIndex(b => b.defKey === p.defKey) < 0)
-                        .concat(data.body);
+                        .concat(data.body.map((d) => {
+                            return {
+                                ...d,
+                                fields: (d.fields || []).map((f) => {
+                                    return {
+                                        ...f,
+                                        defName: f?.defName?.split(';')[0] || '',
+                                        comment: f.comment || f?.defName?.split(';')[1] || '',
+                                    };
+                                }),
+                            };
+                        }));
                 });
             }
             closeLoading();
@@ -326,6 +337,9 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
             <td>
               <span>{metaField.scale}</span>
             </td>
+            <td>
+              <span>{metaField.comment}</span>
+            </td>
           </tr>;
           });
     };
@@ -343,7 +357,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
             return [];
         });
     };
-    //console.log(changes);
+    console.log(changes);
     // eslint-disable-next-line no-nested-ternary
     const type = selectedTable.length === metaData.length ? 'all' : ((selectedTable.length && selectedTable.length < metaData.length) ? 'ind' : 'normal');
     return <div style={style} className={`${currentPrefix}-compare-list`}>
@@ -499,7 +513,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                         <td colSpan={6}>
                                           <span><FormatMessage id='components.compare.model'/></span>
                                         </td>
-                                        <td colSpan={5}><FormatMessage id={`components.compare.${isCustomerMeta ? 'customerMeta' : 'dbMeta'}`}/></td>
+                                        <td colSpan={6}><FormatMessage id={`components.compare.${isCustomerMeta ? 'customerMeta' : 'dbMeta'}`}/></td>
                                       </tr>
                                       <tr>
                                         <td />
@@ -535,6 +549,9 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                         </td>
                                         <td>
                                           <span><FormatMessage id='components.compare.scale'/></span>
+                                        </td>
+                                        <td>
+                                          <span><FormatMessage id='components.compare.comment'/></span>
                                         </td>
                                       </tr>
                                     </thead>

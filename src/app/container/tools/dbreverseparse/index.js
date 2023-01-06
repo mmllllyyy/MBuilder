@@ -81,6 +81,8 @@ export default React.memo(({prefix, dataSource, dataChange, config, onClose, onO
                 fields: (d.fields || []).map(f => ({
                   ...f,
                   defKey: f.defKey?.toLocaleLowerCase(),
+                  defName: f?.defName?.split(';')[0] || '',
+                  comment: f?.defName?.split(';')[1] || f.comment || '',
                   primaryKey: !!f.primaryKey,
                   notNull: !!f.notNull,
                 })),
@@ -93,6 +95,8 @@ export default React.memo(({prefix, dataSource, dataChange, config, onClose, onO
                 fields: (d.fields || []).map(f => ({
                   ...f,
                   defKey: f.defKey?.toLocaleUpperCase(),
+                  defName: f?.defName?.split(';')[0] || '',
+                  comment: f.comment || f?.defName?.split(';')[1] || '',
                   primaryKey: !!f.primaryKey,
                   notNull: !!f.notNull,
                 })),
