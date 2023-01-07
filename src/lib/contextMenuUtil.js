@@ -884,6 +884,9 @@ const getEntityData = (dataSource, data) => {
 
 export const getCopyRealData = (dataSource, data) => {
   // 为了使粘贴数据时 数据域 数据字典 UI建议 能够尽可能的匹配到数据 需要将ID转换成defKey
+  if (!dataSource) {
+    return data;
+  }
   const db = _.get(dataSource, 'profile.default.db', _.get(dataSource, 'profile.dataTypeSupports[0].id'));
   return data.map(d => {
     return {
@@ -899,6 +902,9 @@ export const getCopyRealData = (dataSource, data) => {
 }
 
 export const putCopyRealData = (dataSource, data) => {
+  if (!dataSource) {
+    return data;
+  }
   const getDataId = (currentData, copyData, id) => {
     if (!currentData.some(c => c.id === id)) {
       if(copyData) {
