@@ -72,7 +72,7 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
       if (keys.filter(k => !!k).length !== new Set(keys).size) {
         const fields = t.data?.fields || [];
         const repeat = fields.reduce((a, b) => {
-          if (fields.filter(f => f.defKey === b.defKey).length > 1 && !a.includes(b.defKey)) {
+          if (fields.filter(f => f.defKey?.toLocaleLowerCase() === b.defKey?.toLocaleLowerCase()).length > 1 && !a.includes(b.defKey?.toLocaleLowerCase())) {
             return a.concat(b.defKey || FormatMessage.string({id: 'emptyField'}));
           }
           return a;
@@ -2115,7 +2115,31 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
       extProps: f.extProps || oldDataSource?.profile?.extProps || {}
     })),
   }));
-  const tempEntities = mergeData(entities, newEntities, true, true);
+  const ignoreCaseEntities = (entities, newEntities) => {
+    return newEntities.map((d) => {
+      const currentData = (entities || [])
+          .filter(e => e.defKey?.toLocaleLowerCase() === d.defKey?.toLocaleLowerCase())[0];
+      if (currentData) {
+        return {
+          ...d,
+          defKey: currentData.defKey,
+          fields: (d.fields || []).map((f) => {
+            const currentField = (currentData.fields || [])
+                .filter(e => e.defKey?.toLocaleLowerCase() === d.defKey?.toLocaleLowerCase())[0];
+            if (currentField) {
+              return {
+                ...f,
+                defKey: currentField.defKey,
+              };
+            }
+            return f;
+          }),
+        };
+      }
+      return d;
+    });
+  };
+  const tempEntities = mergeData(entities, ignoreCaseEntities(entities, newEntities), true, true);
   // 合并视图
   // const views = oldDataSource.views || [];
   // const newViews = newDataSource.views || [];

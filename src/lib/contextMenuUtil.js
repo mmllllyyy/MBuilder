@@ -566,8 +566,9 @@ const addOpt = (dataSource, menu, updateDataSource, oldData = {}, title, custome
         // 自定义处理数据
         customerDealData(data, modal);
       } else {
-        const allKeys = modalData.allKeys;
-        if (allKeys.includes(data[modalData.uniqueKey])) {
+        const ignoreCase = realType === 'entities' || 'views';
+        const allKeys = ignoreCase ? modalData.allKeys.map(k => k.toLocaleLowerCase()) : modalData.allKeys;
+        if (allKeys.includes(ignoreCase ? data[modalData.uniqueKey]?.toLocaleLowerCase() : data[modalData.uniqueKey])) {
           Modal.error({
             title: FormatMessage.string({id: 'optFail'}),
             message: FormatMessage.string({
