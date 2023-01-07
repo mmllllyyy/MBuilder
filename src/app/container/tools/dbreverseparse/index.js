@@ -73,10 +73,13 @@ export default React.memo(({prefix, dataSource, dataChange, config, onClose, onO
           });
         } else {
           let tempData = data.body.map((d) => {
-            const group = selectedTable.filter(t => t.originDefKey === d.defKey)[0]?.group;
+            const currentTable = selectedTable.filter(t => t.originDefKey === d.defKey)[0];
+            const group = currentTable?.group;
             if (dbData.flag === 'LOWCASE') {
               return {
                 ...d,
+                defName: currentTable?.defName?.split(';')[0] || d.defName || '',
+                comment: currentTable?.comment || currentTable?.defName?.split(';')[1] || d.comment || '',
                 group,
                 fields: (d.fields || []).map(f => ({
                   ...f,
@@ -91,6 +94,8 @@ export default React.memo(({prefix, dataSource, dataChange, config, onClose, onO
             } else if (dbData.flag === 'UPPERCASE') {
               return {
                 ...d,
+                defName: currentTable?.defName?.split(';')[0] || d.defName || '',
+                comment: currentTable?.comment || currentTable?.defName?.split(';')[1] || d.comment || '',
                 group,
                 fields: (d.fields || []).map(f => ({
                   ...f,
@@ -105,7 +110,16 @@ export default React.memo(({prefix, dataSource, dataChange, config, onClose, onO
             }
             return {
               ...d,
+              defName: currentTable?.defName?.split(';')[0] || d.defName || '',
+              comment: currentTable?.comment || currentTable?.defName?.split(';')[1] || d.comment || '',
               group,
+              fields: (d.fields || []).map(f => ({
+                ...f,
+                defName: f?.defName?.split(';')[0] || '',
+                comment: f.comment || f?.defName?.split(';')[1] || '',
+                primaryKey: !!f.primaryKey,
+                notNull: !!f.notNull,
+              })),
             };
           });
           onOk(tempData.map(t => ({

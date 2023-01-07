@@ -64,7 +64,13 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
             if (data.status === 'FAILED') {
                 errorModal(data);
             } else {
-                setMetaData(data.body);
+                setMetaData(data.body.map((d) => {
+                    return {
+                        ...d,
+                        defName: d?.defName?.split(';')[0] || '',
+                        comment: d.comment || d?.defName?.split(';')[1] || '',
+                    };
+                }));
             }
             closeLoading();
         });
@@ -129,8 +135,11 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                 setMetaDataFields((pre) => {
                     return pre.filter(p => data.body.findIndex(b => b.defKey === p.defKey) < 0)
                         .concat(data.body.map((d) => {
+                            const currentMeta = metaData.filter(m => m.defKey === d.defKey)[0];
                             return {
                                 ...d,
+                                defName: currentMeta?.defName || d.defName,
+                                comment: currentMeta?.comment || d.comment,
                                 fields: (d.fields || []).map((f) => {
                                     return {
                                         ...f,
@@ -325,7 +334,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
             <td style={{textAlign: 'right'}}>
               <span>{sourceField.defKey && sourceField.scale}</span>
             </td>
-            <td style={{textAlign: 'left'}}>
+            <td style={{textAlign: 'left'}} className={`${currentPrefix}-compare-list-container-content-list-item-comment`}>
               <span>{sourceField.comment}</span>
             </td>
             <td style={{textAlign: 'left'}}>
@@ -343,7 +352,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
             <td style={{textAlign: 'right'}}>
               <span>{metaField.scale}</span>
             </td>
-            <td style={{textAlign: 'left'}}>
+            <td style={{textAlign: 'left'}} className={`${currentPrefix}-compare-list-container-content-list-item-comment`}>
               <span>{metaField.comment}</span>
             </td>
           </tr>;
@@ -401,11 +410,11 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                           <td colSpan={3} style={{position: 'sticky', left: 0, zIndex: 3}}>
                             <span><FormatMessage id='components.compare.optOrResult'/></span>
                           </td>
-                          <td colSpan={3}>
+                          <td colSpan={4}>
                             <span><FormatMessage id='components.compare.model'/></span>
                           </td>
                           <td>{}</td>
-                          <td colSpan={3}><FormatMessage id={`components.compare.${isCustomerMeta ? 'customerMeta' : 'dbMeta'}`}/></td>
+                          <td colSpan={4}><FormatMessage id={`components.compare.${isCustomerMeta ? 'customerMeta' : 'dbMeta'}`}/></td>
                         </tr>
                         <tr>
                           <td ref={firstRef} style={{position: 'sticky', left: 0, zIndex: 3}}>
@@ -428,6 +437,9 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                             <span><FormatMessage id='components.compare.name'/></span>
                           </td>
                           <td>
+                            <span><FormatMessage id='components.compare.comment'/></span>
+                          </td>
+                          <td>
                             <span><FormatMessage id='components.compare.fieldCount'/></span>
                           </td>
                           <td> <span><FormatMessage id='components.compare.opt'/></span></td>
@@ -436,6 +448,9 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                           </td>
                           <td>
                             <span><FormatMessage id='components.compare.name'/></span>
+                          </td>
+                          <td>
+                            <span><FormatMessage id='components.compare.comment'/></span>
                           </td>
                           <td>
                             <span><FormatMessage id='components.compare.fieldCount'/></span>
@@ -479,6 +494,9 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                 <td>
                                   <span>{sourceEntity.defName}</span>
                                 </td>
+                                <td className={`${currentPrefix}-compare-list-container-content-list-item-comment`}>
+                                  <span>{sourceEntity.comment}</span>
+                                </td>
                                 <td style={{textAlign: 'right'}}>
                                   <span>{sourceEntity.fields?.length}</span>
                                 </td>
@@ -505,6 +523,9 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                 </td>
                                 <td>
                                   <span>{metaEntity.defName}</span>
+                                </td>
+                                <td className={`${currentPrefix}-compare-list-container-content-list-item-comment`}>
+                                  <span>{metaEntity.comment}</span>
                                 </td>
                                 <td style={{textAlign: 'right'}}>
                                   <span>{metaEntityData.fields?.length}</span>
