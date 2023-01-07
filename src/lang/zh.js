@@ -157,6 +157,7 @@ export default {
         openProject: '双击打开项目',
         removeHistory: '移除',
         removeProject: '文件物理删除',
+        page: '官方网站',
     },
     openProject: '打开项目',
     optFail: '操作失败',

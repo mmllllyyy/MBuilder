@@ -157,6 +157,7 @@ export default {
         openProject: 'Double click to open project',
         removeHistory: 'Remove from recent',
         removeProject: 'Remove Project',
+        page: 'Official website',
     },
     openProject: 'openProject',
     optFail: 'operation fail',

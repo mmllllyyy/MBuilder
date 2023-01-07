@@ -242,6 +242,14 @@ export default React.memo(({prefix, importProject, createProject, openTemplate,
                 <FormatMessage id='home.optBook'/>
               </div>
             </Tooltip>
+            <div
+              title={FormatMessage.string({id: 'home.page'})}
+              onClick={() => openUrl('http://pdmaas.pdmaner.com/')}
+              className={`${currentPrefix}-home-container-body-right-nav-type-unselected`}
+            >
+              <Icon type='fa-home' style={{marginRight: 4, fontSize: '16px'}}/>
+              <FormatMessage id='home.page'/>
+            </div>
           </div>
         </div>
         <div className={`${currentPrefix}-home-container-body-right-list`}>
