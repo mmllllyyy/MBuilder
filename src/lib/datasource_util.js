@@ -65,31 +65,31 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
         }});
     }
     if (t.type === 'entity' || t.type === 'view') {
-      const keys = (t.data?.fields || []).map(f => f.defKey);
       if(!(t.data.fields.filter(f => !f.hideInGraph).length <= size)) {
         sizeError.push(t.data.defKey);
       }
-      if (keys.filter(k => !!k).length !== new Set(keys).size) {
-        const fields = t.data?.fields || [];
-        const repeat = fields.reduce((a, b) => {
-          if (fields.filter(f => f.defKey?.toLocaleLowerCase() === b.defKey?.toLocaleLowerCase()).length > 1 && !a.includes(b.defKey?.toLocaleLowerCase())) {
-            return a.concat(b.defKey || FormatMessage.string({id: 'emptyField'}));
-          }
-          return a;
-        }, []).join('|');
-        repeatError.push(`${t.data.defKey}=>[${repeat}]`);
-      }
+      const fields = t.data?.fields || [];
+      const repeat = fields.reduce((a, b) => {
+        if (!b.defKey) {
+          return a.concat(FormatMessage.string({id: 'emptyField'}));
+        } else if (fields.filter(f => f.defKey?.toLocaleLowerCase() === b.defKey?.toLocaleLowerCase()).length > 1 && !a.includes(b.defKey?.toLocaleLowerCase())) {
+          return a.concat(b.defKey);
+        }
+        return a;
+      }, []).join('|');
+      repeat && repeatError.push(`${t.data.defKey}=>[${repeat}]`);
       // 判断数据表或者视图重复
       const newDefKey = t.data?.defKey;
       if (newDefKey !== t.oldData?.defKey) {
         // 不能跟当前打开的TAB的key重复
         // 不能跟已经存在的key重复
-        if (!currentDefKey[t.type].includes(newDefKey)) {
+        if (!currentDefKey[t.type].map(k => k?.toLocaleLowerCase()).includes(newDefKey?.toLocaleLowerCase())) {
           currentDefKey[t.type].push(newDefKey);
         } else {
           entityRepeatError.push(newDefKey);
         }
-        if (dataSource[t.type === 'view' ? 'views' : 'entities']?.filter(e => e.defKey === newDefKey).length > 0) {
+        if (dataSource[t.type === 'view' ? 'views' : 'entities']?.filter(e => e.defKey?.toLocaleLowerCase()
+            === newDefKey?.toLocaleLowerCase()).length > 0) {
           entityRepeatError.push(newDefKey);
         }
       }

@@ -1,5 +1,6 @@
 import React, {useRef, useState} from 'react';
-import {Radio, FormatMessage, Icon, Input, Upload, Tooltip} from 'components';
+import {Radio, FormatMessage, Icon, Input, Upload, Tooltip, CodeHighlight} from 'components';
+import empty from '../../lib/template/教学管理系统.pdma';
 import {getPrefix} from '../../lib/prefixUtil';
 
 export default React.memo(({prefix, data = {type: 'URL'}, dataChange}) => {
@@ -20,6 +21,14 @@ export default React.memo(({prefix, data = {type: 'URL'}, dataChange}) => {
         }
         dataRef.current[t] = e.target.value;
         dataChange && dataChange(dataRef.current);
+    };
+    const DataModel = () => {
+        return <div style={{padding: 10}}>
+          <div>
+            <FormatMessage id='components.compare.customerMetaHelp'/>
+          </div>
+          <CodeHighlight data={JSON.stringify(empty, null, 2)} style={{height: 'calc(100vh - 100px)', width: '400px'}} mode='json'/>
+        </div>;
     };
     return <div className={`${currentPrefix}-compare-meta-edit`}>
       <div className={`${currentPrefix}-form-item`}>
@@ -45,13 +54,8 @@ export default React.memo(({prefix, data = {type: 'URL'}, dataChange}) => {
         >
           <span className={`${currentPrefix}-form-item-label-require`}>{}</span>
           <FormatMessage id='components.compare.metaType'/>
-          <Tooltip placement='top' title={FormatMessage.string({id: 'components.compare.customerMetaHelp'})} force>
-            <span className={`${currentPrefix}-form-item-label-help`}>
-              <Icon type='icon-xinxi'/>
-            </span>
-          </Tooltip>
         </span>
-        <span className={`${currentPrefix}-form-item-component`}>
+        <span className={`${currentPrefix}-form-item-component ${currentPrefix}-compare-meta-edit-type`}>
           <Radio.RadioGroup
             onChange={e => onChange(e, 'type')}
             defaultValue={data.type}
@@ -77,6 +81,11 @@ export default React.memo(({prefix, data = {type: 'URL'}, dataChange}) => {
         >
                 <span className={`${currentPrefix}-form-item-label-require`}>{}</span>
                 <FormatMessage id='components.compare.takeURL'/>
+                <Tooltip placement='left' title={<DataModel/>} force>
+                  <span className={`${currentPrefix}-form-item-label-help`}>
+                    <Icon type='icon-xinxi'/>
+                  </span>
+                </Tooltip>
               </span>
               <span className={`${currentPrefix}-form-item-component`}>
                 <Input

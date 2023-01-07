@@ -522,7 +522,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
               let pasteFields = JSON.parse(value);
               if (validate) {
                 // 获取父组件的校验
-                pasteFields = validate(pasteFields.map(f => _.omit(f, 'id')));
+                pasteFields = validate(pasteFields.map(f => _.omit(f, ['id', 'otherData'])));
               } else {
                 // 使用默认的校验
                 pasteFields = validateFields(putCopyRealData(dataSource,

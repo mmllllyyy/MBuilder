@@ -26,6 +26,9 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
     const [metaDataFields, setMetaDataFields] = useState([]);
     const [isCustomerMeta, setCustomerMeta] = useState(false);
     const [customerDataSource, setCustomerDataSource] = useState({});
+    const [columnWidth, setColumnWidth] = useState([]);
+    const firstRef = useRef(null);
+    const secondRef = useRef(null);
     useImperativeHandle(ref, () => {
         return {
             setMeta: (m, isCustomer) => {
@@ -174,6 +177,9 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
             return true;
         }));
     }, [metaDataFields, metaData, dataSource.entities, meta]);
+    useEffect(() => {
+        setColumnWidth([firstRef.current?.clientWidth + 2, secondRef.current?.clientWidth + 1]);
+    }, [changes]);
     const mergeMetaDataSourceKeys = (pre, next) => {
         return (pre || []).concat(next).reduce((a, b) => {
             if (a.findIndex(d => b.defKey?.toLocaleLowerCase() === d?.toLocaleLowerCase()) < 0) {
@@ -304,40 +310,40 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                   }
               </span>
             </td>
-            <td>
+            <td style={{textAlign: 'left'}}>
               <span>{sourceField.defKey}</span>
             </td>
-            <td>
+            <td style={{textAlign: 'left'}}>
               <span>{sourceField.defName}</span>
             </td>
-            <td>
+            <td style={{textAlign: 'left'}}>
               <span>{sourceField.defKey && sourceField.type}</span>
             </td>
-            <td>
+            <td style={{textAlign: 'right'}}>
               <span>{sourceField.defKey && sourceField.len}</span>
             </td>
-            <td>
+            <td style={{textAlign: 'right'}}>
               <span>{sourceField.defKey && sourceField.scale}</span>
             </td>
-            <td>
+            <td style={{textAlign: 'left'}}>
               <span>{sourceField.comment}</span>
             </td>
-            <td>
+            <td style={{textAlign: 'left'}}>
               <span>{metaField.defKey}</span>
             </td>
-            <td>
+            <td style={{textAlign: 'left'}}>
               <span>{metaField.defName}</span>
             </td>
-            <td>
+            <td style={{textAlign: 'left'}}>
               <span>{metaField.type}</span>
             </td>
-            <td>
+            <td style={{textAlign: 'right'}}>
               <span>{metaField.len}</span>
             </td>
-            <td>
+            <td style={{textAlign: 'right'}}>
               <span>{metaField.scale}</span>
             </td>
-            <td>
+            <td style={{textAlign: 'left'}}>
               <span>{metaField.comment}</span>
             </td>
           </tr>;
@@ -357,7 +363,6 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
             return [];
         });
     };
-    console.log(changes);
     // eslint-disable-next-line no-nested-ternary
     const type = selectedTable.length === metaData.length ? 'all' : ((selectedTable.length && selectedTable.length < metaData.length) ? 'ind' : 'normal');
     return <div style={style} className={`${currentPrefix}-compare-list`}>
@@ -393,7 +398,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                     <table>
                       <thead>
                         <tr>
-                          <td colSpan={3}>
+                          <td colSpan={3} style={{position: 'sticky', left: 0, zIndex: 3}}>
                             <span><FormatMessage id='components.compare.optOrResult'/></span>
                           </td>
                           <td colSpan={3}>
@@ -403,17 +408,17 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                           <td colSpan={3}><FormatMessage id={`components.compare.${isCustomerMeta ? 'customerMeta' : 'dbMeta'}`}/></td>
                         </tr>
                         <tr>
-                          <td>
+                          <td ref={firstRef} style={{position: 'sticky', left: 0, zIndex: 3}}>
                             {!isCustomerMeta && <span
                               className={`${currentPrefix}-listselect-opt-${type}`}
                               onClick={() => _checkBoxChange(null, type)}>
                                 {}
                               </span>}
                           </td>
-                          <td>
+                          <td ref={secondRef} style={columnWidth[0] ? {position: 'sticky', left: columnWidth[0], zIndex: 3} : {}}>
                             <span><FormatMessage id='components.compare.view'/></span>
                           </td>
-                          <td>
+                          <td style={columnWidth[0] ? {position: 'sticky', left: columnWidth[0] + columnWidth[1], zIndex: 3} : {}}>
                             <span><FormatMessage id='components.compare.diffData'/></span>
                           </td>
                           <td>
@@ -450,7 +455,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                     === d?.toLocaleLowerCase())[0] || {};
                             const [statusCom, status] = getStatus(sourceEntity, metaEntity);
                               return [<tr key={d} className={`${currentPrefix}-compare-list-container-content-list-item`}>
-                                <td>
+                                <td style={{position: 'sticky', left: 0, zIndex: 2}}>
                                   {
                                         !isCustomerMeta && <Checkbox
                                           disable={!metaEntity.defKey}
@@ -460,12 +465,12 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                     }
                                   <span>{i + 1}</span>
                                 </td>
-                                <td>
+                                <td style={columnWidth[0] ? {position: 'sticky', left: columnWidth[0], zIndex: 2} : {}}>
                                   {
                                       status === 'wait' ? '' : <a onClick={() => _setExpand(d)}>{FormatMessage.string({id: `components.compare.${expand.includes(d) ? 'fold' : 'view'}`})}</a>
                                     }
                                 </td>
-                                <td>
+                                <td style={columnWidth[0] ? {position: 'sticky', left: columnWidth[0] + columnWidth[1], zIndex: 2} : {}}>
                                   {statusCom}
                                 </td>
                                 <td>
@@ -474,7 +479,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                 <td>
                                   <span>{sourceEntity.defName}</span>
                                 </td>
-                                <td>
+                                <td style={{textAlign: 'right'}}>
                                   <span>{sourceEntity.fields?.length}</span>
                                 </td>
                                 <td>
@@ -501,7 +506,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                 <td>
                                   <span>{metaEntity.defName}</span>
                                 </td>
-                                <td>
+                                <td style={{textAlign: 'right'}}>
                                   <span>{metaEntityData.fields?.length}</span>
                                 </td>
                               </tr>, <tr style={{display: expand.includes(d) ? 'table-row' : 'none'}} key={`${d}-1`} className={`${currentPrefix}-compare-list-container-content-list-item-child`}>

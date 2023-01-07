@@ -714,6 +714,44 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       `${dataSourceRef.current.name}-${FormatMessage.string({id: 'toolbar.setting'})}-${moment().format('YYYYMDHHmmss')}.json`);
 
   };
+  const exportDicts = () => {
+    let data = {
+      dicts: dataSourceRef.current.dicts || [],
+    };
+    Download(
+        [JSON.stringify(data, null, 2)],
+        'application/json',
+        `${dataSourceRef.current.name}-${FormatMessage.string({id: 'toolbar.dicts'})}-${moment().format('YYYYMDHHmmss')}.json`);
+
+  };
+  const importDicts = () => {
+    Upload('application/json', (d) => {
+      const data = JSON.parse(d);
+      if (!data.dicts) {
+        Modal.error({
+          title: FormatMessage.string({id: 'optFail'}),
+          message: FormatMessage.string({id: 'invalidDictsFile'}),
+        });
+      } else {
+        restProps?.update(
+            {
+              ...dataSourceRef.current,
+              dicts: mergeData(dataSourceRef.current.dicts || [], data.dicts, false, true),
+            }
+        );
+        Message.success({title: FormatMessage.string({id: 'optSuccess'})});
+      }
+    }, (file) => {
+      const result = file.name.endsWith('.json');
+      if (!result) {
+        Modal.error({
+          title: FormatMessage.string({id: 'optFail'}),
+          message: FormatMessage.string({id: 'invalidDictsFile'}),
+        });
+      }
+      return result;
+    });
+  };
   const exportDomains = (type) => {
     const codeTemplates = _.get(dataSourceRef.current, 'profile.codeTemplates', [])
         .filter((t) => {
@@ -1259,7 +1297,9 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       case 'appCodes': importDomains('appCode');break;
       case 'exportAppCodes': exportDomains('appCode');break;
       case 'importConfig': importConfig();break;
+      case 'importDicts': importDicts();break;
       case 'exportConfig': exportConfig();break;
+      case 'exportDicts': exportDicts();break;
       case 'undo': undo(); break;
       case 'redo': redo(); break;
       case 'img': exportImg(); break;

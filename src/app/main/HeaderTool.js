@@ -241,6 +241,7 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
                 name: FormatMessage.string({id: 'toolbar.importAppCodes'}),
             },
             { key: 'importConfig', name: FormatMessage.string({id: 'toolbar.importConfig'}) },
+            { key: 'importDicts', name: FormatMessage.string({id: 'toolbar.importDicts'}) },
         ]}
       />
       <GroupIcon
@@ -268,6 +269,7 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
                 name: FormatMessage.string({id: 'toolbar.exportAppCodes'}),
             },
             { key: 'exportConfig', name: FormatMessage.string({id: 'toolbar.exportConfig'}) },
+            { key: 'exportDicts', name: FormatMessage.string({id: 'toolbar.exportDicts'}) },
           ]}
       />
       <GroupIcon title={FormatMessage.string({id: 'toolbar.setting'})} icon='icon-shezhi' onClick={() => openModal('config')}/>
