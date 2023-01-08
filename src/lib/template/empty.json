@@ -1,13 +1,14 @@
 {
-  "name": "empty",
-  "describe": "empty",
+  "name": "教学管理系统-标准模板",
+  "describe": "教学管理系统参考案例",
   "avatar": "",
-  "version": "4.2.2",
+  "version": "4.3.0",
   "createdTime": "2023-1-2 14:47:34",
-  "updatedTime": "2023-1-2 14:55:41",
+  "updatedTime": "2023-1-8 23:17:12",
+  "dbConns": [],
   "profile": {
     "default": {
-      "db": "29D1CE08-4C35-4D2D-AAA9-23D93305B52E",
+      "db": "A4E23CB7-BB01-4BD1-9F71-F73F3E15A542",
       "dbConn": "D4843C6A-F7EC-480D-A8DB-4F6655F65F92",
       "entityInitFields": [
         {
@@ -174,6 +175,30 @@
       {
         "defKey": "Hive",
         "id": "81CCA482-3F4D-4EAC-8CF9-F5E7BC098AD2"
+      },
+      {
+        "defKey": "JAVA",
+        "id": "797A1496-D649-4261-89B4-544132EC3F36"
+      },
+      {
+        "defKey": "JavaMybatis",
+        "id": "895CFD1D-4273-4D32-A2C4-CAC70200AB5B"
+      },
+      {
+        "defKey": "JavaMybatisPlus",
+        "id": "A2EE7B4A-CE62-4290-B00C-B26C1BF18073"
+      },
+      {
+        "defKey": "C#",
+        "id": "F3AC2415-E86B-40C6-9FEB-F4B7937D2C30"
+      },
+      {
+        "defKey": "Golang",
+        "id": "B91D99E0-9B7C-416C-8737-B760957DAF09"
+      },
+      {
+        "defKey": "Rust",
+        "id": "BDF457FD-9F98-4AC3-A705-7587B00A3BAB"
       }
     ],
     "codeTemplates": [
