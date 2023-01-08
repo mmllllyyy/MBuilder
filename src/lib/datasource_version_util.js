@@ -346,7 +346,7 @@ export const simplePackageChanges = (currentDataSource, preDataSource, db, needR
       const pData = preData.filter(c => c.defKey === n.defKey)[0];
       // 1.比较基础信息
       let baseChanged, fieldChanged;
-      const baseNames = ['defKey', 'defName'];
+      const baseNames = ['defKey', 'defName', 'comment'];
       const baseChanges = compareObj(cData, pData, baseNames);
       if (baseChanges.length > 0) {
         baseChanged = {
