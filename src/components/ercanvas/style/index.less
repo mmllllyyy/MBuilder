@@ -1,5 +1,204 @@
 @import "~style";
 
+.@{prefix}-node-size {
+  text-align: center;
+  color: #FFFFFF;
+  font-size: 12px;
+  & > span {
+    background: #4e75fd;
+    padding: 2px 5px;
+  }
+}
+
+.@{prefix}-cell-tooltip {
+  background: @background-color;
+  color: @font-color;
+  padding: 5px;
+  box-shadow: 0 0 6px 2px @primary-border-color;
+  border-radius: 5px;
+  cursor: default;
+}
+.@{prefix}-edge-tooltip {
+  &-content {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    height: 100%;
+    &-line {
+      width: 1px;
+      height: 80%;
+      background: @primary-border-color;
+    }
+    &-item {
+      cursor: pointer;
+      &-data {
+        position: absolute;
+        background: @background-color;
+        color: @font-color;
+        padding: 5px;
+        box-shadow: 0 0 6px 2px @primary-border-color;
+        border-radius: 5px;
+        &-line {
+          width: 100px;
+          padding: 5px 8px;
+          & > div:first-child > {
+            & > div:last-child {
+              display: flex;
+              flex-direction: row;
+              & > div:first-child {
+                width: 29px;
+                height: 29px;
+                background: url("line-straight.png");
+                background-size: cover;
+              }
+              & > div:last-child {
+                width: 29px;
+                height: 29px;
+                background: url("line-polyline.png");
+                background-size: cover;
+              }
+            }
+          }
+          & > div:last-child > {
+            & > div:last-child {
+              display: flex;
+              flex-direction: row;
+              & > div:first-child {
+                width: 50px;
+                height: 29px;
+                background: url("solid.png");
+                background-size: cover;
+              }
+              & > div:last-child {
+                width: 50px;
+                height: 29px;
+                background: url("dashed.png");
+                background-size: cover;
+              }
+            }
+          }
+        }
+        &-arrow {
+          width: 50px;
+          padding: 5px 8px;
+          & > div:first-child {
+            i {
+              font-size: 12px;
+              visibility: visible;
+            }
+            & > div:last-child {
+              width: 30px;
+              height: 30px;
+              background: url("arrow-none.png");
+              background-size: cover;
+            }
+          }
+          & > div:nth-child(2) {
+            & > div:last-child {
+              width: 30px;
+              height: 30px;
+              background: url("arrow-fill.png");
+              background-size: cover;
+            }
+          }
+          & > div:nth-child(3) {
+            & > div:last-child {
+              width: 30px;
+              height: 30px;
+              background: url("arrow-concave.png");
+              background-size: cover;
+            }
+          }
+          & > div:nth-child(4) {
+            & > div:last-child {
+              width: 30px;
+              height: 30px;
+              background: url("arrow-right.png");
+              background-size: cover;
+            }
+          }
+          & > div:nth-child(5) {
+            & > div:last-child {
+              width: 30px;
+              height: 30px;
+              background: url("arrow-stroke.png");
+              background-size: cover;
+            }
+          }
+          & > div:nth-child(6) {
+            & > div:last-child {
+              width: 30px;
+              height: 30px;
+              background: url("arrow-1.png");
+              background-size: cover;
+            }
+          }
+          & > div:nth-child(7) {
+            & > div:last-child {
+              width: 30px;
+              height: 30px;
+              background: url("arrow-n.png");
+              background-size: cover;
+            }
+          }
+          & > div {
+            display: flex;
+            flex-direction: row;
+            cursor: pointer;
+            justify-content: center;
+            align-items: center;
+            i {
+              font-size: 12px;
+              visibility: hidden;
+            }
+          }
+        }
+      }
+      &-line {
+        &-straight {
+          width: 25px;
+          height: 25px;
+          background: url("line-straight.png");
+          background-size: cover;
+        }
+        &-polyline {
+
+        }
+      }
+      &-arrow {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        & > div + div {
+          margin-left: 5px;
+        }
+        &-fill {
+          width: 30px;
+          height: 30px;
+          background: url("arrow-fill.png");
+          background-size: cover;
+        }
+      }
+      padding: 5px 10px;
+      &:hover {
+        //background: @primary-border-color;
+      }
+    }
+  }
+}
+.@{prefix}-node-tooltip {
+  &-content {
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+  }
+}
+
 .@{prefix}-relation-editor {
   padding: 10px;
   display: flex;

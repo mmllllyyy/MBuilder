@@ -857,6 +857,10 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     cavRef?.startDrag(e, key);
     return cavRef;
   };
+  const createTopicNode = (e) => {
+    const cavRef = getCurrentCav();
+    cavRef?.createTopicNode(e);
+  };
   const createNode = (e, type) => {
     const cavRef = getCurrentCav();
     cavRef?.startRemarkDrag(e, type);
@@ -1312,6 +1316,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       case 'round': createNode(e, 'round');break;
       case 'circle': createCircleNode(e);break;
       case 'rect': createNode(e, 'rect');break;
+      case 'mind': createTopicNode(e);break;
       case 'polygon': createPolygonNode(e);break;
       case 'group': createGroupNode(e);break;
       case 'alignLeft':

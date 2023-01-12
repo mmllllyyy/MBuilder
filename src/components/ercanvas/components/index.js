@@ -7,3 +7,7 @@ import './editnode';
 import './table-img';
 import './erdrelation-img';
 import './editnode-img';
+
+// 脑图节点
+import './mindtopic';
+import './mindrelation';

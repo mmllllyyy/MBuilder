@@ -9,6 +9,15 @@
   background-repeat: no-repeat;
   margin-right: 5px;
 }
+.shape(){
+  background-image: url("shape.png");
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-size: 120px;
+  background-repeat: no-repeat;
+  margin-right: 5px;
+}
 
 .@{prefix}-head {
   .@{prefix}-input {
@@ -52,6 +61,22 @@
     .align();
     height: 19px;
     background-position: 0 -124px;
+  }
+  &-rect {
+    .shape();
+    background-position: -3px -2px;
+  }
+  &-round {
+    .shape();
+    background-position: -36px -2px;
+  }
+  &-circle {
+    .shape();
+    background-position: -95px -2px;
+  }
+  &-polygon {
+    .shape();
+    background-position: -66px -2px;
   }
   display: flex;
   flex-direction: row;
@@ -106,20 +131,24 @@
       width: 42px;
     }
   }
+  &-mind {
+    &-disable {
+      opacity: 0.5;
+    }
+    height: 25px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    &-img {
+      background: url("./mind.png") no-repeat;
+      width: 18px;
+      height: 18px;
+      background-size: contain;
+    }
+  }
   &-font {
     text-align: center;
-  }
-  &-rect {
-    width: 13px;
-    height: 24px;
-    padding-top: 5px;
-    & > span {
-      transform: rotate(45deg);
-      display: inline-block;
-      width: 13px;
-      height: 13px;
-      border: 1px solid @font-color;
-    }
   }
   &-search {
     display: flex;

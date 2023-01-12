@@ -115,30 +115,30 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
         //onMouseDown={e => iconClick(e, 'group')}
       />
       <GroupIcon
-        topStyle={{height: '24px'}}
-        hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
-        dropType='icon'
-        groupKey='rect'
+        className={`${currentPrefix}-head-db`}
+        dropType='all'
         disable={activeTab?.type !== 'diagram'}
-        title={FormatMessage.string({id: 'toolbar.rect'})}
+        hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
+        groupKey='shape'
+        title={FormatMessage.string({id: 'toolbar.shape'})}
         icon='fa-square-o'
         onClick={iconClick}
         dropMenu={[
-          { key: 'round', name: FormatMessage.string({id: 'toolbar.round'})},
-          { key: 'circle', name: FormatMessage.string({id: 'toolbar.circle'})},
-        ]}/>
+                {icon: <span className={`${currentPrefix}-head-rect`}/>, key: 'rect', name: FormatMessage.string({id: 'toolbar.rect'})},
+                {icon: <span className={`${currentPrefix}-head-round`}/>, key: 'round', name: FormatMessage.string({id: 'toolbar.round'})},
+                {icon: <span className={`${currentPrefix}-head-circle`}/>, key: 'circle', name: FormatMessage.string({id: 'toolbar.circle'})},
+                {icon: <span className={`${currentPrefix}-head-polygon`}/>,  key: 'polygon', name: FormatMessage.string({id: 'toolbar.polygon'})},
+            ]}/>
       <GroupIcon
         hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
-        title={FormatMessage.string({id: 'toolbar.polygon'})}
-        //style={{cursor: 'move'}}
-        icon={<div className={`${currentPrefix}-head-rect`}>
-          <span>{}</span>
+        title={FormatMessage.string({id: 'toolbar.mind'})}
+        icon={<div className={`${currentPrefix}-head-mind ${currentPrefix}-head-mind-${activeTab?.type !== 'diagram' ? 'disable' : 'normal'}`} >
+          <div className={`${currentPrefix}-head-mind-img`} />
         </div>}
-        groupKey='polygon'
+        groupKey='mind'
         onClick={iconClick}
         disable={activeTab?.type !== 'diagram'}
-        //onMouseDown={e => iconClick(e, 'polygon')}
-      />
+        />
       <GroupIcon
         hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
         title={FormatMessage.string({id: 'toolbar.fontColor'})}
