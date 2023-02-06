@@ -26,6 +26,9 @@
     justify-content: space-around;
     align-items: center;
     height: 100%;
+    & > div + div {
+      margin-left: 2px;
+    }
     &-line {
       width: 1px;
       height: 80%;
@@ -41,107 +44,38 @@
         box-shadow: 0 0 6px 2px @primary-border-color;
         border-radius: 5px;
         &-line {
-          width: 100px;
-          padding: 5px 8px;
-          & > div:first-child > {
-            & > div:last-child {
-              display: flex;
-              flex-direction: row;
-              & > div:first-child {
-                width: 29px;
-                height: 29px;
-                background: url("line-straight.png");
-                background-size: cover;
-              }
-              & > div:last-child {
-                width: 29px;
-                height: 29px;
-                background: url("line-polyline.png");
-                background-size: cover;
-              }
-            }
+          padding: 2px;
+          &-selected {
+            background-color: @second-primary-color;
+            color: @background-color;
           }
-          & > div:last-child > {
+          & > div {
             & > div:last-child {
               display: flex;
               flex-direction: row;
-              & > div:first-child {
-                width: 50px;
-                height: 29px;
-                background: url("solid.png");
-                background-size: cover;
-              }
-              & > div:last-child {
-                width: 50px;
-                height: 29px;
-                background: url("dashed.png");
-                background-size: cover;
+              background-color: @third-primary-color;
+              border-radius: 2px;
+              justify-content: space-between;
+              align-items: center;
+              padding: 5px;
+              & > div {
+                padding: 2px;
+                width: 25px;
+                height: 25px;
+                &:hover {
+                  cursor: pointer;
+                  color: @background-color;
+                  background-color: @primary-color;
+                }
               }
             }
           }
         }
         &-arrow {
           width: 50px;
-          padding: 5px 8px;
-          & > div:first-child {
-            i {
-              font-size: 12px;
-              visibility: visible;
-            }
-            & > div:last-child {
-              width: 30px;
-              height: 30px;
-              background: url("arrow-none.png");
-              background-size: cover;
-            }
-          }
-          & > div:nth-child(2) {
-            & > div:last-child {
-              width: 30px;
-              height: 30px;
-              background: url("arrow-fill.png");
-              background-size: cover;
-            }
-          }
-          & > div:nth-child(3) {
-            & > div:last-child {
-              width: 30px;
-              height: 30px;
-              background: url("arrow-concave.png");
-              background-size: cover;
-            }
-          }
-          & > div:nth-child(4) {
-            & > div:last-child {
-              width: 30px;
-              height: 30px;
-              background: url("arrow-right.png");
-              background-size: cover;
-            }
-          }
-          & > div:nth-child(5) {
-            & > div:last-child {
-              width: 30px;
-              height: 30px;
-              background: url("arrow-stroke.png");
-              background-size: cover;
-            }
-          }
-          & > div:nth-child(6) {
-            & > div:last-child {
-              width: 30px;
-              height: 30px;
-              background: url("arrow-1.png");
-              background-size: cover;
-            }
-          }
-          & > div:nth-child(7) {
-            & > div:last-child {
-              width: 30px;
-              height: 30px;
-              background: url("arrow-n.png");
-              background-size: cover;
-            }
+          padding: 2px;
+          &-border {
+            border-top: 1px solid @primary-border-color;
           }
           & > div {
             display: flex;
@@ -149,6 +83,9 @@
             cursor: pointer;
             justify-content: center;
             align-items: center;
+            &:hover {
+              background-color: @third-primary-color;
+            }
             i {
               font-size: 12px;
               visibility: hidden;
@@ -157,14 +94,14 @@
         }
       }
       &-line {
-        &-straight {
-          width: 25px;
-          height: 25px;
-          background: url("line-straight.png");
-          background-size: cover;
-        }
-        &-polyline {
-
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        & > div {
+          &:hover {
+            background-color: @third-primary-color;
+          }
         }
       }
       &-arrow {
@@ -175,16 +112,21 @@
         & > div + div {
           margin-left: 5px;
         }
-        &-fill {
-          width: 30px;
-          height: 30px;
-          background: url("arrow-fill.png");
-          background-size: cover;
+        & > div {
+          &:hover {
+            background-color: @third-primary-color;
+          }
         }
       }
-      padding: 5px 10px;
-      &:hover {
-        //background: @primary-border-color;
+      i {
+        display: inline-block;
+        width: 32px;
+        height: 32px;
+        text-align: center;
+        line-height: 32px;
+        &:hover {
+          background-color: @third-primary-color;
+        }
       }
     }
   }

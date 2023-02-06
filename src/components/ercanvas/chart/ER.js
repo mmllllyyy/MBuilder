@@ -1102,54 +1102,61 @@ export default class ER {
             node.addTools([{
                 name: 'showSizeTool',
             }]);
-            edgeNodeAddTool(node, graph, id, 'node');
+            edgeNodeAddTool(node, graph, id, 'node', () => {
+                this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
+            });
         }
     }
     edgeSelected = (edge, graph, id) => {
         if (this.isErCell(edge)) {
-            edgeNodeAddTool(edge, graph, id, 'edge');
-            edge.addTools([
-                {
-                    name: 'vertices',
-                    args: {
-                        attrs: {
-                            stroke: this.currentColor.selected,
-                            fill: this.currentColor.circleFill,
-                            strokeWidth: 2,
+            edgeNodeAddTool(edge, graph, id, 'edge', () => {
+                this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
+            });
+            if (!edge.getProp('isLock')) {
+                edge.addTools([
+                    {
+                        name: 'vertices',
+                        args: {
+                            attrs: {
+                                stroke: this.currentColor.selected,
+                                fill: this.currentColor.circleFill,
+                                strokeWidth: 2,
+                            },
                         },
                     },
-                },
-                {
-                    name: 'target-arrowhead',
-                    args: {
-                        attrs: {
-                            d: 'M 0, -5 a 5,5,0,1,1,0,10 a 5,5,0,1,1,0,-10',
-                            fill: this.currentColor.selected,
+                    {
+                        name: 'target-arrowhead',
+                        args: {
+                            attrs: {
+                                d: 'M 0, -5 a 5,5,0,1,1,0,10 a 5,5,0,1,1,0,-10',
+                                fill: this.currentColor.selected,
+                            },
                         },
                     },
-                },
-                {
-                    name: 'source-arrowhead',
-                    args: {
-                        attrs: {
-                            d: 'M 0, -5 a 5,5,0,1,1,0,10 a 5,5,0,1,1,0,-10',
-                            fill: this.currentColor.selected,
+                    {
+                        name: 'source-arrowhead',
+                        args: {
+                            attrs: {
+                                d: 'M 0, -5 a 5,5,0,1,1,0,10 a 5,5,0,1,1,0,-10',
+                                fill: this.currentColor.selected,
+                            },
                         },
                     },
-                },
-                // {
-                //     name: 'edgeTool',
-                //     args: {
-                //
-                //     },
-                // },
-            ]);
+                    // {
+                    //     name: 'edgeTool',
+                    //     args: {
+                    //
+                    //     },
+                    // },
+                ]);
+            }
         }
     }
     delete = () => {
         const cells = this.graph.getSelectedCells();
         if (this.filterErCell(cells).length) {
-            this.graph.removeCells(cells.filter(c => !((c.shape === 'edit-node' ||
+            this.graph.removeCells(cells.filter(c => !c.getProp('isLock'))
+                .filter(c => !((c.shape === 'edit-node' ||
                 (c.shape === 'edit-node-circle-svg') || (c.shape === 'edit-node-polygon')
                 || c.shape === 'edit-node-circle' || c.shape === 'group') && (c.getProp('editable')))));
         }

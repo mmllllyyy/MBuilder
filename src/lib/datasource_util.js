@@ -176,7 +176,10 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
                         'fontColor',
                         'fillColor',
                         'parent',
-                        'router'
+                        'router',
+                        'connector',
+                        'attrs.line.strokeDasharray',
+                        'isLock'
                       ];
                       if (c.shape === 'edit-node' || c.shape === 'edit-node-circle'
                         || c.shape === 'edit-node-polygon'
@@ -255,7 +258,8 @@ const updateAllEntity = (dataSource, diagrams) => {
         const sourceId = _.get(cell, 'source.cell', '');
         const targetId = _.get(cell, 'target.cell', '');
         const relation = (cell.relation || '').split(':');
-        const status = relation[0]?.includes('n');
+        const erRelation = ['n', '0,1', '0,n', '1', '1,n', '0']
+        const status = erRelation.includes(relation[0]);
         const myEntity = allTable
           .filter(t => t.id === (status ? sourceId : targetId))[0]?.originKey;
         const refEntity = allTable

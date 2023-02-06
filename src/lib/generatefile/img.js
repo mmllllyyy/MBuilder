@@ -33,58 +33,8 @@ export const img = (data, relationType, dataSource, needCalc = true, groups) => 
             ..._.get(d, 'attrs.line'),
             strokeWidth: 1,
             stroke: d.fillColor || '#ACDAFC',
-            sourceMarker: {
-              ..._.get(d, 'attrs.line.sourceMarker'),
-              name: '',
-            },
-            targetMarker: {
-              ..._.get(d, 'attrs.line.targetMarker'),
-              name: (relation[1] && relation[1] === 'arrow') ? 'classic' : '',
-            },
           }
         }
-        other.labels = (d.labels || []).map(l => {
-          return {
-            ...l,
-            position: {
-              ...l.position,
-              offset: l.position?.offset ?  l.position?.offset + 8 : {
-                x: 10,
-                y: 8,
-              },
-            },
-          }
-        }).concat([{
-          attrs: {
-            text: {
-              text: (relation[0] || '').toLocaleUpperCase(),
-            },
-          },
-          position: {
-            distance: 10,
-            offset: {
-              x: 10,
-              y: 8,
-            },
-          },
-        },
-          {
-            attrs: {
-              text: {
-                text: (relation[1] || '').toLocaleUpperCase(),
-              },
-            },
-            position: {
-              distance: -10,
-              offset: {
-                x: 10,
-                y: 8,
-              },
-            },
-          }].filter(l => {
-            const text = _.get(l, 'attrs.text.text');
-            return text !== 'NONE' && text !== 'ARROW';
-        }));
       }
       if (d.shape === 'edit-node-polygon' || d.shape === 'edit-node-circle-svg') {
         return {

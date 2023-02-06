@@ -66,7 +66,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       history: {
         enabled: true,
         beforeAddCommand(event, args) {
-          if (args.key === 'zIndex') {
+          if (args.key === 'zIndex' || args.key === 'tools') {
             return false;
           }
           return !args.options.ignoreHistory;
@@ -131,8 +131,8 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
           return erRef.current.preserveAspectRatio(node);
         },
       },
-      interacting: () => {
-        if (isView) return false;
+      interacting: ({cell}) => {
+        if (isView || cell.getProp('isLock')) return false;
         if (interactingRef.current) {
           return {
             nodeMovable: (cellView) => {
@@ -296,7 +296,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       graph.on('selection:changed', ({ added,removed }) => {
         eR.selectionChanged(added, removed);
         mind.selectionChanged(added, removed);
-        selectionChanged && selectionChanged(graph.getSelectedCells());
+        selectionChanged && selectionChanged(graph.getSelectedCells().filter(c => !c.getProp('isLock')));
       });
       graph.on('node:selected', ({ node }) => {
         eR.nodeSelected(node, graph, id);
@@ -331,7 +331,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       });
       graph.on('edge:unselected', ({ edge }) => {
         edgeNodeRemoveTool(id);
-        edge.removeTools({ ignoreHistory : true});
+        edge.removeTools();
       });
       graph.on('edge:change:labels', () => {
         dataChange && dataChange(graph.toJSON({diff: true}));

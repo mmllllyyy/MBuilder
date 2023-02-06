@@ -21,6 +21,12 @@ Graph.registerEdge('erdRelation-img', {
       refY: 8,
       strokeWidth: 1,
       stroke: '#ACDAFC',
+      sourceMarker: {
+        name: 'relation',
+      },
+      targetMarker: {
+        name: 'relation',
+      },
     },
   },
 });
