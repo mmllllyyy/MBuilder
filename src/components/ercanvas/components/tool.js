@@ -98,9 +98,6 @@ class ShowSizeTool extends ToolItem {
     this.init();
     return this;
   }
-  init = () => {
-    console.log('===');
-  }
 }
 
 ShowSizeTool.config({
@@ -293,10 +290,20 @@ const EdgeTooltipContent = ({onUpdate, edge}) => {
 };
 
 
-const NodeTooltipContent = () => {
+const NodeTooltipContent = ({onUpdate, node}) => {
+  const [isLock, setIsLock] = useState(() => {
+    return node.getProp('isLock');
+  });
+  // lock
+  const _onUpdate = (t, value) => {
+    if (t === 'lock') {
+      setIsLock(pre => !pre);
+    }
+    onUpdate(t, value);
+  };
   return <div className={`${prefix}-node-tooltip-content`}>
-    <div><Icon type='fa-link'/></div>
-    <div><Icon type='fa-unlock'/></div>
+    {!isLock && <div><Icon type='fa-link'/></div>}
+    <div onClick={() => _onUpdate('lock', !isLock)}><Icon type={`fa-${isLock ? 'lock' : 'unlock'}`}/></div>
   </div>;
 };
 
@@ -318,7 +325,7 @@ export const edgeNodeAddTool = (edge, graph, id, type, dataChange) => {
     //toolParent.style.width = `${width}px`;
     toolParent.style.height = `${height}px`;
     const onUpdate = (t, v, p) => {
-      graph.batchUpdate('updateEdge', () => {
+      graph.batchUpdate('updateEdgeOrNode', () => {
         if (t === 'lineType') {
           // straight', 'polyline', 'fillet'
           if (v === 'straight') {
@@ -419,7 +426,7 @@ export const edgeNodeAddTool = (edge, graph, id, type, dataChange) => {
         t !== 'label' && dataChange && dataChange();
       });
     };
-    ReactDom.render(type === 'node' ? <NodeTooltipContent/> : <EdgeTooltipContent onUpdate={onUpdate} edge={edge}/>, toolParent);
+    ReactDom.render(type === 'node' ? <NodeTooltipContent onUpdate={onUpdate} node={edge}/> : <EdgeTooltipContent onUpdate={onUpdate} edge={edge}/>, toolParent);
     cellTooltip.appendChild(toolParent);
   }
 };

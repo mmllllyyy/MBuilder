@@ -125,7 +125,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         minWidth: 80,
         minHeight: 60,
         enabled:  (node) => {
-          return erRef.current.resizingEnabled(node);
+          return !node.getProp('isLock') && erRef.current.resizingEnabled(node);
         },
         preserveAspectRatio: (node) => {
           return erRef.current.preserveAspectRatio(node);
@@ -273,6 +273,10 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       }
     });
     graph.on('render:done', () => {
+      graph.mousewheel.container.onscroll = (e) => {
+        edgeNodeRemoveTool(id);
+        eR.onScroll(e);
+      };
       if (!isDoneInit.current) {
         graphRef.current.centerContent();
         isDoneInit.current = true;
@@ -293,6 +297,9 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       graph.on('cell:added', () => {
         dataChange && dataChange(graph.toJSON({diff: true}));
       });
+      graph.on('cell:click', ({cell}) => {
+        eR.cellClick(cell, graph, id);
+      });
       graph.on('selection:changed', ({ added,removed }) => {
         eR.selectionChanged(added, removed);
         mind.selectionChanged(added, removed);
@@ -311,9 +318,8 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       graph.on('edge:connected', (args) => {
         eR.edgeConnected(args, dataSourceRef.current);
       });
-      graph.on('edge:contextmenu', ({cell, e}) => {
-        eR.edgeContextmenu(e, cell);
-      });
+      // graph.on('edge:contextmenu', ({cell, e}) => {
+      // });
       graph.on('edge:change:target', (cell) => {
         eR.edgeChangeTarget(cell);
       });

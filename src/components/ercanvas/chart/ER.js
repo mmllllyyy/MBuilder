@@ -1,8 +1,6 @@
-import {Button, FormatMessage, Message, Modal, openDrawer, openModal} from 'components';
+import {Button, FormatMessage, Message, Modal, openDrawer} from 'components';
 import React from 'react';
 import _ from 'lodash/object';
-import RelationEditor from 'components/ercanvas/RelationEditor';
-import LabelEditor from 'components/ercanvas/LabelEditor';
 import {Shape} from '@antv/x6';
 import ReactDOM from 'react-dom';
 import {
@@ -16,7 +14,6 @@ import {
 import {separator} from '../../../../profile';
 import {getDataByTabId} from '../../../lib/cache';
 import Entity from '../../../app/container/entity';
-import { createContentMenu } from '../components/util';
 import { edgeNodeAddTool} from '../components/tool';
 
 export default class ER {
@@ -742,7 +739,7 @@ export default class ER {
         }
     }
     changePortsVisible = (visible, node, source) => {
-        if (!this.isView) {
+        if (!this.isView && !node?.getProp('isLock')) {
             const currentNodeDom = node ? Array.from(this.container.querySelectorAll('.x6-node')).filter((n) => {
                 return n.getAttribute('data-cell-id') === node.id;
             })[0] : this.container;
@@ -934,117 +931,6 @@ export default class ER {
             }
         }
     };
-    // 创建右键菜单
-    edgeContextmenu = (e, cell) => {
-        if (this.isErCell(cell)) {
-            let lineType = 'straightLine';
-            if (cell.getProp('router')?.name === 'normal') {
-                lineType = 'brokenLine';
-            }
-            createContentMenu(e, [
-                {name: FormatMessage.string({id: 'canvas.edge.editRelation'})},
-                {name: FormatMessage.string({id: 'canvas.edge.relationLabel'})},
-                {name: FormatMessage.string({id: `canvas.edge.${lineType}`})},
-            ], (i) => {
-                if (i === 0) {
-                    const label = cell.getProp('relation') || '1:n';
-                    const relationArray = label.split(':');
-                    const relationChange = (value, type) => {
-                        const index = type === 'form' ? 0 : 1;
-                        relationArray[index] = value;
-                    };
-                    let modal = null;
-                    const onOK = () => {
-                        cell.setProp('relation', relationArray.join(':') || '1:n', { ignoreHistory : true});
-                        cell.attr('line', {
-                            sourceMarker: {
-                                relation: relationArray[0],
-                            },
-                            targetMarker: {
-                                relation: relationArray[1],
-                            },
-                        });
-                        modal && modal.close();
-                    };
-                    const onCancel = () => {
-                        modal && modal.close();
-                    };
-                    modal = openModal(
-                      <RelationEditor
-                        label={label}
-                        relationChange={relationChange}
-                        />,
-                        {
-                            title: <FormatMessage id='canvas.edge.setRelation'/>,
-                            buttons: [
-                              <Button key='onOK' onClick={onOK} type='primary'>
-                                <FormatMessage id='button.ok'/>
-                              </Button>,
-                              <Button key='onCancel' onClick={onCancel}>
-                                <FormatMessage id='button.cancel'/>
-                              </Button>,
-                            ],
-                        });
-                } else if (i === 1){
-                    let modal = null;
-                    let value = cell.getLabelAt(0)?.attrs?.text?.text || '';
-                    const labelChange = (v) => {
-                        value = v;
-                    };
-                    const onOK = () => {
-                        cell.setLabels([{
-                            attrs: {
-                                text: {
-                                    // fill: cell.getProp('fontColor'),
-                                    text: value,
-                                },
-                                rect: {
-                                    // fill: cell.getProp('fillColor'),
-                                },
-                            },
-                        }], { ignoreHistory : true, relation: true});
-                        modal && modal.close();
-                    };
-                    const onCancel = () => {
-                        modal && modal.close();
-                    };
-                    modal = openModal(
-                      <LabelEditor
-                        label={value}
-                        labelChange={labelChange}
-                        />,
-                        {
-                            title: <FormatMessage id='canvas.edge.relationLabel'/>,
-                            buttons: [
-                              <Button key='onOK' onClick={onOK} type='primary'>
-                                <FormatMessage id='button.ok'/>
-                              </Button>,
-                              <Button key='onCancel' onClick={onCancel}>
-                                <FormatMessage id='button.cancel'/>
-                              </Button>,
-                            ],
-                        });
-                } else {
-                    this.graph.batchUpdate('rename', () => {
-                        if (lineType === 'straightLine') {
-                            cell.setProp('router', {
-                                name: 'normal',
-                            });
-                            cell.setProp('vertices', []);
-                        } else {
-                            cell.setProp('router', {
-                                name: 'manhattan',
-                                args: {
-                                    excludeShapes: ['group'],
-                                },
-                            });
-                        }
-                        this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-                    });
-                }
-            });
-        }
-    }
     edgeChangeTarget = (cell) => {
         if (this.isErCell(cell)) {
             const previous = this.graph.getCell(cell.previous.cell);
@@ -1264,4 +1150,14 @@ export default class ER {
             return false;
         });
     }
+    cellClick = (cell, graph, id) => {
+        if (this.isErCell(cell)) {
+            edgeNodeAddTool(cell, graph, id, cell.shape === 'erdRelation' ? 'edge' : 'node', () => {
+                this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
+            });
+        }
+    };
+    onScroll = () => {
+        //this.graph.
+    };
 }
