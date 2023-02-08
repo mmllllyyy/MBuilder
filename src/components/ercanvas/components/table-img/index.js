@@ -8,7 +8,7 @@ const Table = forwardRef(({node}, ref) => {
   const store = node.store;
   const id = node.id;
   const allFk = node?._model?.getIncomingEdges(id)?.map(t => t.getTargetPortId()
-      .split(separator)[0]) || [];
+      ?.split(separator)[0]) || [];
   const calcFKPKShow = (f, h) => {
     if (h.refKey === 'primaryKey') {
       if (f[h.refKey]) {

@@ -55,7 +55,10 @@ class EditableCellTool extends ToolItem {
     setTimeout(() => {
       if (window.getComputedStyle(this.editorContent).pointerEvents !== 'none') {
         this.editorContent.onblur = (e) => {
-          cell.attr('text/text', e.target.value, { ignoreHistory : true});
+          this.graph.batchUpdate('updateNodeText', () => {
+            cell.setProp('label', e.target.value);
+            cell.attr('text/text', e.target.value);
+          });
         };
         this.editorContent.focus();
       }
@@ -309,11 +312,11 @@ const NodeTooltipContent = ({onUpdate, node}) => {
 
 export const edgeNodeAddTool = (edge, graph, id, type, dataChange) => {
   const cellTooltip = document.getElementById(`${id}-cellTooltip`);
-  if (cellTooltip) {
+  const { container } = graph.findView(edge) || {};
+  if (cellTooltip && container) {
     cellTooltip.innerHTML = '';
     const canvasContainer = cellTooltip.parentElement;
     const canvasContainerRect = canvasContainer.getBoundingClientRect();
-    const { container } = graph.findView(edge);
     const rect = container.getBoundingClientRect();
     let width = type === 'node' ? 80 : 200;
     let height = 40;

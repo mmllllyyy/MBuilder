@@ -307,6 +307,7 @@ export default {
             defaultRemark: 'Double click the input',
             remarkPlaceholder: 'Please enter your data(support Markdown)',
             extendError: 'Inheritance failed, the data table has no visible primary key',
+            extendWarring: 'The data table is connected with the source table by primary key! No need to inherit!',
             find: 'Find table on the diagram',
         },
         title: 'Drag entity from left entities to diagram',

@@ -11,7 +11,7 @@ const Table = forwardRef(({node}, ref) => {
   const store = node.store;
   const id = node.id;
   const allFk = node?._model?.getIncomingEdges(id)?.map(t => t.getTargetPortId()
-      .split(separator)[0]) || [];
+      ?.split(separator)[0]) || [];
   const onDragOver = (e) => {
     e.preventDefault();
   };

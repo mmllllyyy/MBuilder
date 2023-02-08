@@ -307,6 +307,7 @@ export default {
             defaultRemark: '双击输入内容',
             remarkPlaceholder: '请输入内容(支持Markdown)',
             extendError: '继承失败，该数据表无可见的主键',
+            extendWarring: '该数据表与源表存在主键相连！无需继承！',
             find: '图上找表',
         },
         title: '从左侧数据表中拖拽数据表至关系图中',

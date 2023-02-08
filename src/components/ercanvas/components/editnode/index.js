@@ -14,7 +14,7 @@ const EditNode = forwardRef(({node}, ref) => {
   const inputRef = useRef(null);
   const editable = node.getProp('editable');
   const onChange = () => {
-    node.setProp('label', inputRef.current.value, { ignoreHistory : true});
+    node.setProp('label', inputRef.current.value);
   };
   useEffect(() => {
     if (editable) {

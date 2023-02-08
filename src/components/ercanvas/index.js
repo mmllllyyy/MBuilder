@@ -68,7 +68,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       history: {
         enabled: true,
         beforeAddCommand(event, args) {
-          if (args.key === 'zIndex' || args.key === 'tools') {
+          if (args.key === 'zIndex' || args.key === 'tools' || args.cell.getProp('isTemp')) {
             return false;
           }
           return !args.options.ignoreHistory;
@@ -369,6 +369,12 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       graph.on('node:mouseleave', ({node}) => {
         eR.nodeMouseLeave(node);
       });
+      graph.on('node:move', () => {
+        edgeNodeRemoveTool(id);
+      });
+      graph.on('node:moved', ({node}) => {
+        eR.nodeMoved(node, graph, id);
+      });
       graph.on('scale', (scale) => {
         scaleChange && scaleChange(scale.sx);
       });
@@ -384,6 +390,12 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
     });
     graph.on('edge:mouseleave', ({edge}) => {
       eR.edgeLeave(edge);
+    });
+    graph.on('edge:move', () => {
+      edgeNodeRemoveTool(id);
+    });
+    graph.on('edge:moved', ({edge}) => {
+      eR.edgeMoved(edge, graph, id);
     });
     const startDrag = (e, key) => {
       eR.startDrag(e, key, dataSourceRef.current);

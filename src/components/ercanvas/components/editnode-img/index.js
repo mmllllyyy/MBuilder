@@ -97,6 +97,8 @@ Graph.registerNode('edit-node-circle-svg-img', {
       strokeWidth: 1,
     },
     text: {
+      refX2: 10,
+      refY2: 8,
       style: {
         fontSize: '12px',
         fill: 'rgba(0, 0, 0, 0.65)',

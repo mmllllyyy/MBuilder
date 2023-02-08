@@ -33,6 +33,14 @@ export const img = (data, relationType, dataSource, needCalc = true, groups) => 
             ..._.get(d, 'attrs.line'),
             strokeWidth: 1,
             stroke: d.fillColor || '#ACDAFC',
+            sourceMarker: {
+              ..._.get(d, 'attrs.line.sourceMarker'),
+              relation: relation[0],
+            },
+            targetMarker: {
+              ..._.get(d, 'attrs.line.targetMarker'),
+              relation: relation[1],
+            },
           }
         }
       }
@@ -50,7 +58,9 @@ export const img = (data, relationType, dataSource, needCalc = true, groups) => 
     });
     graph.on('render:done', () => {
       graph.centerContent();
-      res(dom);
+      //setTimeout(() => {
+        res(dom);
+      //});
     });
     graph.fromJSON({cells});
     if (cells.length === 0) {

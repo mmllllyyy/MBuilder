@@ -440,45 +440,36 @@ export default class ER {
         if (cells.length === 0) {
             cells = this.graph.getCells();
         }
-        cells
-            .forEach((c) => {
-                c.setProp(key, color.hex, { ignoreHistory : true});
-                if (c.shape === 'erdRelation') {
-                    if (key === 'fillColor') {
-                        const tempLine = c.attr('line');
-                        c.attr('line', {
-                            ...tempLine,
-                            stroke: color.hex,
-                            sourceMarker: {
-                                ...tempLine.sourceMarker,
-                                fillColor: color.hex,
-                            },
-                            targetMarker: {
-                                ...tempLine.targetMarker,
-                                fillColor: color.hex,
-                            },
-                        }, { ignoreHistory : true});
+        this.graph.batchUpdate('updateColor', () => {
+            cells
+                .forEach((c) => {
+                    c.setProp(key, color.hex);
+                    if (c.shape === 'erdRelation') {
+                        if (key === 'fillColor') {
+                            const tempLine = c.attr('line');
+                            c.attr('line', {
+                                ...tempLine,
+                                stroke: color.hex,
+                                sourceMarker: {
+                                    ...tempLine.sourceMarker,
+                                    fillColor: color.hex,
+                                },
+                                targetMarker: {
+                                    ...tempLine.targetMarker,
+                                    fillColor: color.hex,
+                                },
+                            });
+                        }
                     }
-                    c.setLabels([{
-                        attrs: {
-                            text: {
-                                // fill: c.getProp('fontColor'),
-                                text: c.getLabelAt(0)?.attrs?.text?.text || '',
-                            },
-                            rect: {
-                                // fill: c.getProp('fillColor'),
-                            },
-                        },
-                    }], { ignoreHistory : true, relation: true});
-                }
-                if (c.shape === 'edit-node-polygon' || c.shape === 'edit-node-circle-svg') {
-                    if (key === 'fillColor') {
-                        c.attr('body/fill', color.hex, { ignoreHistory : true});
-                    } else {
-                        c.attr('text/style/fill', color.hex, { ignoreHistory : true});
+                    if (c.shape === 'edit-node-polygon' || c.shape === 'edit-node-circle-svg') {
+                        if (key === 'fillColor') {
+                            c.attr('body/fill', color.hex);
+                        } else {
+                            c.attr('text/style/fill', color.hex);
+                        }
                     }
-                }
-            });
+                });
+        });
         this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
         const recentColors = [...new Set((dataSource.profile?.recentColors || [])
             .concat(color.hex))];
@@ -562,9 +553,15 @@ export default class ER {
         };
     };
     paste = (e, dataSource) => {
-        this.graph.resetSelection();
         const cells = this.graph.paste();
         const keys = [];
+        cells.forEach((c) => {
+            c.removeTools();
+            c.attr('body', {
+                stroke: c.shape === 'group' ? '#000000' : this.currentColor.border,
+                strokeWidth: 1,
+            }, { ignoreHistory : true});
+        });
         const copyEntities = cells
             .filter(c => c.shape === 'table').map((c) => {
                 const copyDefKey = c.getData().defKey || '';
@@ -582,7 +579,6 @@ export default class ER {
                 };
             });
         this.updateDataSource && this.updateDataSource(this.addEntityData(copyEntities, 'copy', dataSource));
-        this.graph.select(cells);
     }
     nodeDbClick = (e, cell, dataSource) => {
         if (this.isErCell(cell)) {
@@ -663,7 +659,7 @@ export default class ER {
                 } else {
                     this.jumpEntity(entityTabKey);
                 }
-            } else if (!this.isView) {
+            } else if (!this.isView && !cell.getProp('isLock')) {
                 if (cell.shape === 'edit-node'
                     || cell.shape === 'edit-node-circle'
                     || cell.shape === 'group') {
@@ -738,7 +734,7 @@ export default class ER {
                         n.getProp('count') &&
                         n.getProp('count') > count)
                     .forEach((n) => {
-                        n.setProp('count', n.getProp('count') - 1);
+                        n.setProp('count', n.getProp('count') - 1, { ignoreHistory : true});
                     });
             });
         }
@@ -766,7 +762,9 @@ export default class ER {
                 }
             }
             if (visible && (!node || node.shape !== 'group')) {
-                node.toFront();
+                setTimeout(() => {
+                    node.toFront();
+                });
             }
         }
     };
@@ -803,13 +801,13 @@ export default class ER {
                     if (cell.shape === 'edit-node-polygon' || cell.shape === 'edit-node-circle-svg') {
                         this.graph.batchUpdate(() => {
                             cell.removeTools();
-                            cell.setProp('label', cell.attr('text/text'));
-                            cell.attr('text/style/display', '');
+                            cell.setProp('label', cell.attr('text/text'), { ignoreHistory : true});
+                            cell.attr('text/style/display', '', { ignoreHistory : true});
                             cell.attr('body', {
                                 stroke: this.currentColor.border,
                                 strokeWidth: 1,
-                            });
-                        }, { ignoreHistory : true});
+                            }, { ignoreHistory : true});
+                        });
                     }
                     cell.setProp('editable', false, { ignoreHistory : true, relation: true});
                 }
@@ -830,130 +828,143 @@ export default class ER {
     };
     edgeConnected = (args, dataSource) => {
         const edge = args.edge;
-        if (this.isErCell(edge)) {
-            const node = this.graph.getCellById(edge.target.cell);
-            const sourceNode = this.graph.getCellById(edge.source.cell);
-            if (edge.target.port.includes('extend')) {
-                this.graph.removeCell(edge, { ignoreHistory: true });
-                this.graph.history.undoStack.pop();
-                const primaryKeys = (node.data?.fields || []).filter(f => f.primaryKey);
-                if (primaryKeys.length === 0) {
-                    Message.error({title: FormatMessage.string({id: 'canvas.node.extendError'})});
-                } else {
-                    // 增加主键之间的连线
-                    const allEdges = this.graph.getEdges();
-                    const tempEdges = primaryKeys.map((p) => {
-                        return {
-                            id: Math.uuid(),
-                            shape: 'erdRelation',
-                            relation: '1:n',
-                            source: {
-                                cell: edge.target.cell,
-                                port: `${p.id}${separator}out`,
-                            },
-                            target: {
-                                cell: edge.source.cell,
-                                port: `${p.id}${separator}in`,
-                            },
-                        };
-                    }).filter((e) => {
-                        // 过滤重复的连接线
-                        return allEdges.findIndex((old) => {
-                            if((old.source.cell === e.source.cell)
-                                && (old.target.cell === e.target.cell)) {
-                                return  (old.source.port === e.source.port)
-                                    && (old.target.port === e.target.port);
-                            } else if((old.source.cell === e.target.cell)
-                                && (old.target.cell === e.source.cell)) {
-                                return  (old.source.port === e.target.port)
-                                    && (old.target.port === e.source.port);
-                            }
-                            return false;
-                        }) < 0;
-                    });
-                    this.graph.addEdges(tempEdges, { auto: true});
-                    const sourceKey = sourceNode.getProp('originKey');
-                    const newDataSource = {
-                        ...dataSource,
-                        entities: (dataSource.entities || []).map(((entity) => {
-                            if (entity.id === sourceKey) {
-                                const tempFields = entity.fields || [];
-                                const tempPrimaryKeys = primaryKeys
-                                    .filter(p => tempFields
-                                        .findIndex(f => f.id === p.id) < 0);
-                                return {
-                                    ...entity,
-                                    fields: tempPrimaryKeys.concat(tempFields),
+        if (this.isErCell(edge) && edge.getProp('isTemp')) {
+            this.graph.batchUpdate('createEdge', () => {
+                const node = this.graph.getCellById(edge.target.cell);
+                const sourceNode = this.graph.getCellById(edge.source.cell);
+                if (edge.target.port.includes('extend')) {
+                    const nodeData = (dataSource.entities || [])
+                        .filter(e => e.id === node.getProp('originKey'))[0] || node.data || {};
+                    const primaryKeys = (nodeData.fields || []).filter(f => f.primaryKey);
+                    if (primaryKeys.length === 0) {
+                        Message.error({title: FormatMessage.string({id: 'canvas.node.extendError'})});
+                    } else {
+                        const targetField = primaryKeys[0];
+                        const sourceField = (sourceNode?.data?.fields || [])
+                            .filter(f => f.defKey === targetField.defKey)[0];
+                        const createEdge = (creatField) => {
+                            this.graph.addEdge({
+                                shape: 'erdRelation',
+                                relation: '1:n',
+                                source: {
+                                    cell: edge.target.cell,
+                                    port: `${targetField.id}${separator}out`,
+                                },
+                                target: {
+                                    cell: edge.source.cell,
+                                    port: `${targetField.id}${separator}in`,
+                                },
+                            });
+                            this.graph.removeCell(edge);
+                            if (creatField) {
+                                const sourceKey = sourceNode.getProp('originKey');
+                                const newDataSource = {
+                                    ...dataSource,
+                                    entities: (dataSource.entities || []).map(((entity) => {
+                                        if (entity.id === sourceKey) {
+                                            const tempFields = entity.fields || [];
+                                            return {
+                                                ...entity,
+                                                fields: [targetField].concat(tempFields),
+                                            };
+                                        }
+                                        return entity;
+                                    })),
                                 };
+                                this.updateDataSource && this.updateDataSource(newDataSource);
                             }
-                            return entity;
-                        })),
-                    };
-                    this.updateDataSource && this.updateDataSource(newDataSource);
-                }
-            } else {
-                edge.setProp('relation', '1:n', { ignoreHistory: true });
-                edge.setProp('fillColor', this.currentColor.fillColor, { ignoreHistory: true });
-                edge.attr({
-                    line: {
-                        strokeDasharray: '',
-                        sourceMarker: {
-                            name: 'relation',
-                            relation: '1',
+                        };
+                        if (sourceField) {
+                            // 判断两个字段之间是否已经存在连线
+                            const allEdges = this.graph.getEdges();
+                            const sourceFieldPort = [`${sourceField.id}${separator}in`, `${sourceField.id}${separator}out`];
+                            const targetFieldPort = [`${targetField.id}${separator}in`, `${targetField.id}${separator}out`];
+                            if (!allEdges.some((e) => {
+                                if (e.source.cell === sourceNode.id && e.target.cell === node.id) {
+                                    return sourceFieldPort.includes(e.source.port)
+                                        && targetFieldPort.includes(e.target.port);
+                                    // eslint-disable-next-line max-len
+                                } else if (e.source.cell === node.id && e.target.cell === sourceNode.id) {
+                                    return targetFieldPort.includes(e.source.port)
+                                        && sourceFieldPort.includes(e.target.port);
+                                }
+                                return false;
+                            })) {
+                                // 创建连线
+                                createEdge(false);
+                            } else {
+                                Message.warring({title: FormatMessage.string({id: 'canvas.node.extendWarring'})});
+                                this.graph.removeCell(edge);
+                            }
+                        } else {
+                            // 创建连线
+                            createEdge(true);
+                        }
+                    }
+                } else {
+                    const newEdge = edge.clone();
+                    newEdge.setProp('isTemp', false);
+                    newEdge.setProp('relation', '1:n');
+                    newEdge.setProp('fillColor', this.currentColor.fillColor);
+                    newEdge.attr({
+                        line: {
+                            strokeDasharray: '',
+                            sourceMarker: {
+                                name: 'relation',
+                                relation: '1',
+                            },
+                            targetMarker: {
+                                name: 'relation',
+                                relation: 'n',
+                            },
                         },
-                        targetMarker: {
-                            name: 'relation',
-                            relation: 'n',
-                        },
-                    },
-                }, { ignoreHistory: true, relation: true });
-            }
-            const calcPorts = (port, calcNode) => {
-                const incomingEdges = this.graph.getIncomingEdges(calcNode) || [];
-                const outgoingEdges = this.graph.getOutgoingEdges(calcNode) || [];
-                const usedPorts = incomingEdges.map((e) => {
-                    return e.getTargetPortId();
-                }).concat(outgoingEdges.map((e) => {
-                    return e.getSourcePortId();
-                }));
-                const currentGroup = (/(\d+)/g).test(port) ? port.match(/[A-Za-z]+/g)[0] : port;
-                const currentGroupPorts = calcNode.getPorts()
-                    .filter(p => p.group === currentGroup).map(p => p.id);
-                if (currentGroupPorts.length ===
-                    [...new Set(usedPorts.filter(p => p.includes(currentGroup)))].length) {
-                    calcNode.addPort({
-                        id: `${currentGroup}${currentGroupPorts.length + 1}`, group: currentGroup,
                     });
+                    this.graph.addEdge(newEdge);
+                    this.graph.removeCell(edge);
                 }
-            };
-            if (node.shape === 'edit-node' || (this.relationType === 'entity' && node.shape === 'table')) {
-                // 判断输入锚点是否已经用完
-                calcPorts(edge.target.port, node);
-            }
-            if (sourceNode.shape === 'edit-node' || (this.relationType === 'entity' && node.shape === 'table')) {
-                // 判断输出锚点是否已经用完
-                calcPorts(edge.source.port, sourceNode);
-            }
+                const calcPorts = (port, calcNode) => {
+                    const incomingEdges = this.graph.getIncomingEdges(calcNode) || [];
+                    const outgoingEdges = this.graph.getOutgoingEdges(calcNode) || [];
+                    const usedPorts = incomingEdges.map((e) => {
+                        return e.getTargetPortId();
+                    }).concat(outgoingEdges.map((e) => {
+                        return e.getSourcePortId();
+                    }));
+                    const currentGroup = (/(\d+)/g).test(port) ? port.match(/[A-Za-z]+/g)[0] : port;
+                    const currentGroupPorts = calcNode.getPorts()
+                        .filter(p => p.group === currentGroup).map(p => p.id);
+                    if (currentGroupPorts.length ===
+                        [...new Set(usedPorts.filter(p => p.includes(currentGroup)))].length) {
+                        calcNode.addPort({
+                            id: `${currentGroup}${currentGroupPorts.length + 1}`, group: currentGroup,
+                        });
+                    }
+                };
+                if (node.shape === 'edit-node' || (this.relationType === 'entity' && node.shape === 'table')) {
+                    // 判断输入锚点是否已经用完
+                    calcPorts(edge.target.port, node);
+                }
+                if (sourceNode.shape === 'edit-node' || (this.relationType === 'entity' && node.shape === 'table')) {
+                    // 判断输出锚点是否已经用完
+                    calcPorts(edge.source.port, sourceNode);
+                }
+            });
         }
     };
     edgeChangeTarget = (cell) => {
-        if (this.isErCell(cell)) {
+        if (this.isErCell(cell.edge)) {
             const previous = this.graph.getCell(cell.previous.cell);
             const current = this.graph.getCell(cell.current.cell);
             previous?.setProp('targetPort', '', { ignoreHistory : true});
-            if (!cell.options.propertyPath) {
-                current?.setProp('targetPort', cell.current.port, { ignoreHistory : true});
-            }
+            current?.setProp('targetPort', cell.current.port, { ignoreHistory : true});
         }
     };
     edgeChangeSource = (cell) => {
-        if (this.isErCell(cell)) {
+        if (this.isErCell(cell.edge)) {
             const previous = this.graph.getCell(cell.previous.cell);
             const current = this.graph.getCell(cell.current.cell);
             previous?.setProp('sourcePort', '', { ignoreHistory : true});
-            if (!cell.options.propertyPath) {
-                current?.setProp('sourcePort', cell.current.port, { ignoreHistory : true});
-            }
+            current?.setProp('sourcePort', cell.current.port, { ignoreHistory : true});
         }
     };
     edgeMouseup = (edge) => {
@@ -966,26 +977,9 @@ export default class ER {
         }
     }
     edgeAdded = (edge, options) => {
-        if (this.isErCell(edge)) {
-        if (!options.auto && !options.undo && !options.redo) {
+        if (this.isErCell(edge) && edge.getProp('isTemp')) {
             const source = edge.getSourceCell();
             source.setProp('sourcePort', edge.getSource().port, { ignoreHistory : true});
-        } else if (options.redo) {
-            edge.attr({
-                line: {
-                    strokeDasharray: '',
-                    sourceMarker: {
-                        name: 'relation',
-                        relation: '1',
-                    },
-                    targetMarker: {
-                        name: 'relation',
-                        relation: 'n',
-                    },
-                },
-            }, { ignoreHistory: true });
-        }
-        edge.removeTools();
         }
     }
     nodeSelected = (node, graph, id) => {
@@ -996,6 +990,9 @@ export default class ER {
             edgeNodeAddTool(node, graph, id, 'node', () => {
                 this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
             });
+            if(node.shape === 'group') {
+                console.log('group');
+            }
         }
     }
     edgeSelected = (edge, graph, id) => {
@@ -1061,7 +1058,9 @@ export default class ER {
                 }
             }
             if (cell.shape === 'group') {
-                cell.toBack();
+                setTimeout(() => {
+                    cell.toBack();
+                });
             }
             if (options.undo && cell.isNode()) {
                 cell.attr('body', {
@@ -1090,6 +1089,7 @@ export default class ER {
     createEdge = () => {
         return new Shape.Edge({
             shape: 'erdRelation',
+            isTemp: true, // 临时创建文件 无需在历史中存在
             attrs: {
                 line: {
                     strokeDasharray: '5 5',
@@ -1170,4 +1170,18 @@ export default class ER {
     onScroll = () => {
         //this.graph.
     };
+    nodeMoved = (cell, graph, id) => {
+        if (this.isErCell(cell) && graph.isSelected(cell)) {
+            edgeNodeAddTool(cell, graph, id, 'node', () => {
+                this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
+            });
+        }
+    };
+    edgeMoved = (cell, graph, id) => {
+        if (this.isErCell(cell) && graph.isSelected(cell)) {
+            edgeNodeAddTool(cell, graph, id, 'edge', () => {
+                this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
+            });
+        }
+    }
 }
