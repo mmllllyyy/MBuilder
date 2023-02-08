@@ -697,7 +697,7 @@ export default class ER {
             }
         }
     }
-    edgeOver = (edge) => {
+    edgeOver = (edge, graph, id, isScroll) => {
         if (this.isErCell(edge)) {
             const sourceNode = edge.getSourceCell();
             const targetNode = edge.getTargetCell();
@@ -706,6 +706,11 @@ export default class ER {
             edge.attr('line/stroke', this.currentColor.selected, { ignoreHistory : true});
             edge.attr('line/sourceMarker/fillColor', this.currentColor.selected, { ignoreHistory : true});
             edge.attr('line/targetMarker/fillColor', this.currentColor.selected, { ignoreHistory : true});
+        }
+        if (!isScroll && graph.isSelected(edge)) {
+            edgeNodeAddTool(edge, graph, id, 'edge', () => {
+                this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
+            });
         }
 
     }
@@ -1065,10 +1070,15 @@ export default class ER {
             }
         }
     }
-    nodeMouseEnter = (node) => {
+    nodeMouseEnter = (node, graph, id, isScroll) => {
         if (this.isErCell(node)) {
             if (!this.graph.isSelected(node) || node.shape === 'table') {
                 this.changePortsVisible(true, node);
+            }
+            if (!isScroll && graph.isSelected(node)) {
+                edgeNodeAddTool(node, graph, id, 'node', () => {
+                    this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
+                });
             }
         }
     };

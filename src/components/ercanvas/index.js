@@ -33,6 +33,8 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
   const isDoneInit = useRef(false);
   dataSourceRef.current = dataSource;
   const id = useMemo(() => `er-${Math.uuid()}`, []);
+  const isScroll = useRef(false);
+  const scrollTimer = useRef(null);
   const render = () => {
     if (!isInit.current) {
       graphRef.current.fromJSON({
@@ -274,6 +276,13 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
     });
     graph.on('render:done', () => {
       graph.mousewheel.container.onscroll = (e) => {
+        isScroll.current = true;
+        if (scrollTimer.current) {
+          clearTimeout(scrollTimer.current);
+        }
+        scrollTimer.current = setTimeout(() => {
+          isScroll.current = false;
+        }, 100);
         edgeNodeRemoveTool(id);
         eR.onScroll(e);
       };
@@ -355,7 +364,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         eR.nodeAdded(cell, options, dataSourceRef.current);
       });
       graph.on('node:mouseenter', ({node}) => {
-        eR.nodeMouseEnter(node);
+        eR.nodeMouseEnter(node, graph, id, isScroll.current);
       });
       graph.on('node:mouseleave', ({node}) => {
         eR.nodeMouseLeave(node);
@@ -371,7 +380,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       eR.nodeDbClick(e, cell, dataSourceRef.current);
     });
     graph.on('edge:mouseenter', ({edge}) => {
-      eR.edgeOver(edge);
+      eR.edgeOver(edge, graph, id, isScroll.current);
     });
     graph.on('edge:mouseleave', ({edge}) => {
       eR.edgeLeave(edge);

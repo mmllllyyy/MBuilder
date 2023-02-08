@@ -310,6 +310,7 @@ const NodeTooltipContent = ({onUpdate, node}) => {
 export const edgeNodeAddTool = (edge, graph, id, type, dataChange) => {
   const cellTooltip = document.getElementById(`${id}-cellTooltip`);
   if (cellTooltip) {
+    cellTooltip.innerHTML = '';
     const canvasContainer = cellTooltip.parentElement;
     const canvasContainerRect = canvasContainer.getBoundingClientRect();
     const { container } = graph.findView(edge);
