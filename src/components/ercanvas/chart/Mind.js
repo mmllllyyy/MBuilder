@@ -1,7 +1,7 @@
 import Hierarchy from '@antv/hierarchy';
 import {FormatMessage} from 'components';
 import { tree2array } from '../../../lib/tree';
-import { createContentMenu } from '../components/util';
+import { createContentMenu, getChildrenCell } from '../components/util';
 
 export default class Mind {
     count = 1;
@@ -20,18 +20,6 @@ export default class Mind {
     isMindCell = (cell) => {
         return this.filterMindCell(cell).length > 0;
     }
-    getChildrenCell = (n, cells) => {
-        if (n.prop('children')?.length > 0) {
-            return n.prop('children').reduce((a, b) => {
-                const child = cells.filter(c => c.id === b)[0];
-                if (child) {
-                    return a.concat(child).concat(this.getChildrenCell(child, cells));
-                }
-                return a;
-            }, []);
-        }
-        return [];
-    };
     updateTree = (node) => {
         const nodes = this.graph.getNodes();
         const getChildrenId = (n) => {
@@ -111,7 +99,7 @@ export default class Mind {
                 expand: (n) => {
                     this.graph.batchUpdate('expand', () => {
                         const currentExpand = !n.prop('isExpand');
-                        const children = this.getChildrenCell(n, this.graph.getNodes());
+                        const children = getChildrenCell(n, this.graph.getNodes());
                         children.forEach((c) => {
                             currentExpand ? c.show() : c.hide();
                         });

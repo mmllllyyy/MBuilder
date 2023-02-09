@@ -104,6 +104,9 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         enabled: true,
         multiple: true,
         rubberband: true,
+        filter(node) {
+          return !node.getProp('isLock');
+        },
         //modifiers: 'alt|ctrl',
       },
       mousewheel: {
@@ -119,7 +122,8 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
           return erRef.current.createEdge();
         },
         validateConnection({targetPort, targetView, sourcePort,sourceCell}) {
-          return erRef.current.validateConnection(targetPort, targetView, sourcePort,sourceCell);
+          return !targetView.cell.getProp('isLock') && !sourceCell.getProp('isLock')
+              && erRef.current.validateConnection(targetPort, targetView, sourcePort,sourceCell);
         },
       },
       grid: false,
@@ -308,6 +312,9 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       });
       graph.on('cell:click', ({cell}) => {
         eR.cellClick(cell, graph, id);
+      });
+      graph.on('blank:click', () => {
+        edgeNodeRemoveTool(id);
       });
       graph.on('selection:changed', ({ added,removed }) => {
         eR.selectionChanged(added, removed);

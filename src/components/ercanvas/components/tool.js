@@ -294,6 +294,7 @@ const EdgeTooltipContent = ({onUpdate, edge}) => {
 
 
 const NodeTooltipContent = ({onUpdate, node}) => {
+  const parent = node.getParent();
   const [isLock, setIsLock] = useState(() => {
     return node.getProp('isLock');
   });
@@ -306,11 +307,11 @@ const NodeTooltipContent = ({onUpdate, node}) => {
   };
   return <div className={`${prefix}-node-tooltip-content`}>
     {!isLock && <div><Icon type='fa-link'/></div>}
-    <div onClick={() => _onUpdate('lock', !isLock)}><Icon type={`fa-${isLock ? 'lock' : 'unlock'}`}/></div>
+    { !parent && <div onClick={() => _onUpdate('lock', !isLock)}><Icon type={`fa-${isLock ? 'lock' : 'unlock'}`}/></div>}
   </div>;
 };
 
-export const edgeNodeAddTool = (edge, graph, id, type, dataChange) => {
+export const edgeNodeAddTool = (edge, graph, id, dataChange) => {
   const cellTooltip = document.getElementById(`${id}-cellTooltip`);
   const { container } = graph.findView(edge) || {};
   if (cellTooltip && container) {
@@ -318,7 +319,7 @@ export const edgeNodeAddTool = (edge, graph, id, type, dataChange) => {
     const canvasContainer = cellTooltip.parentElement;
     const canvasContainerRect = canvasContainer.getBoundingClientRect();
     const rect = container.getBoundingClientRect();
-    let width = type === 'node' ? 80 : 200;
+    let width = edge.isNode() ? 80 : 200;
     let height = 40;
 
     const toolParent = document.createElement('div');
@@ -430,7 +431,8 @@ export const edgeNodeAddTool = (edge, graph, id, type, dataChange) => {
         t !== 'label' && dataChange && dataChange();
       });
     };
-    ReactDom.render(type === 'node' ? <NodeTooltipContent onUpdate={onUpdate} node={edge}/> : <EdgeTooltipContent onUpdate={onUpdate} edge={edge}/>, toolParent);
+    ReactDom.render(edge.isNode() ? <NodeTooltipContent onUpdate={onUpdate} node={edge}/>
+        : <EdgeTooltipContent onUpdate={onUpdate} edge={edge}/>, toolParent);
     cellTooltip.appendChild(toolParent);
   }
 };

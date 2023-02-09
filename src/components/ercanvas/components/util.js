@@ -62,3 +62,16 @@ export const createContentMenu = (event, menus, cb) => {
         menuContainer.focus();
     });
 };
+
+export const getChildrenCell = (n, cells) => {
+    if (n.prop('children')?.length > 0) {
+        return n.prop('children').reduce((a, b) => {
+            const child = cells.filter(c => c.id === b)[0];
+            if (child) {
+                return a.concat(child).concat(getChildrenCell(child, cells));
+            }
+            return a;
+        }, []);
+    }
+    return [];
+};

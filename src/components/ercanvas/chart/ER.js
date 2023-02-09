@@ -3,6 +3,7 @@ import React from 'react';
 import _ from 'lodash/object';
 import {Shape} from '@antv/x6';
 import ReactDOM from 'react-dom';
+import {getChildrenCell} from 'components/ercanvas/components/util';
 import {
     calcCellData,
     calcNodeData,
@@ -704,7 +705,7 @@ export default class ER {
             edge.attr('line/targetMarker/fillColor', this.currentColor.selected, { ignoreHistory : true});
         }
         if (!isScroll && graph.isSelected(edge)) {
-            edgeNodeAddTool(edge, graph, id, 'edge', () => {
+            edgeNodeAddTool(edge, graph, id, () => {
                 this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
             });
         }
@@ -815,6 +816,23 @@ export default class ER {
                 cell.attr('line/stroke', cell.getProp('fillColor')
                     || this.currentColor.fillColor, { ignoreHistory : true});
                 cell.attr('line/strokeWidth', 1, { ignoreHistory : true});
+            }
+        });
+
+        // 分组和子节点需要互斥选中
+        const addChildren = added
+            .reduce((p, n) => p.concat(getChildrenCell(n, this.graph.getCells())), [])
+            .map(n => n.id);
+        added.filter(n => !addChildren.includes(n.id)).forEach((node) => {
+            const childrenIds = getChildrenCell(node, this.graph.getCells()).map(n => n.id);
+            const children = this.graph.getSelectedCells()
+                .filter(c => childrenIds.includes(c.id));
+            const parent = this.graph.getSelectedCells()
+                .filter(c => getChildrenCell(c, this.graph.getCells()).map(n => n.id)
+                    .includes(node.id));
+            const unselectCells = children.concat(parent);
+            if (unselectCells.length > 0) {
+                this.graph.unselect(unselectCells);
             }
         });
     }
@@ -976,30 +994,21 @@ export default class ER {
         this.changePortsVisible(false);
         }
     }
-    edgeAdded = (edge, options) => {
+    edgeAdded = (edge) => {
         if (this.isErCell(edge) && edge.getProp('isTemp')) {
             const source = edge.getSourceCell();
             source.setProp('sourcePort', edge.getSource().port, { ignoreHistory : true});
         }
     }
-    nodeSelected = (node, graph, id) => {
+    nodeSelected = (node) => {
         if (this.isErCell(node)) {
             node.addTools([{
                 name: 'showSizeTool',
             }]);
-            edgeNodeAddTool(node, graph, id, 'node', () => {
-                this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-            });
-            if(node.shape === 'group') {
-                console.log('group');
-            }
         }
     }
-    edgeSelected = (edge, graph, id) => {
+    edgeSelected = (edge) => {
         if (this.isErCell(edge)) {
-            edgeNodeAddTool(edge, graph, id, 'edge', () => {
-                this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-            });
             if (!edge.getProp('isLock')) {
                 edge.addTools([
                     {
@@ -1043,10 +1052,12 @@ export default class ER {
     delete = () => {
         const cells = this.graph.getSelectedCells();
         if (this.filterErCell(cells).length) {
-            this.graph.removeCells(cells.filter(c => !c.getProp('isLock'))
+            const deleteCells = cells.filter(c => !c.getProp('isLock'))
                 .filter(c => !((c.shape === 'edit-node' ||
-                (c.shape === 'edit-node-circle-svg') || (c.shape === 'edit-node-polygon')
-                || c.shape === 'edit-node-circle' || c.shape === 'group') && (c.getProp('editable')))));
+                    (c.shape === 'edit-node-circle-svg') || (c.shape === 'edit-node-polygon')
+                    || c.shape === 'edit-node-circle' || c.shape === 'group') && (c.getProp('editable'))));
+            deleteCells.forEach(c => c.removeTools());
+            this.graph.removeCells(deleteCells);
         }
     }
     nodeAdded = (cell, options, dataSource) => {
@@ -1058,9 +1069,9 @@ export default class ER {
                 }
             }
             if (cell.shape === 'group') {
-                setTimeout(() => {
-                    cell.toBack();
-                });
+                // setTimeout(() => {
+                //     cell.toBack();
+                // });
             }
             if (options.undo && cell.isNode()) {
                 cell.attr('body', {
@@ -1075,7 +1086,7 @@ export default class ER {
                 this.changePortsVisible(true, node);
             }
             if (!isScroll && graph.isSelected(node)) {
-                edgeNodeAddTool(node, graph, id, 'node', () => {
+                edgeNodeAddTool(node, graph, id, () => {
                     this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
                 });
             }
@@ -1162,7 +1173,7 @@ export default class ER {
     }
     cellClick = (cell, graph, id) => {
         if (this.isErCell(cell)) {
-            edgeNodeAddTool(cell, graph, id, cell.shape === 'erdRelation' ? 'edge' : 'node', () => {
+            edgeNodeAddTool(cell, graph, id, () => {
                 this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
             });
         }
@@ -1172,14 +1183,14 @@ export default class ER {
     };
     nodeMoved = (cell, graph, id) => {
         if (this.isErCell(cell) && graph.isSelected(cell)) {
-            edgeNodeAddTool(cell, graph, id, 'node', () => {
+            edgeNodeAddTool(cell, graph, id, () => {
                 this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
             });
         }
     };
     edgeMoved = (cell, graph, id) => {
         if (this.isErCell(cell) && graph.isSelected(cell)) {
-            edgeNodeAddTool(cell, graph, id, 'edge', () => {
+            edgeNodeAddTool(cell, graph, id, () => {
                 this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
             });
         }
