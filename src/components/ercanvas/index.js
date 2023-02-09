@@ -111,7 +111,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       history: {
         enabled: true,
         beforeAddCommand(event, args) {
-          if (args.key === 'zIndex' || args.key === 'tools' || args.cell.getProp('isTemp')) {
+          if (args.key === 'zIndex' || args.key === 'tools' || args.cell.getProp('isTemp') || args.key === 'visible') {
             return false;
           }
           return !args.options.ignoreHistory;

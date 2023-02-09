@@ -666,12 +666,14 @@ export default class ER {
                     || cell.shape === 'group') {
                     if (cell.shape === 'group') {
                         // 暂时隐藏所有的子节点
-                        const cells = cell.getChildren();
-                        if (cells) {
-                            cells.forEach((c) => {
-                                c.hide();
-                            });
-                        }
+                        this.graph.batchUpdate('hideChildren',() => {
+                            const cells = getChildrenCell(cell, this.graph.getCells());
+                            if (cells) {
+                                cells.forEach((c) => {
+                                    c.hide({ ignoreHistory : true});
+                                });
+                            }
+                        });
                     }
                     cell.setProp('editable', true, { ignoreHistory : true});
                 } else if (cell.shape === 'edit-node-polygon' || cell.shape === 'edit-node-circle-svg') {
@@ -791,13 +793,14 @@ export default class ER {
                 if (cell.shape === 'edit-node-polygon' || cell.shape === 'edit-node-circle-svg' ||
                     cell.shape === 'edit-node' || cell.shape === 'edit-node-circle' || cell.shape === 'group') {
                     if (cell.shape === 'group') {
-                        // 暂时隐藏所有的子节点
-                        const cells = cell.getChildren();
-                        if (cells) {
-                            cells.forEach((c) => {
-                                c.show();
-                            });
-                        }
+                        this.graph.batchUpdate('showChildren', () => {
+                            const cells = getChildrenCell(cell, this.graph.getCells());
+                            if (cells) {
+                                cells.forEach((c) => {
+                                    c.show({ ignoreHistory : true});
+                                });
+                            }
+                        });
                     }
                     if (cell.shape === 'edit-node-polygon' || cell.shape === 'edit-node-circle-svg') {
                         this.graph.batchUpdate(() => {
