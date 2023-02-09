@@ -193,11 +193,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
   const validateTableStatus = (key) => {
     return tabsRef.current.findIndex(t => t.tabKey === key) >= 0;
   };
-  const scaleChange = (scale) => {
-    headerToolRef.current.setScaleNumber(scale);
-  };
   const renderReady = (cav, key) => {
-    scaleChange(1);
     cavRefArray.current.push({
       cav,
       key,
@@ -218,8 +214,6 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
   useEffect(() => {
     const cavRef = getCurrentCav();
     if (cavRef) {
-      // 更新放大倍数
-      scaleChange(cavRef.getScaleNumber().sx || 1);
       setDraggable(true);
     } else {
       setDraggable(false);
@@ -302,25 +296,11 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
         // eslint-disable-next-line no-use-before-define
         callback, restProps?.updateAllVersion, genImg);
   };
-  const sliderChange = (percent) => {
-    const cavRef = cavRefArray.current.filter(cav => activeKeyRef.current === cav.key)[0]?.cav;
-    if (cavRef) {
-      cavRef.zoomGraph(percent * 2 / 100, true);
-    }
-  };
   const resize = (factor) => {
     const cavRef = getCurrentCav();
     if (cavRef) {
       cavRef.validateScale(factor);
     }
-  };
-  const undo = () => {
-    const cavRef = getCurrentCav();
-    cavRef.undo();
-  };
-  const redo = () => {
-    const cavRef = getCurrentCav();
-    cavRef.redo();
   };
   const genImg = (useBase = false, filterDiagrams = []) => {
     const currentDiagrams = dataSourceRef.current?.diagrams || [];
@@ -1065,7 +1045,6 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
         getDataSource={getDataSource}
         common={common}
         save={otherTabSave}
-        scaleChange={scaleChange}
         activeKey={activeKey}
         validateTableStatus={validateTableStatus}
         tabKey={t.tabKey}
@@ -1304,8 +1283,6 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       case 'importDicts': importDicts();break;
       case 'exportConfig': exportConfig();break;
       case 'exportDicts': exportDicts();break;
-      case 'undo': undo(); break;
-      case 'redo': redo(); break;
       case 'img': exportImg(); break;
       case 'word': exportWord(); break;
       case 'html':
@@ -1583,7 +1560,6 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       iconClick={iconClick}
       activeTab={activeTab}
       resize={resize}
-      sliderChange={sliderChange}
       colorChange={_colorChange}
       openModal={_openModal}
       jumpPosition={_jumpPosition}

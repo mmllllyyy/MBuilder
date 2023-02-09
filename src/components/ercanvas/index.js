@@ -7,6 +7,7 @@ import './components';
 import {getPrefix} from '../../lib/prefixUtil';
 import { img } from '../../lib/generatefile/img';
 import FindEntity from './FindEntity';
+import ToolBar from './ToolBar';
 import clipCanvasEmptyPadding from './_util/clip_canvas';
 import * as align from '../../lib/position';
 import ER from './chart/ER';
@@ -16,7 +17,7 @@ import { edgeNodeRemoveTool } from './components/tool';
 const { Dnd } = Addon;
 
 export default ({data, dataSource, renderReady, updateDataSource, validateTableStatus, prefix,
-                  dataChange, openEntity, tabKey, activeKey, scaleChange, common, tabDataChange,
+                  dataChange, openEntity, tabKey, activeKey, common, tabDataChange,
                   changes, versionsData, save, getDataSource, openDict, selectionChanged,
                   jumpEntity, diagramKey, relationType,changeTab, openTab, closeTab,
                   ...restProps}) => {
@@ -28,6 +29,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
   const graphRef = useRef(null);
   const erRef = useRef(null);
   const mindRef = useRef(null);
+  const toolBarRef = useRef(null);
   const interactingRef = useRef(true);
   const dataSourceRef = useRef(dataSource);
   const isDoneInit = useRef(false);
@@ -43,6 +45,47 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       isInit.current = true;
     } else {
       erRef.current.update(dataSourceRef.current);
+    }
+  };
+  const undo = () => {
+    const cells = graphRef.current.getSelectedCells();
+    graphRef.current.cleanSelection();
+    graphRef.current.undo({undo: true});
+    graphRef.current.resetSelection(cells);
+  };
+  const redo = () => {
+    const cells = graphRef.current.getSelectedCells();
+    graphRef.current.cleanSelection();
+    graphRef.current.redo({undo: true});
+    graphRef.current.resetSelection(cells);
+  };
+  const setSelection = (status) => {
+    if (status) {
+      graphRef.current.enableRubberband();
+      graphRef.current.scroller.widgetOptions.modifiers = ['ctrl', 'meta'];
+    } else {
+      graphRef.current.disableRubberband();
+      graphRef.current.scroller.widgetOptions.modifiers = [];
+    }
+  };
+  const setMinimap = () => {
+    const minimapContainer = document.getElementById(`${id}minimapContainer`);
+    if (minimapContainer) {
+      if (minimapContainer.style.opacity === '0') {
+        minimapContainer.style.opacity = '1';
+        minimapContainer.style.pointerEvents = 'auto';
+      } else {
+        minimapContainer.style.opacity = '0';
+        minimapContainer.style.pointerEvents = 'none';
+      }
+    }
+  };
+  const sliderChange = (percent) => {
+    if (percent === 'fit') {
+      graphRef.current.scale(1);
+      graphRef.current.centerContent();
+    } else {
+      graphRef.current.scale(percent * 2 / 100);
     }
   };
   useEffect(() => {
@@ -187,18 +230,6 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
     const mind = new Mind({graph, dnd});
     erRef.current = eR;
     mindRef.current = mind;
-    const undo = () => {
-      const cells = graph.getSelectedCells();
-      graph.cleanSelection();
-      graph.undo({undo: true});
-      graph.resetSelection(cells);
-    };
-    const redo = () => {
-      const cells = graph.getSelectedCells();
-      graph.cleanSelection();
-      graph.redo({undo: true});
-      graph.resetSelection(cells);
-    };
     if (!isView) {
       graph.bindKey(['ctrl+c','command+c'], (e) => {
         const cells = graph.getSelectedCells();
@@ -255,16 +286,8 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
     }
     graph.bindKey(['ctrl+m','command+m'], (e) => {
       e.preventDefault();
-      const minimapContainer = document.getElementById(`${id}minimapContainer`);
-      if (minimapContainer) {
-        if (minimapContainer.style.opacity === '0') {
-          minimapContainer.style.opacity = '1';
-          minimapContainer.style.pointerEvents = 'auto';
-        } else {
-          minimapContainer.style.opacity = '0';
-          minimapContainer.style.pointerEvents = 'none';
-        }
-      }
+      setMinimap();
+      toolBarRef.current.setMinimap();
     });
     graph.bindKey(['ctrl+f','command+f'], (e) => {
       e.preventDefault();
@@ -383,7 +406,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         eR.nodeMoved(node, graph, id);
       });
       graph.on('scale', (scale) => {
-        scaleChange && scaleChange(scale.sx);
+        toolBarRef.current.scaleChange(scale.sx);
       });
       graph.history.on('undo', (args) => {
         console.log(args);
@@ -404,6 +427,9 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
     graph.on('edge:moved', ({edge}) => {
       eR.edgeMoved(edge, graph, id);
     });
+    graph.history.on('change', () => {
+      toolBarRef.current.historyChange(graph.history);
+    });
     const startDrag = (e, key) => {
       eR.startDrag(e, key, dataSourceRef.current);
     };
@@ -421,19 +447,6 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
     };
     const createTopicNode = (e) => {
       mind.createTopicNode(e, true);
-    };
-    const zoomGraph = (factor, scale) => {
-      if (scale) {
-        graph.scale(factor);
-      } else if (typeof factor === 'number') {
-        graph.zoom(factor);
-      } else if (factor === 'fit') {
-        graph.scale(1);
-        graph.zoomToFit({ padding: 12 });
-      } else {
-        graph.scale(1);
-        graph.centerContent();
-      }
     };
     const alignment = (a) => {
       const cells = graph.getSelectedCells();
@@ -472,15 +485,12 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
     };
     renderReady && renderReady({
       update,
-      undo,
-      redo,
       startDrag,
       startRemarkDrag,
       startGroupNodeDrag,
       startPolygonNodeDrag,
       createCircleNode,
       createTopicNode,
-      zoomGraph,
       validateScale,
       getScaleNumber,
       updateColor,
@@ -546,5 +556,14 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       {}
     </div>
     <div id={`${id}-cellTooltip`} />
+    <ToolBar
+      undo={undo}
+      redo={redo}
+      isView={isView}
+      ref={toolBarRef}
+      sliderChange={sliderChange}
+      setSelection={setSelection}
+      setMinimap={setMinimap}
+    />
   </>;
 };

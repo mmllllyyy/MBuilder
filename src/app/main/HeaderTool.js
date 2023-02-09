@@ -1,16 +1,14 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
-import {FormatMessage, GroupIcon, Icon, SearchSuggest, Slider, NumberInput, Modal, ColorPicker} from 'components';
-import numeral from 'numeral';
+import {FormatMessage, GroupIcon, Icon, SearchSuggest, Modal, ColorPicker} from 'components';
 import {validateNeedSave} from '../../lib/datasource_util';
 import { checkAlignEnable} from '../../lib/position';
 
 const GroupIconGroup = GroupIcon.GroupIconGroup;
 
 export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorChange, openModal,
-                                        activeTab, resize, sliderChange, dataSource,
+                                        activeTab, dataSource,
                                         jumpPosition, jumpDetail}, ref) => {
   const [isCellSelected, setIsCellSelected] = useState([]);
-  const [scaleNumber, setScaleNumber] = useState(1);
   const [colorState, setColor] = useState({
     fontColor: 'rgba(0, 0, 0, 0.65)',
     fillColor: '#ACDAFC',
@@ -23,7 +21,6 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
   };
   useImperativeHandle(ref, () => {
     return {
-      setScaleNumber,
       setIsCellSelected,
     };
   }, []);
@@ -74,20 +71,6 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
         title={FormatMessage.string({id: 'toolbar.refresh'})}
         onClick={() => iconClick(null, 'refresh')}
         icon='fa-refresh'
-      />
-      <GroupIcon
-        title={FormatMessage.string({id: 'toolbar.undo'})}
-        onClick={() => iconClick(null, 'undo')}
-        icon='icon-bianzu4'
-        disable={activeTab?.type !== 'diagram'}
-        hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
-      />
-      <GroupIcon
-        onClick={() => iconClick(null, 'redo')}
-        title={FormatMessage.string({id: 'toolbar.redo'})}
-        icon='icon-bianzu3'
-        disable={activeTab?.type !== 'diagram'}
-        hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
       />
       {/* eslint-disable-next-line max-len */}
       {/*<GroupIcon title={FormatMessage.string({id: 'toolbar.opt'})} icon='opt.svg' dropMenu={[]}/>*/}
@@ -194,32 +177,6 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
             ]}/>
     </GroupIconGroup>
     <GroupIconGroup>
-      <GroupIcon
-        hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
-        disable={activeTab?.type !== 'diagram'}
-        title={FormatMessage.string({id: 'toolbar.scale'})}
-        icon={<>
-          <span className={`${currentPrefix}-head-scale
-           ${currentPrefix}-head-scale-${activeTab?.type !== 'diagram' ? 'disable' : 'normal'}`}>
-            <Icon type='fa-minus' onClick={() => resize(-0.1)}/>
-            <span>
-              <NumberInput
-                readOnly={activeTab?.type !== 'diagram'}
-                onBlur={e => sliderChange(numeral(e.target.value).divide(2).value())}
-                min={0}
-                max={200}
-                value={parseInt(numeral(scaleNumber).multiply(100).value(), 10)}
-                formatter={value => `${value}%`}
-                parser={value => value.replace('%', '')}
-              />
-            </span>
-            <Icon type='fa-plus ' onClick={() => resize(0.1)}/>
-          </span>
-          <div>
-            <Slider disable={activeTab?.type !== 'diagram'} onChange={sliderChange} value={numeral(scaleNumber).multiply(50).value()}/>
-          </div>
-        </>}
-      />
       <GroupIcon
         title={FormatMessage.string({id: 'toolbar.import'})}
         onClick={iconClick}

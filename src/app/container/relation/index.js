@@ -6,7 +6,7 @@ import { removeDataByTabId } from '../../../lib/cache';
 
 const Relation = React.memo(({dataSource, renderReady, diagramKey, validateTableStatus,
                                tabDataChange, tabKey, activeKey, updateDataSource, openEntity,
-                               scaleChange, common, changes, versionsData, jumpEntity, closeLoading,
+                               common, changes, versionsData, jumpEntity, closeLoading,
                                save, autoSave, getDataSource, openDict, selectionChanged,
                                openLoading}) => {
   const relationRef = useRef(null);
@@ -60,7 +60,6 @@ const Relation = React.memo(({dataSource, renderReady, diagramKey, validateTable
       tabKey={tabKey}
       activeKey={activeKey}
       common={common}
-      scaleChange={scaleChange}
       tabDataChange={tabDataChange}
       changes={changes}
       versionsData={versionsData}
