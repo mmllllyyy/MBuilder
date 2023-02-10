@@ -112,16 +112,18 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
                 {icon: <span className={`${currentPrefix}-head-circle`}/>, key: 'circle', name: FormatMessage.string({id: 'toolbar.circle'})},
                 {icon: <span className={`${currentPrefix}-head-polygon`}/>,  key: 'polygon', name: FormatMessage.string({id: 'toolbar.polygon'})},
             ]}/>
-      <GroupIcon
-        hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
-        title={FormatMessage.string({id: 'toolbar.mind'})}
-        icon={<div className={`${currentPrefix}-head-mind ${currentPrefix}-head-mind-${activeTab?.type !== 'diagram' ? 'disable' : 'normal'}`} >
-          <div className={`${currentPrefix}-head-mind-img`} />
-        </div>}
-        groupKey='mind'
-        onClick={iconClick}
-        disable={activeTab?.type !== 'diagram'}
-        />
+      {/*<GroupIcon*/}
+      {/* eslint-disable-next-line max-len */}
+      {/*  hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}*/}
+      {/*  title={FormatMessage.string({id: 'toolbar.mind'})}*/}
+      {/* eslint-disable-next-line max-len */}
+      {/*  icon={<div className={`${currentPrefix}-head-mind ${currentPrefix}-head-mind-${activeTab?.type !== 'diagram' ? 'disable' : 'normal'}`} >*/}
+      {/*    <div className={`${currentPrefix}-head-mind-img`} />*/}
+      {/*  </div>}*/}
+      {/*  groupKey='mind'*/}
+      {/*  onClick={iconClick}*/}
+      {/*  disable={activeTab?.type !== 'diagram'}*/}
+      {/*  />*/}
       <GroupIcon
         hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
         title={FormatMessage.string({id: 'toolbar.fontColor'})}

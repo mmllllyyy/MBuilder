@@ -48,6 +48,8 @@ const Tree = React.memo(({prefix, dataSource, labelRender, defaultCheckeds,
     }
     updateExpands(tempExpands);
   };
+  const reg = new RegExp((searchValue || '')
+      .replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
   const _checkBoxChange = (e, { key, children }, parent) => {
     let tempCheckeds = [...checkeds];
     const checked = e.target.checked;
@@ -64,7 +66,7 @@ const Tree = React.memo(({prefix, dataSource, labelRender, defaultCheckeds,
         }
         if (children) {
           // 选中所有子节点
-          currentChecked.push(...calcKey(children));
+          currentChecked.push(...calcKey(children.filter(c => reg.test(c.value || ''))));
         }
         tempCheckeds = [...new Set(tempCheckeds.concat(currentChecked))];
       }
@@ -76,7 +78,7 @@ const Tree = React.memo(({prefix, dataSource, labelRender, defaultCheckeds,
       }
       if (children) {
         // 取消选中所有子节点
-        currentUnChecked.push(...calcKey(children));
+        currentUnChecked.push(...calcKey(children.filter(c => reg.test(c.value || ''))));
       }
       tempCheckeds = tempCheckeds.filter(p => !currentUnChecked.includes(p));
     }
@@ -84,8 +86,6 @@ const Tree = React.memo(({prefix, dataSource, labelRender, defaultCheckeds,
     onChange && onChange(tempCheckeds.filter(k => !parentKeys.includes(k)));
   };
   const currentPrefix = getPrefix(prefix);
-  const reg = new RegExp((searchValue || '')
-    .replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
   const renderChild = (d, p) => {
     return d.children ?
       <ul key={d.key}>
