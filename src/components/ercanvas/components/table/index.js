@@ -10,6 +10,7 @@ const Table = forwardRef(({node}, ref) => {
   const data = node.data;
   const store = node.store;
   const id = node.id;
+  const linkData = JSON.parse(node.getProp('link') || '{}');
   const allFk = node?._model?.getIncomingEdges(id)?.map(t => t.getTargetPortId()
       ?.split(separator)[0]) || [];
   const onDragOver = (e) => {
@@ -17,6 +18,9 @@ const Table = forwardRef(({node}, ref) => {
   };
   const onDrop = (e) => {
     store?.data?.updateFields(store.data.originKey, JSON.parse(e.dataTransfer.getData('fields')));
+  };
+  const nodeClickText = () => {
+    store?.data?.nodeClickText(node);
   };
   const validateSelected = (f, {targetPort, sourcePort}) => {
     const fieldTargetPort = `${f.id}${separator}in`;
@@ -70,7 +74,10 @@ const Table = forwardRef(({node}, ref) => {
       className='chiner-er-table-header'
       style={{background: node.getProp('fillColor')}}
     >
-      {`${getTitle()}${store?.data.count > 0 ? `:${store?.data.count}` : ''}`}
+      {
+        linkData.type ? <a style={{textDecoration: 'underline'}} onClick={nodeClickText}>{getTitle()}{store?.data.count > 0 ? `:${store?.data.count}` : ''}</a>
+            : `${getTitle()}${store?.data.count > 0 ? `:${store?.data.count}` : ''}`
+      }
       {
         data?.comment &&
           <Tooltip title={data?.comment} force conversion={1} placement='top'>

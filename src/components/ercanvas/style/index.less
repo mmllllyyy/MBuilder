@@ -330,3 +330,24 @@
     }
   }
 }
+
+
+.@{prefix}-relation-link {
+  &-type {
+    display: flex;
+    flex-direction: row !important;
+  }
+  &-tree {
+    width: 100%;
+    min-height: 100px;
+    max-height: 60vh;
+    .@{prefix}-chiner-search-input {
+      input {
+        width: 100%;
+      }
+    }
+    input + span {
+      margin-left: 3px;
+    }
+  }
+}

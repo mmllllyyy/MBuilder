@@ -1,8 +1,9 @@
 import { Graph, ToolsView } from '@antv/x6';
 import ReactDom from 'react-dom';
 import React, {useRef, useState} from 'react';
-import {Button, FormatMessage, Icon, openModal} from 'components';
-import LabelEditor from 'components/ercanvas/LabelEditor';
+import {Button, FormatMessage, Icon, Modal, openModal} from 'components';
+import LabelEditor from '../LabelEditor';
+import LinkEditor from '../LinkEditor';
 import { prefix } from '../../../../profile';
 import Svg from './svg';
 
@@ -306,134 +307,191 @@ const NodeTooltipContent = ({onUpdate, node}) => {
     onUpdate(t, value);
   };
   return <div className={`${prefix}-node-tooltip-content`}>
-    {!isLock && <div><Icon type='fa-link'/></div>}
+    {!isLock && <div onClick={() => _onUpdate('link')}><Icon type='fa-link'/></div>}
     { !parent && <div onClick={() => _onUpdate('lock', !isLock)}><Icon type={`fa-${isLock ? 'lock' : 'unlock'}`}/></div>}
   </div>;
 };
 
-export const edgeNodeAddTool = (edge, graph, id, dataChange) => {
-  const cellTooltip = document.getElementById(`${id}-cellTooltip`);
-  const { container } = graph.findView(edge) || {};
-  if (cellTooltip && container) {
-    cellTooltip.innerHTML = '';
-    const canvasContainer = cellTooltip.parentElement;
-    const canvasContainerRect = canvasContainer.getBoundingClientRect();
-    const rect = container.getBoundingClientRect();
-    let width = edge.isNode() ? 80 : 200;
-    let height = 40;
+let preNode;
 
-    const toolParent = document.createElement('div');
-    toolParent.setAttribute('class', `${prefix}-cell-tooltip`);
-    toolParent.style.position = 'absolute';
-    toolParent.style.left = `${rect.x - canvasContainerRect.x + rect.width / 2 - width / 2}px`;
-    toolParent.style.bottom = `${canvasContainerRect.bottom - rect.top + 5}px`;
-    //toolParent.style.width = `${width}px`;
-    toolParent.style.height = `${height}px`;
-    const onUpdate = (t, v, p) => {
-      graph.batchUpdate('updateEdgeOrNode', () => {
-        if (t === 'lineType') {
-          // straight', 'polyline', 'fillet'
-          if (v === 'straight') {
-            edge.setProp('router', {
-              name: 'normal',
-            });
-            edge.setProp('vertices', []);
-            edge.setProp('connector', {
-              name: 'normal',
-            });
-          } else {
-            if (v === 'fillet') {
-              edge.setProp('connector', {
-                name: 'rounded',
-                args: {
-                  radius: 10,
-                },
+export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource) => {
+  if (preNode !== edge) {
+    preNode = edge;
+    const cellTooltip = document.getElementById(`${id}-cellTooltip`);
+    const { container } = graph.findView(edge) || {};
+    if (cellTooltip && container) {
+      cellTooltip.innerHTML = '';
+      const canvasContainer = cellTooltip.parentElement;
+      const canvasContainerRect = canvasContainer.getBoundingClientRect();
+      const rect = container.getBoundingClientRect();
+      let width = edge.isNode() ? 80 : 200;
+      let height = 40;
+
+      const toolParent = document.createElement('div');
+      toolParent.setAttribute('class', `${prefix}-cell-tooltip`);
+      toolParent.style.position = 'absolute';
+      toolParent.style.left = `${rect.x - canvasContainerRect.x + rect.width / 2 - width / 2}px`;
+      toolParent.style.bottom = `${canvasContainerRect.bottom - rect.top + 5}px`;
+      //toolParent.style.width = `${width}px`;
+      toolParent.style.height = `${height}px`;
+      const onUpdate = (t, v, p) => {
+        graph.batchUpdate('updateEdgeOrNode', () => {
+          if (t === 'lineType') {
+            // straight', 'polyline', 'fillet'
+            if (v === 'straight') {
+              edge.setProp('router', {
+                name: 'normal',
               });
-            } else {
+              edge.setProp('vertices', []);
               edge.setProp('connector', {
                 name: 'normal',
               });
+            } else {
+              if (v === 'fillet') {
+                edge.setProp('connector', {
+                  name: 'rounded',
+                  args: {
+                    radius: 10,
+                  },
+                });
+              } else {
+                edge.setProp('connector', {
+                  name: 'normal',
+                });
+              }
+              edge.setProp('router', {
+                name: 'manhattan',
+                args: {
+                  excludeShapes: ['group'],
+                },
+              });
             }
-            edge.setProp('router', {
-              name: 'manhattan',
-              args: {
-                excludeShapes: ['group'],
+          } else if(t === 'lineStyle'){
+            if (v === 'dotted-large') {
+              edge.attr('line/strokeDasharray', '5 5');
+            } else {
+              edge.attr('line/strokeDasharray', '');
+            }
+          } else if(t === 'relation') {
+            //edge.setProp('relation', relationArray.join(':') || '1:n');
+            if (p === 'left') {
+              edge.attr('line/sourceMarker/relation', v);
+            } else {
+              edge.attr('line/targetMarker/relation', v);
+            }
+            edge.setProp('relation', `${edge.attr('line/sourceMarker/relation')}:${edge.attr('line/targetMarker/relation')}`);
+          } else if (t === 'arrow-exchange') {
+            edge.attr('line', {
+              sourceMarker: {
+                relation: edge.attr('line/targetMarker/relation'),
+              },
+              targetMarker: {
+                relation: edge.attr('line/sourceMarker/relation'),
               },
             });
-          }
-        } else if(t === 'lineStyle'){
-          if (v === 'dotted-large') {
-            edge.attr('line/strokeDasharray', '5 5');
-          } else {
-            edge.attr('line/strokeDasharray', '');
-          }
-        } else if(t === 'relation') {
-          //edge.setProp('relation', relationArray.join(':') || '1:n');
-          if (p === 'left') {
-            edge.attr('line/sourceMarker/relation', v);
-          } else {
-            edge.attr('line/targetMarker/relation', v);
-          }
-          edge.setProp('relation', `${edge.attr('line/sourceMarker/relation')}:${edge.attr('line/targetMarker/relation')}`);
-        } else if (t === 'arrow-exchange') {
-          edge.attr('line', {
-            sourceMarker: {
-              relation: edge.attr('line/targetMarker/relation'),
-            },
-            targetMarker: {
-              relation: edge.attr('line/sourceMarker/relation'),
-            },
-          });
-          edge.setProp('relation', `${edge.attr('line/sourceMarker/relation')}:${edge.attr('line/targetMarker/relation')}`);
-        } else if(t === 'lock') {
-          edge.setProp('isLock', v);
-          graph.cleanSelection();
-          if (!v) {
-            graph.select(edge);
-          }
-        } else if (t === 'label') {
-          let modal = null;
-          let value = edge.getLabelAt(0)?.attrs?.text?.text || '';
-          const labelChange = (label) => {
-            value = label;
-          };
-          const onOK = () => {
-            edge.setLabels([{
-              attrs: {
-                text: {
-                  text: value,
+            edge.setProp('relation', `${edge.attr('line/sourceMarker/relation')}:${edge.attr('line/targetMarker/relation')}`);
+          } else if(t === 'lock') {
+            edge.setProp('isLock', v);
+            graph.cleanSelection();
+            if (!v) {
+              graph.select(edge);
+            }
+          } else if (t === 'label') {
+            let modal = null;
+            let value = edge.getLabelAt(0)?.attrs?.text?.text || '';
+            const labelChange = (label) => {
+              value = label;
+            };
+            const onOK = () => {
+              edge.setLabels([{
+                attrs: {
+                  text: {
+                    text: value,
+                  },
                 },
-              },
-            }]);
-            dataChange && dataChange();
-            modal && modal.close();
-          };
-          const onCancel = () => {
-            modal && modal.close();
-          };
-          modal = openModal(
-            <LabelEditor
-              label={value}
-              labelChange={labelChange}
-              />,
-              {
-                title: <FormatMessage id='canvas.edge.relationLabel'/>,
-                buttons: [
-                  <Button key='onOK' onClick={onOK} type='primary'>
-                    <FormatMessage id='button.ok'/>
-                  </Button>,
-                  <Button key='onCancel' onClick={onCancel}>
-                    <FormatMessage id='button.cancel'/>
-                  </Button>,
-                ],
-              });
-        }
-        t !== 'label' && dataChange && dataChange();
-      });
-    };
-    ReactDom.render(edge.isNode() ? <NodeTooltipContent onUpdate={onUpdate} node={edge}/>
-        : <EdgeTooltipContent onUpdate={onUpdate} edge={edge}/>, toolParent);
-    cellTooltip.appendChild(toolParent);
+              }]);
+              dataChange && dataChange();
+              modal && modal.close();
+            };
+            const onCancel = () => {
+              modal && modal.close();
+            };
+            modal = openModal(
+              <LabelEditor
+                label={value}
+                labelChange={labelChange}
+                />,
+                {
+                  title: <FormatMessage id='canvas.edge.relationLabel'/>,
+                  buttons: [
+                    <Button key='onOK' onClick={onOK} type='primary'>
+                      <FormatMessage id='button.ok'/>
+                    </Button>,
+                    <Button key='onCancel' onClick={onCancel}>
+                      <FormatMessage id='button.cancel'/>
+                    </Button>,
+                  ],
+                });
+          } else if(t === 'link') {
+            let modal = null;
+            if (edge.getProp('link') === undefined) {
+              edge.setProp('link', '{"type": ""}');
+            }
+            let linkData = JSON.parse(edge.getProp('link'));
+            const linkChange = (data) => {
+              linkData = data;
+            };
+            const onOK = () => {
+              if (Object.keys(linkData).length === 0
+                  || (linkData.type && !linkData.value)) {
+                Modal.error({
+                  title: FormatMessage.string({id: 'optFail'}),
+                  message: FormatMessage.string({id: 'formValidateMessage'}),
+                });
+              } else {
+                graph.batchUpdate('updateLink', () => {
+                  edge.setProp('link', JSON.stringify(linkData));
+                  edge.attr('text/style', {
+                    cursor: linkData.type ? 'pointer' : 'none',
+                    textDecoration: linkData.type ? 'underline' : 'none',
+                    fill: linkData.type ? '#4e75fd' : (edge.getProp('fontColor') || 'rgba(0, 0, 0, 0.65)'),
+                  });
+                });
+                dataChange && dataChange();
+                modal && modal.close();
+              }
+            };
+            const onCancel = () => {
+              modal && modal.close();
+            };
+            modal = openModal(
+              <LinkEditor
+                getDataSource={getDataSource}
+                data={linkData}
+                onChange={linkChange}
+                />,
+                {
+                  title: <FormatMessage id='canvas.node.link'/>,
+                  buttons: [
+                    <Button key='onOK' onClick={onOK} type='primary'>
+                      <FormatMessage id='button.ok'/>
+                    </Button>,
+                    <Button key='onCancel' onClick={onCancel}>
+                      <FormatMessage id='button.cancel'/>
+                    </Button>,
+                  ],
+                });
+          }
+          t !== 'label' && t !== 'link' && dataChange && dataChange();
+        });
+      };
+      ReactDom.render(edge.isNode() ? <NodeTooltipContent
+        onUpdate={onUpdate}
+        node={edge}
+        getDataSource={getDataSource}/>
+          : <EdgeTooltipContent onUpdate={onUpdate} edge={edge}/>, toolParent);
+      cellTooltip.appendChild(toolParent);
+    }
   }
 };
 
@@ -443,5 +501,6 @@ export const edgeNodeRemoveTool = (id) => {
     Array.from(cellTooltip.children).forEach((c) => {
       cellTooltip.removeChild(c);
     });
+    preNode = null;
   }
 };

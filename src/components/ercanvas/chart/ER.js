@@ -16,6 +16,7 @@ import {separator} from '../../../../profile';
 import {getDataByTabId} from '../../../lib/cache';
 import Entity from '../../../app/container/entity';
 import { edgeNodeAddTool} from '../components/tool';
+import {openUrl} from '../../../lib/json2code_util';
 
 export default class ER {
     currentColor = {
@@ -398,6 +399,7 @@ export default class ER {
             count,
             updateFields: (originKey, fieldData) =>
                 this.updateFields(dataSource, originKey, fieldData),
+            nodeClickText: this.nodeTextClick,
             data: {
                 ...empty,
                 fields,
@@ -415,6 +417,7 @@ export default class ER {
             label: '',
             size: size,
             ports: this.commonPorts,
+            nodeClickText: this.nodeTextClick,
         });
         this.dnd.start(node, e.nativeEvent);
     };
@@ -423,6 +426,7 @@ export default class ER {
             shape: 'group',
             label: '',
             size: this.defaultGroupNodeSize,
+            nodeClickText: this.nodeTextClick,
         });
         this.dnd.start(node, e.nativeEvent);
     };
@@ -432,6 +436,7 @@ export default class ER {
             label: '',
             size: this.defaultEditNodePolygonSize,
             ports: this.commonPolygonPorts,
+            nodeClickText: this.nodeTextClick,
         });
         this.dnd.start(node, e.nativeEvent);
     };
@@ -493,11 +498,44 @@ export default class ER {
         });
         this.dnd.start(node, e.nativeEvent);
     };
+    nodeTextClick = (node) => {
+        const link = JSON.parse(node.getProp('link') || '{}');
+        if (link.type) {
+            if (link.type === 'externally') {
+                openUrl(link.value);
+            } else {
+                const iconMap = {
+                    entities: 'fa-table',
+                    views: 'icon-shitu',
+                    diagrams: 'icon-guanxitu',
+                    dicts: 'icon-shujuzidian',
+                };
+                const keyMap = {
+                    entities: 'entity',
+                    views: 'view',
+                    diagrams: 'diagram',
+                    dicts: 'dict',
+                };
+                // openDict(data.id, 'dict', null, 'dict.svg');
+                const dataSource = this.getDataSource();
+                const currenTab = Object.keys(iconMap).filter((i) => {
+                    return dataSource[i].some(d => d.id === link.value);
+                })[0];
+                if (currenTab) {
+                    this.openDict(link.value, keyMap[currenTab], null, iconMap[currenTab]);
+                } else {
+                    Message.error({title: `${FormatMessage.string({id: 'canvas.node.invalidLink'})}`});
+                }
+            }
+        }
+        //console.log(node);
+    }
     render = (data, dataSource) => {
         return calcCellData(data?.canvasData?.cells || [],
             dataSource,
             (originKey, fields) => this.updateFields(dataSource, originKey, fields),
-            this.getTableGroup(), this.commonPorts, this.relationType, this.commonEntityPorts);
+            this.getTableGroup(), this.commonPorts, this.relationType,
+            this.commonEntityPorts, this.nodeTextClick);
     }
     update = (dataSource) => {
         const cells = this.graph.getCells();
@@ -511,7 +549,8 @@ export default class ER {
                     dataSource,
                     (originKey, fields) => this.updateFields(dataSource, originKey, fields),
                     this.getTableGroup(),
-                    this.commonPorts, this.relationType, this.commonEntityPorts) || {};
+                    this.commonPorts, this.relationType, this.commonEntityPorts,
+                    this.nodeTextClick) || {};
                 if (size) {
                     // 需要取消撤销重做的记录
                     c.setProp('data', rest.data, { ignoreHistory : true});
@@ -558,6 +597,11 @@ export default class ER {
         const keys = [];
         cells.forEach((c) => {
             c.removeTools();
+            if (c.shape === 'table') {
+                c.setProp('updateFields', (originKey, fieldData) =>
+                    this.updateFields(dataSource, originKey, fieldData), { ignoreHistory : true});
+            }
+            c.setProp('nodeClickText', this.nodeTextClick, { ignoreHistory : true});
             c.attr('body', {
                 stroke: c.shape === 'group' ? '#000000' : this.currentColor.border,
                 strokeWidth: 1,
@@ -709,7 +753,7 @@ export default class ER {
         if (!isScroll && graph.isSelected(edge)) {
             edgeNodeAddTool(edge, graph, id, () => {
                 this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-            });
+            }, this.getDataSource);
         }
 
     }
@@ -1091,7 +1135,7 @@ export default class ER {
             if (!isScroll && graph.isSelected(node)) {
                 edgeNodeAddTool(node, graph, id, () => {
                     this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-                });
+                }, this.getDataSource);
             }
         }
     };
@@ -1178,7 +1222,7 @@ export default class ER {
         if (this.isErCell(cell)) {
             edgeNodeAddTool(cell, graph, id, () => {
                 this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-            });
+            }, this.getDataSource);
         }
     };
     onScroll = () => {
@@ -1188,14 +1232,14 @@ export default class ER {
         if (this.isErCell(cell) && graph.isSelected(cell)) {
             edgeNodeAddTool(cell, graph, id, () => {
                 this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-            });
+            }, this.getDataSource);
         }
     };
     edgeMoved = (cell, graph, id) => {
         if (this.isErCell(cell) && graph.isSelected(cell)) {
             edgeNodeAddTool(cell, graph, id, () => {
                 this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-            });
+            }, this.getDataSource);
         }
     }
 }

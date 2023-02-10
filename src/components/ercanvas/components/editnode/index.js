@@ -11,10 +11,15 @@ import { platform } from '../../../../lib/middle';
 const EditNode = forwardRef(({node}, ref) => {
   const preRef = useRef(null);
   const label = node.getProp('label');
+  const linkData = JSON.parse(node.getProp('link') || '{}');
   const inputRef = useRef(null);
   const editable = node.getProp('editable');
   const onChange = () => {
     node.setProp('label', inputRef.current.value);
+  };
+  const nodeClickText = () => {
+    const store = node.store;
+    store?.data?.nodeClickText(node);
   };
   useEffect(() => {
     if (editable) {
@@ -48,14 +53,22 @@ const EditNode = forwardRef(({node}, ref) => {
     }}
   >
     {
+      // eslint-disable-next-line no-nested-ternary
       editable ? <textarea
         onChange={onChange}
         placeholder={FormatMessage.string({id: 'canvas.node.remarkPlaceholder'})}
         ref={inputRef}
         defaultValue={label}
       /> :
-        // eslint-disable-next-line react/no-danger
-      <pre ref={preRef} dangerouslySetInnerHTML={{__html: getLabel()}}/>
+          (linkData.type ? <a style={{textDecoration: 'underline'}} onClick={nodeClickText}><pre
+            ref={preRef}
+              // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{__html: getLabel()}}
+          /></a> : <pre
+            ref={preRef}
+              // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{__html: getLabel()}}
+          />)
     }
   </div>;
 });
@@ -98,6 +111,7 @@ Graph.registerNode('edit-node-polygon', {
       refPoints: '0,10 10,0 20,10 10,20',
     },
     text: {
+      event: 'node:click:text',
       style: {
         fontSize: '12px',
         fill: 'rgba(0, 0, 0, 0.65)',
@@ -116,6 +130,7 @@ Graph.registerNode('edit-node-circle-svg', {
       strokeWidth: 1,
     },
     text: {
+      event: 'node:click:text',
       style: {
         fontSize: '12px',
         fill: 'rgba(0, 0, 0, 0.65)',

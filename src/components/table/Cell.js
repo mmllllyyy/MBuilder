@@ -108,7 +108,7 @@ export default React.memo(({f, name, remarkChange, onKeyDown, currentPrefix,
     if (data) {
       const onOk = () => {
         tooltipRef.current.setTooltipVisible(false);
-        openDict(data.id, 'dict', null, 'dict.svg');
+        openDict(data.id, 'dict', null, 'icon-shujuzidian');
       };
       return <div className={`${currentPrefix}-table-dict-items`}>
         <div style={{width: '100%', height: '100%', overflow: 'auto'}}>

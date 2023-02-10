@@ -113,6 +113,8 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         beforeAddCommand(event, args) {
           if (args.key === 'zIndex' || args.key === 'tools' || args.cell.getProp('isTemp') || args.key === 'visible') {
             return false;
+          } else if (args.key === 'link' && args.previous === undefined) {
+            return false;
           }
           return !args.options.ignoreHistory;
         },
@@ -335,6 +337,9 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       });
       graph.on('cell:click', ({cell}) => {
         eR.cellClick(cell, graph, id);
+      });
+      graph.on('node:click:text', ({cell}) => {
+        eR.nodeTextClick(cell);
       });
       graph.on('blank:click', () => {
         edgeNodeRemoveTool(id);

@@ -21,7 +21,7 @@ export const img = (data, relationType, dataSource, needCalc = true, groups) => 
         enabled: true,
       },
     });
-    const cells = ((needCalc ? calcCellData(data, dataSource, null, groups, null, relationType, null) : data)).map((d) => {
+    const cells = ((needCalc ? calcCellData(data, dataSource, null, groups, null, relationType, null, null) : data)).map((d) => {
       const other = {
         tools: {},
       };

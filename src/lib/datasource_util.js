@@ -163,6 +163,7 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
                       const otherData = {};
                       const pickFields = [
                         'id',
+                        'link',
                         'shape',
                         'source',
                         'target',
@@ -1284,7 +1285,7 @@ export  const calcNodeData = (preData, nodeData, dataSource, groups) => {
 };
 
 export const mapData2Table = (n, dataSource, updateFields, groups, commonPorts,
-                              relationType, commonEntityPorts) => {
+                              relationType, commonEntityPorts, nodeClickText) => {
   const nodeData = dataSource?.entities?.filter(e => e.id === n.originKey)[0];
   if (nodeData) {
     const { width, height, fields, headers, maxWidth, ports } = calcNodeData(n.data, nodeData, dataSource, groups);
@@ -1296,6 +1297,7 @@ export const mapData2Table = (n, dataSource, updateFields, groups, commonPorts,
       },
       ports: relationType === 'entity' ? (n.ports || commonEntityPorts) : ports,
       updateFields,
+      nodeClickText,
       data: {
         ...nodeData,
         fields,
@@ -1308,7 +1310,7 @@ export const mapData2Table = (n, dataSource, updateFields, groups, commonPorts,
 };
 
 export const calcCellData = (cells = [], dataSource, updateFields, groups, commonPorts,
-                             relationType, commonEntityPorts) => {
+                             relationType, commonEntityPorts, nodeClickText) => {
   const defaultEditNodeSize = {
     width: 80,
     height: 60,
@@ -1319,17 +1321,24 @@ export const calcCellData = (cells = [], dataSource, updateFields, groups, commo
     height: 60,
     minHeight: 20,
   };
-  const groupNodes = cells.filter(c => c.shape === 'group');
+  const groupNodes = cells.filter(c => c.shape === 'group').map(c => {
+    return {
+      ...c,
+      nodeClickText
+    }
+  });
   const remarks = cells.filter(c => c.shape === 'edit-node'
       || c.shape === 'edit-node-circle').map((n) => {
     return {
       ...n,
+      nodeClickText,
       ports: n.ports || commonPorts,
       size: n.size || (n.shape === 'edit-node' ? defaultEditNodeSize : defaultEditNodeCircleSize),
     };
   });
   const polygon = cells.filter(c => c.shape === 'edit-node-polygon'
     || c.shape === 'edit-node-circle-svg').map(c => {
+      const link = JSON.parse(c.link || '{}');
     return {
       ...c,
       attrs: {
@@ -1338,7 +1347,9 @@ export const calcCellData = (cells = [], dataSource, updateFields, groups, commo
         },
         text: {
           style: {
-            fill: c.fontColor,
+            cursor: link.type ? 'pointer' : 'none',
+            textDecoration: link.type ? 'underline' : 'none',
+            fill: link.type ? '#4e75fd' : c.fontColor,
           },
           text: c.label || c.attrs?.text?.text || ''
         },
@@ -1347,7 +1358,7 @@ export const calcCellData = (cells = [], dataSource, updateFields, groups, commo
   });
   const nodes = cells.filter(c => c.shape === 'table').map((n) => {
     return mapData2Table(n, dataSource, updateFields, groups, commonPorts,
-      relationType, commonEntityPorts);
+      relationType, commonEntityPorts, nodeClickText);
   }).filter(n => !!n);
   const allNodes = (nodes || []).concat(remarks || []).concat(polygon || []);
   const edges = cells.filter(c => c.shape === 'erdRelation')

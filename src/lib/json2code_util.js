@@ -1066,7 +1066,9 @@ export const openUrl = (url) => {
   const href = url;
   if (platform === 'json') {
     // eslint-disable-next-line global-require,import/no-extraneous-dependencies
-    require('electron').shell.openExternal(href);
+    require('electron').shell.openExternal(href).catch(() => {
+      Message.error({title: `${FormatMessage.string({id: 'canvas.node.invalidLink'})}`});
+    });
   } else {
     const a = document.createElement('a');
     a.href = href;

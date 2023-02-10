@@ -9,7 +9,7 @@ import {getPrefix} from '../../lib/prefixUtil';
 import {tree2array} from '../../lib/tree';
 
 const Tree = React.memo(({prefix, dataSource, labelRender, defaultCheckeds,
-                           onChange, placeholder}) => {
+                           onChange, placeholder, simpleChecked}) => {
   const calcKey = (c) => {
     return c.reduce((a, b) => a.concat(b.key).concat(calcKey(b.children || [])), []);
   };
@@ -52,18 +52,22 @@ const Tree = React.memo(({prefix, dataSource, labelRender, defaultCheckeds,
     let tempCheckeds = [...checkeds];
     const checked = e.target.checked;
     if (checked) {
-      const currentChecked = [key];
-      if (parent && parent.children
-          .filter(c => c.key !== key)
-          .every(c => tempCheckeds.includes(c.key))) {
-        // 判断是否需要选中父节点
-        currentChecked.push(parent.key);
+      if (simpleChecked) {
+        tempCheckeds = [key];
+      } else {
+        const currentChecked = [key];
+        if (parent && parent.children
+            .filter(c => c.key !== key)
+            .every(c => tempCheckeds.includes(c.key))) {
+          // 判断是否需要选中父节点
+          currentChecked.push(parent.key);
+        }
+        if (children) {
+          // 选中所有子节点
+          currentChecked.push(...calcKey(children));
+        }
+        tempCheckeds = [...new Set(tempCheckeds.concat(currentChecked))];
       }
-      if (children) {
-        // 选中所有子节点
-        currentChecked.push(...calcKey(children));
-      }
-      tempCheckeds = [...new Set(tempCheckeds.concat(currentChecked))];
     } else {
       const currentUnChecked = [key];
       if (parent && tempCheckeds.includes(parent.key)) {
@@ -88,11 +92,13 @@ const Tree = React.memo(({prefix, dataSource, labelRender, defaultCheckeds,
         <li className={`${currentPrefix}-tree-container-ul-parent-${expands.includes(d.key) ? 'show' : 'hidden'}`}>
           <Icon type='fa-caret-down' onClick={() => _iconClick(d.key)}/>
           <CheckBox
+            disable={simpleChecked}
             checked={checkeds.includes(d.key)}
             onChange={e => _checkBoxChange(e, d, p)}
-            >
+          >
             <span>{d.value}</span>
-          </CheckBox></li>
+          </CheckBox>
+        </li>
         {
           d.children.length > 0 && <ul style={{marginLeft: 17}} className={`${currentPrefix}-tree-container-ul-child-${expands.includes(d.key) ? 'show' : 'hidden'}`}>
             {d.children.filter((c) => {
