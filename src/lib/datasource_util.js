@@ -2249,7 +2249,7 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
       refEntities,
     };
   });
-  const newViewGroups = (newDataSource.viewGroups || []).map(g => ({...g, refEntities: []}));
+  const newViewGroups = (newDataSource.viewGroups || []);
   const tempViewGroups = mergeData(viewGroups, newViewGroups, false, false);
   const mergeGroupData = (v, name, data) => {
     const newV = newViewGroups.filter(g => g.defKey === v.defKey)[0]?.[name];
@@ -2352,7 +2352,7 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
       })
     }
   }
-
+  //console.log(tempViewGroups);
   return {
     ...oldDataSource,
     domains: tempDomains.map(t => _.omit(t, 'old')).map(d => {
@@ -2394,7 +2394,7 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
         ...v,
         refDiagrams: mergeGroupData(v, 'refDiagrams', []),
         refDicts: mergeGroupData(v, 'refDicts', tempDicts),
-        //refEntities: mergeGroupData(v, 'refEntities', tempEntities),
+        refEntities: mergeGroupData(v, 'refEntities', tempEntities),
       }
     }),
   }
