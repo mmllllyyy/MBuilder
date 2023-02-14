@@ -1,11 +1,13 @@
 import { Graph, ToolsView } from '@antv/x6';
 import ReactDom from 'react-dom';
-import React, {useRef, useState} from 'react';
-import {Button, FormatMessage, Icon, Modal, openModal} from 'components';
+import React, {useRef, useState, forwardRef, useImperativeHandle} from 'react';
+import {Button, ColorPicker, FormatMessage, Icon, Modal, openModal, Tooltip} from 'components';
+import DragCom from 'components/dragcom';
 import LabelEditor from '../LabelEditor';
 import LinkEditor from '../LinkEditor';
 import { prefix } from '../../../../profile';
 import Svg from './svg';
+import {getPresetColors} from '../../../lib/datasource_util';
 
 const ToolItem = ToolsView.ToolItem;
 
@@ -112,11 +114,87 @@ ShowSizeTool.config({
 Graph.registerNodeTool('showSizeTool', ShowSizeTool, true);
 
 
+const OverDown = forwardRef(({children, over, offset = 0}, ref) => {
+  const [dataPosition, setDataPosition] = useState(null);
+  const isLeave = useRef(true);
+  const time = useRef(null);
+  useImperativeHandle(ref, () => {
+    return {
+      close: () => {
+        clearTimeout(time.current);
+        setDataPosition(null);
+        isLeave.current = true;
+      },
+    };
+  }, []);
+  const checkLeave = () => {
+    clearTimeout(time.current);
+    time.current = setTimeout(() => {
+      if (isLeave.current) {
+        setDataPosition(null);
+      }
+    }, 300);
+  };
+  const onMouseOver = (e) => {
+    const checkIsChildren = (dom) => {
+      // chiner-tooltip-content
+      if ((dom.getAttribute('class') || '').includes(`${prefix}-tooltip-content`)){
+        return false;
+      } else if (dom.parentElement && dom.parentElement !== document.body) {
+        return checkIsChildren(dom.parentElement);
+      }
+      return true;
+    };
+    if (checkIsChildren(e.target)) {
+      isLeave.current = false;
+      checkLeave();
+      const target = e.currentTarget;
+      const rect = target.getBoundingClientRect();
+      setDataPosition({
+        left: rect.x + rect.width / 2 - offset,
+        top: rect.bottom + 8,
+      });
+    } else {
+      isLeave.current = true;
+      checkLeave();
+    }
+  };
+  const onMouseLeave = () => {
+    isLeave.current = true;
+    checkLeave();
+  };
+  const onMouseOverData = () => {
+    isLeave.current = false;
+    checkLeave();
+  };
+  const onMouseLeaveData = () => {
+    isLeave.current = true;
+    checkLeave();
+  };
+  return <>
+    {React.cloneElement(children, {
+      onMouseOver,
+      onMouseLeave,
+    })}
+    {dataPosition && ReactDom.createPortal(<div
+      onMouseLeave={onMouseLeaveData}
+      onMouseOver={onMouseOverData}
+      className={`${prefix}-edge-tooltip-content-item-data`}
+      style={dataPosition}
+    >
+      {over}
+    </div>, document.body)}
+  </>;
+});
+
 // 节点或边的工具栏
-const EdgeTooltipContent = ({onUpdate, edge}) => {
-  const [dataPosition, setDataPosition] = useState({left: 0, bottom: -40});
-  const [dataType, setDataType] = useState('');
-  const [arrowReverse, setArrowReverse] = useState('left');
+const EdgeTooltipContent = ({onUpdate, edge, movePosition, getDataSource, position, id}) => {
+  const overDownFillRef = useRef(null);
+  const defaultColor = {
+    fillColor: '#ACDAFC',
+    fontColor: '#000000',
+  };
+  const [fillColor, setFillColor] = useState(edge.getProp('fillColor') || defaultColor.fillColor);
   const [arrowState, setArrowState] = useState(() => {
     const attr = edge.attr('line');
     // triangle-stroke
@@ -138,14 +216,12 @@ const EdgeTooltipContent = ({onUpdate, edge}) => {
   const erArrowType = ['1', 'n'];
   const lineType = ['straight', 'polyline', 'fillet'];
   const lineStyle = ['#icon-stroke-line1', 'dotted-large'];
-  const isLeave = useRef(true);
-  const time = useRef(null);
-  const _onUpdate = (type, value) => {
+  const _onUpdate = (type, value, reverse) => {
     if(type === 'relation' || type === 'arrow-exchange') {
       setArrowState((pre) => {
         if (type === 'arrow-exchange') {
           return [pre[1], pre[0]];
-        } else if (arrowReverse === 'left') {
+        } else if (reverse) {
           return [value, pre[1]];
         }
         return [pre[0], value];
@@ -159,46 +235,19 @@ const EdgeTooltipContent = ({onUpdate, edge}) => {
       });
     } else if (type === 'lock') {
       setIsLock(pre => !pre);
+    } else if (type === 'fillColor') {
+      setFillColor(value.hex);
     }
-    onUpdate(type, value, arrowReverse);
+    onUpdate(type, value, reverse);
   };
-  const checkLeave = () => {
-    clearTimeout(time.current);
-    time.current = setTimeout(() => {
-      if (isLeave.current) {
-        setDataType('');
-      }
-    }, 300);
+  const fillClose = () => {
+    overDownFillRef.current.close();
   };
-  const onMouseOver = (e, type, reverse) => {
-    isLeave.current = false;
-    checkLeave();
-    const target = e.currentTarget;
-    const rect = target.getBoundingClientRect();
-    setDataType(type);
-    setArrowReverse(reverse);
-    setDataPosition({
-      left: rect.x + rect.width / 2 - (type === 'line' ? 50 : 25),
-      top: rect.bottom + 8,
-    });
-  };
-  const onMouseLeave = () => {
-    isLeave.current = true;
-    checkLeave();
-  };
-  const onMouseOverData = () => {
-    isLeave.current = false;
-    checkLeave();
-  };
-  const onMouseLeaveData = () => {
-    isLeave.current = true;
-    checkLeave();
-  };
-  const renderDataType = () => {
-    if (dataType === 'line') {
+  const renderDataType = (type, reverse) => {
+    if (type === 'line') {
       return <div className={`${prefix}-edge-tooltip-content-item-data-line`}>
         <div>
-          <div>线条类型</div>
+          <div><FormatMessage id='canvas.edge.lineType'/></div>
           <div>
             {
               lineType.map((t) => {
@@ -213,7 +262,7 @@ const EdgeTooltipContent = ({onUpdate, edge}) => {
           </div>
         </div>
         <div>
-          <div>线条样式</div>
+          <div><FormatMessage id='canvas.edge.lineStyle'/></div>
           <div>
             {
               lineStyle.map((s) => {
@@ -231,13 +280,16 @@ const EdgeTooltipContent = ({onUpdate, edge}) => {
     }
     return <div className={`${prefix}-edge-tooltip-content-item-data-arrow`}>
       {arrowType.concat(erArrowType).map((a) => {
-        return <div className={a === '1' ? `${prefix}-edge-tooltip-content-item-data-arrow-border` : ''} key={a} onClick={() => _onUpdate('relation', a)}>
+        return <div
+          className={a === '1' ? `${prefix}-edge-tooltip-content-item-data-arrow-border` : ''}
+          key={a}
+          onClick={() => _onUpdate('relation', a, reverse)}>
           <div>
             <Icon
-              style={{visibility: a === arrowState[arrowReverse === 'left' ? 0 : 1] ? 'visible' : 'hidden'}}
+              style={{visibility: a === arrowState[reverse ? 0 : 1] ? 'visible' : 'hidden'}}
               type='fa-check'/>
           </div>
-          <Svg reverse={arrowReverse === 'left'} type={a} />
+          <Svg reverse={reverse} type={a} />
         </div>;
       })}
     </div>;
@@ -245,76 +297,245 @@ const EdgeTooltipContent = ({onUpdate, edge}) => {
   return <div className={`${prefix}-edge-tooltip-content`}>
     {
       !isLock && <>
-        <div className={`${prefix}-edge-tooltip-content-item`}>
-          <Icon onClick={() => _onUpdate('label', !isLock)} type='fa-font'/>
+        <div className={`${prefix}-edge-tooltip-content-item-arrow`}>
+          <Tooltip offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.edge.relationLabel'})}>
+            <Svg
+              style={{cursor: 'pointer', width: '27px'}}
+              onClick={() => _onUpdate('label', !isLock)}
+              type='#icon-part-A'
+            />
+          </Tooltip>
         </div>
-        <div className={`${prefix}-edge-tooltip-content-line`}/>
-        <div
-          className={`${prefix}-edge-tooltip-content-item`}
-          onMouseLeave={onMouseLeave}
-          onMouseOver={e => onMouseOver(e, 'line')}>
-          <div className={`${prefix}-edge-tooltip-content-item-line`}>
-            <Svg isArrow={false} type={lineState.lineType}/>
+        <OverDown
+          offset={80}
+          ref={overDownFillRef}
+          over={<ColorEdit
+            movePosition={movePosition}
+            color={fillColor}
+            getDataSource={getDataSource}
+            onUpdate={(v, complete) => _onUpdate('fillColor', v, complete)}
+            position={position}
+            id={id}
+            close={fillClose}
+          />}
+        >
+          <div className={`${prefix}-edge-tooltip-content-customer-circle`}>
+            <Tooltip offsetTop={7} placement='top' force title={FormatMessage.string({id: 'toolbar.fillColor'})}>
+              <div
+                className={`${prefix}-node-tooltip-content-font-circle`}
+                style={{background: fillColor}} />
+            </Tooltip>
           </div>
-        </div>
+        </OverDown>
+        <div className={`${prefix}-edge-tooltip-content-line`}/>
+        <OverDown over={renderDataType('line')} offset={50}>
+          <div
+            className={`${prefix}-edge-tooltip-content-item`}
+            >
+            <div className={`${prefix}-edge-tooltip-content-item-line`}>
+              <Tooltip propagation offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.edge.lineType'})}>
+                <Svg isArrow={false} type={lineState.lineType}/>
+              </Tooltip>
+            </div>
+          </div>
+        </OverDown>
         <div className={`${prefix}-edge-tooltip-content-line`}/>
         <div
           className={`${prefix}-edge-tooltip-content-item`}
           >
           <div className={`${prefix}-edge-tooltip-content-item-arrow`}>
-            <Svg
-              reverse
-              type={arrowState[0]}
-              onMouseLeave={onMouseLeave}
-              onMouseOver={e => onMouseOver(e, 'arrow', 'left')}
-              />
+            <OverDown over={renderDataType('arrow', true)} offset={25}>
+              <div>
+                <Tooltip propagation offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.edge.startArrow'})}>
+                  <Svg
+                    reverse
+                    type={arrowState[0]}
+                  />
+                </Tooltip>
+              </div>
+            </OverDown>
             <div onClick={() => _onUpdate('arrow-exchange')} className={`${prefix}-edge-tooltip-content-item-arrow-change`}>
-              <Icon type='fa-exchange'/>
+              <Tooltip offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.edge.exchange'})}>
+                <Icon type='fa-exchange'/>
+              </Tooltip>
             </div>
-            <Svg
-              type={arrowState[1]}
-              onMouseLeave={onMouseLeave}
-              onMouseOver={e => onMouseOver(e, 'arrow', 'right')}
-              />
+            <OverDown over={renderDataType('arrow')} offset={25}>
+              <div>
+                <Tooltip propagation offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.edge.endArrow'})}>
+                  <Svg
+                    type={arrowState[1]}
+                  />
+                </Tooltip>
+              </div>
+            </OverDown>
           </div>
         </div>
         <div className={`${prefix}-edge-tooltip-content-line`}/></>
     }
     <div className={`${prefix}-edge-tooltip-content-item`}>
-      <Icon onClick={() => _onUpdate('lock', !isLock)} type={`fa-${isLock ? 'lock' : 'unlock'}`}/>
+      <Tooltip clickClose offsetTop={1} placement='top' force title={FormatMessage.string({id: `canvas.${isLock ? 'unLock' : 'lock'}`})}>
+        <Icon onClick={() => _onUpdate('lock', !isLock)} type={`fa-${isLock ? 'lock' : 'unlock'}`}/>
+      </Tooltip>
     </div>
-    {dataType && ReactDom.createPortal(<div
-      onMouseLeave={onMouseLeaveData}
-      onMouseOver={onMouseOverData}
-      className={`${prefix}-edge-tooltip-content-item-data`}
-      style={dataPosition}>
-      {renderDataType()}
-    </div>, document.body)}
   </div>;
 };
 
 
-const NodeTooltipContent = ({onUpdate, node}) => {
+const ColorEdit = ({onUpdate, close, id, position, getDataSource, movePosition, color}) => {
+  const standardColor = getPresetColors();
+  const recentColors = getDataSource().profile?.recentColors || [];
+  const currentColor = color;
+  const openPicker = () => {
+    const pickerDom = document.getElementById(`${id}-color-picker`);
+    // pickerDom.innerHTML = '';
+    pickerDom.setAttribute('class', `${prefix}-node-tooltip-content-color-picker`);
+    const Com = DragCom(ColorPicker);
+    const onClose = () => {
+      ReactDom.unmountComponentAtNode(pickerDom);
+    };
+    const refactorPosition = (e) => {
+      return {
+        left: e.left - movePosition.left,
+        top: e.top - movePosition.top,
+      };
+    };
+    ReactDom.render(<Com
+      refactorPosition={refactorPosition}
+      defaultColor={currentColor}
+      onChange={onUpdate}
+      closeable
+      onClose={onClose}
+      isSimple
+      recentColors={[]}
+      style={{left: `${position.left + 10}px`, top: `${position.top}px`, zIndex: 999}}/>, pickerDom);
+  };
+  const _close = () => {
+    openPicker();
+    close && close();
+  };
+  return <div className={`${prefix}-node-tooltip-content-color-edit`}>
+    <div className={`${prefix}-node-tooltip-content-color-edit-container`}>
+      <div className={`${prefix}-node-tooltip-content-color-edit-container-label`}>
+        <FormatMessage id='canvas.myColor'/></div>
+      <div className={`${prefix}-node-tooltip-content-color-edit-container-list`}>
+        <div
+          onClick={_close}
+          className={`${prefix}-node-tooltip-content-color-edit-container-list-item-normal`}
+        >
+          <Icon type='fa-plus'/>
+        </div>
+        {recentColors.map((s) => {
+          return <div
+            onClick={() => onUpdate({hex: s}, false)}
+            className={`${prefix}-node-tooltip-content-color-edit-container-list-item-${currentColor === s ? 'selected' : 'normal'}`}
+            key={s}
+            style={{background: s}}/>;
+        })}
+      </div>
+    </div>
+    <div className={`${prefix}-node-tooltip-content-color-edit-container`}>
+      <div className={`${prefix}-node-tooltip-content-color-edit-container-label`}>
+        <FormatMessage id='canvas.standardColor'/>
+      </div>
+      <div className={`${prefix}-node-tooltip-content-color-edit-container-list`}>
+        {standardColor.map((s) => {
+          return <div
+            onClick={() => onUpdate({hex: s}, false)}
+            className={`${prefix}-node-tooltip-content-color-edit-container-list-item-${currentColor === s ? 'selected' : 'normal'}`}
+            key={s}
+            style={{background: s}}/>;
+        })}
+      </div>
+    </div>
+  </div>;
+};
+
+const NodeTooltipContent = ({onUpdate, node, id, position, getDataSource, movePosition}) => {
   const parent = node.getParent();
+  const overDownFontRef = useRef(null);
+  const overDownFillRef = useRef(null);
+  const defaultColor = {
+    fillColor: node.shape === 'table' ? '#ACDAFC' : '#FFFFFF',
+    fontColor: '#000000',
+  };
+  const [fillColor, setFillColor] = useState(node.getProp('fillColor') || defaultColor.fillColor);
+  const [fontColor, setFontColor] = useState(node.getProp('fontColor') || defaultColor.fontColor);
+
   const [isLock, setIsLock] = useState(() => {
     return node.getProp('isLock');
   });
   // lock
-  const _onUpdate = (t, value) => {
+  const _onUpdate = (t, value, complete) => {
     if (t === 'lock') {
       setIsLock(pre => !pre);
+    } else if (t === 'fontColor') {
+      setFontColor(value.hex);
+    } else if (t === 'fillColor') {
+      setFillColor(value.hex);
     }
-    onUpdate(t, value);
+    onUpdate(t, value, complete);
+  };
+  //  fillColor: '#ACDAFC', // 节点和边的背景色
+  //  fontColor: '#000000'
+  const fontClose = () => {
+    overDownFontRef.current.close();
+  };
+  const fillClose = () => {
+    overDownFillRef.current.close();
   };
   return <div className={`${prefix}-node-tooltip-content`}>
-    {!isLock && <div onClick={() => _onUpdate('link')}><Icon type='fa-link'/></div>}
-    { !parent && <div onClick={() => _onUpdate('lock', !isLock)}><Icon type={`fa-${isLock ? 'lock' : 'unlock'}`}/></div>}
+    {!isLock && [<OverDown
+      ref={overDownFontRef}
+      offset={80}
+      over={<ColorEdit
+        movePosition={movePosition}
+        color={fontColor}
+        getDataSource={getDataSource}
+        onUpdate={(v, complete) => _onUpdate('fontColor', v, complete)}
+        position={position}
+        id={id}
+        close={fontClose}
+      />}
+      key='fontColor'><div>
+        <Tooltip offsetTop={10} placement='top' force title={FormatMessage.string({id: 'toolbar.fontColor'})}>
+          <Icon style={{fontSize: '13px', borderBottom: `2px solid ${fontColor}`}} type='fa-font'/>
+        </Tooltip>
+      </div></OverDown>, <OverDown
+        offset={80}
+        ref={overDownFillRef}
+        over={<ColorEdit
+          movePosition={movePosition}
+          color={fillColor}
+          getDataSource={getDataSource}
+          onUpdate={(v, complete) => _onUpdate('fillColor', v, complete)}
+          position={position}
+          id={id}
+          close={fillClose}
+        />}
+        key='fillColor'>
+        <div>
+          <Tooltip offsetTop={6} placement='top' force title={FormatMessage.string({id: 'toolbar.fillColor'})}>
+            <div
+              className={`${prefix}-node-tooltip-content-font-circle`}
+              style={{background: fillColor}} />
+          </Tooltip>
+        </div></OverDown>, <div key='line' className={`${prefix}-edge-tooltip-content-line`}/>]}
+    {!isLock && node.shape !== 'table' && <div onClick={() => _onUpdate('link')}>
+      <Tooltip offsetTop={10} placement='top' force title={FormatMessage.string({id: 'canvas.node.link'})}>
+        <Icon type='fa-link'/>
+      </Tooltip>
+    </div>}
+    { !parent &&
+    <Tooltip clickClose offsetTop={1} placement='top' force title={FormatMessage.string({id: `canvas.${isLock ? 'unLock' : 'lock'}`})}>
+      <div onClick={() => _onUpdate('lock', !isLock)}><Icon type={`fa-${isLock ? 'lock' : 'unlock'}`}/></div>
+    </Tooltip>
+        }
   </div>;
 };
 
 let preNode;
 
-export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource) => {
+export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource, updateDataSource) => {
   if (preNode !== edge) {
     preNode = edge;
     const cellTooltip = document.getElementById(`${id}-cellTooltip`);
@@ -324,17 +545,24 @@ export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource) => {
       const canvasContainer = cellTooltip.parentElement;
       const canvasContainerRect = canvasContainer.getBoundingClientRect();
       const rect = container.getBoundingClientRect();
-      let width = edge.isNode() ? 80 : 200;
       let height = 40;
-
+      let left, width;
       const toolParent = document.createElement('div');
       toolParent.setAttribute('class', `${prefix}-cell-tooltip`);
       toolParent.style.position = 'absolute';
-      toolParent.style.left = `${rect.x - canvasContainerRect.x + rect.width / 2 - width / 2}px`;
-      toolParent.style.bottom = `${canvasContainerRect.bottom - rect.top + 5}px`;
+      const calcLeft = () => {
+        width = edge.isNode() ? 140 : 250;
+        if (edge.getProp('isLock')) {
+          width = 45;
+        }
+        left = rect.x - canvasContainerRect.x + rect.width / 2 - width / 2;
+        toolParent.style.left = `${left}px`;
+      };
+      calcLeft();
+      toolParent.style.bottom = `${canvasContainerRect.bottom - rect.top + 10}px`;
       //toolParent.style.width = `${width}px`;
       toolParent.style.height = `${height}px`;
-      const onUpdate = (t, v, p) => {
+      const onUpdate = (t, v, reverse) => {
         graph.batchUpdate('updateEdgeOrNode', () => {
           if (t === 'lineType') {
             // straight', 'polyline', 'fillet'
@@ -374,7 +602,7 @@ export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource) => {
             }
           } else if(t === 'relation') {
             //edge.setProp('relation', relationArray.join(':') || '1:n');
-            if (p === 'left') {
+            if (reverse) {
               edge.attr('line/sourceMarker/relation', v);
             } else {
               edge.attr('line/targetMarker/relation', v);
@@ -395,6 +623,7 @@ export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource) => {
             graph.cleanSelection();
             if (!v) {
               graph.select(edge);
+              calcLeft();
             }
           } else if (t === 'label') {
             let modal = null;
@@ -481,15 +710,80 @@ export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource) => {
                     </Button>,
                   ],
                 });
+          } else if (t === 'fontColor' || t === 'fillColor') {
+            let cells = graph.getSelectedCells();
+            if (cells.length === 0) {
+              cells = graph.getCells();
+            }
+            cells
+                .forEach((c) => {
+                  c.setProp(t, v.hex);
+                  if (c.shape === 'erdRelation') {
+                    if (t === 'fillColor') {
+                      const tempLine = c.attr('line');
+                      c.attr('line', {
+                        ...tempLine,
+                        stroke: v.hex,
+                        sourceMarker: {
+                          ...tempLine.sourceMarker,
+                          fillColor: v.hex,
+                        },
+                        targetMarker: {
+                          ...tempLine.targetMarker,
+                          fillColor: v.hex,
+                        },
+                      });
+                    }
+                  }
+                  if (c.shape === 'edit-node-polygon' || c.shape === 'edit-node-circle-svg') {
+                    if (t === 'fillColor') {
+                      c.attr('body/fill', v.hex);
+                    } else {
+                      c.attr('text/style/fill', v.hex);
+                    }
+                  }
+                });
+            if (reverse) {
+              const dataSource = getDataSource();
+              const recentColors = [...new Set((dataSource.profile?.recentColors || [])
+                  .concat(v.hex))];
+              const start = recentColors.length - 8 > 0 ? recentColors.length - 8 : 0;
+              const tempDataSource = {
+                ...dataSource,
+                profile: {
+                  ...dataSource.profile,
+                  recentColors: recentColors.slice(start, recentColors.length),
+                },
+              };
+              updateDataSource && updateDataSource(tempDataSource);
+            }
           }
           t !== 'label' && t !== 'link' && dataChange && dataChange();
         });
       };
+      const movePosition = {
+        left: canvasContainerRect.left,
+        top: canvasContainerRect.top,
+      };
+      const position = {
+        left: left + width / 2 + rect.width / 2,
+        top: rect.top - canvasContainerRect.top,
+      };
       ReactDom.render(edge.isNode() ? <NodeTooltipContent
+        getDataSource={getDataSource}
+        movePosition={movePosition}
+        position={position}
+        id={id}
         onUpdate={onUpdate}
         node={edge}
-        getDataSource={getDataSource}/>
-          : <EdgeTooltipContent onUpdate={onUpdate} edge={edge}/>, toolParent);
+        />
+          : <EdgeTooltipContent
+            getDataSource={getDataSource}
+            movePosition={movePosition}
+            position={position}
+            id={id}
+            onUpdate={onUpdate}
+            edge={edge}/>, toolParent);
       cellTooltip.appendChild(toolParent);
     }
   }

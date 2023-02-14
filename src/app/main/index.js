@@ -837,9 +837,10 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     cavRef?.startDrag(e, key);
     return cavRef;
   };
-  const createTopicNode = (e) => {
-    const cavRef = getCurrentCav();
-    cavRef?.createTopicNode(e);
+  const createTopicNode = () => {
+    Message.warring({title: FormatMessage.string({id: 'wait'})});
+    // const cavRef = getCurrentCav();
+    // cavRef?.createTopicNode(e);
   };
   const createNode = (e, type) => {
     const cavRef = getCurrentCav();
@@ -1258,11 +1259,6 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     }
     return m.defName;
   };
-  const _colorChange = (key, value) => {
-    // 颜色发生变化
-    const cavRef = getCurrentCav();
-    cavRef.updateColor(key, value);
-  };
   const iconClick = (e, key) => {
     switch (key) {
       case 'save': saveProject();break;
@@ -1560,7 +1556,6 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       iconClick={iconClick}
       activeTab={activeTab}
       resize={resize}
-      colorChange={_colorChange}
       openModal={_openModal}
       jumpPosition={_jumpPosition}
       jumpDetail={_jumpDetail}
@@ -1602,19 +1597,6 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
                       <Icon type='fa-crosshairs'/>
                     </Tooltip>
                   </div>}
-                  <span>
-                    <Tooltip
-                      title={<div
-                        className={`${currentPrefix}-home-menu-header-opt-title`}
-                        >
-                        <FormatMessage id='hiddenGroupInfo'/>
-                      </div>}
-                      force
-                      placement='top'
-                    >
-                      <Icon type='icon-xinxi'/>
-                    </Tooltip>
-                  </span>
                   <span>
                     <FormatMessage id='hiddenGroup'/>
                   </span>

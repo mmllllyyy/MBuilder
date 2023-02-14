@@ -440,55 +440,6 @@ export default class ER {
         });
         this.dnd.start(node, e.nativeEvent);
     };
-    updateColor = (key, color, dataSource) => {
-        //currentColor.current[key] = color.hex;
-        let cells = this.graph.getSelectedCells();
-        if (cells.length === 0) {
-            cells = this.graph.getCells();
-        }
-        this.graph.batchUpdate('updateColor', () => {
-            cells
-                .forEach((c) => {
-                    c.setProp(key, color.hex);
-                    if (c.shape === 'erdRelation') {
-                        if (key === 'fillColor') {
-                            const tempLine = c.attr('line');
-                            c.attr('line', {
-                                ...tempLine,
-                                stroke: color.hex,
-                                sourceMarker: {
-                                    ...tempLine.sourceMarker,
-                                    fillColor: color.hex,
-                                },
-                                targetMarker: {
-                                    ...tempLine.targetMarker,
-                                    fillColor: color.hex,
-                                },
-                            });
-                        }
-                    }
-                    if (c.shape === 'edit-node-polygon' || c.shape === 'edit-node-circle-svg') {
-                        if (key === 'fillColor') {
-                            c.attr('body/fill', color.hex);
-                        } else {
-                            c.attr('text/style/fill', color.hex);
-                        }
-                    }
-                });
-        });
-        this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-        const recentColors = [...new Set((dataSource.profile?.recentColors || [])
-            .concat(color.hex))];
-        const start = recentColors.length - 8 > 0 ? recentColors.length - 8 : 0;
-        const tempDataSource = {
-            ...dataSource,
-            profile: {
-                ...dataSource.profile,
-                recentColors: recentColors.slice(start, recentColors.length),
-            },
-        };
-        this.updateDataSource && this.updateDataSource(tempDataSource);
-    };
     createCircleNode = (e) => {
         const node =  this.graph.createNode({
             shape: 'edit-node-circle-svg',
@@ -753,7 +704,7 @@ export default class ER {
         if (!isScroll && graph.isSelected(edge)) {
             edgeNodeAddTool(edge, graph, id, () => {
                 this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-            }, this.getDataSource);
+            }, this.getDataSource, this.updateDataSource);
         }
 
     }
@@ -902,6 +853,7 @@ export default class ER {
                         .filter(e => e.id === node.getProp('originKey'))[0] || node.data || {};
                     const primaryKeys = (nodeData.fields || []).filter(f => f.primaryKey);
                     if (primaryKeys.length === 0) {
+                        this.graph.removeCell(edge);
                         Message.error({title: FormatMessage.string({id: 'canvas.node.extendError'})});
                     } else {
                         const targetField = primaryKeys[0];
@@ -911,6 +863,7 @@ export default class ER {
                             this.graph.addEdge({
                                 shape: 'erdRelation',
                                 relation: '1:n',
+                                fillColor: node.getProp('fillColor') || this.currentColor.fillColor,
                                 source: {
                                     cell: edge.target.cell,
                                     port: `${targetField.id}${separator}out`,
@@ -967,20 +920,24 @@ export default class ER {
                         }
                     }
                 } else {
+                    const fillColor = node.getProp('fillColor') || this.currentColor.fillColor;
                     const newEdge = edge.clone();
                     newEdge.setProp('isTemp', false);
-                    newEdge.setProp('relation', '1:n');
-                    newEdge.setProp('fillColor', this.currentColor.fillColor);
+                    newEdge.setProp('relation', node.shape === 'table' ? '1:n' : '0:concave');
+                    newEdge.setProp('fillColor', fillColor);
                     newEdge.attr({
                         line: {
+                            stroke: fillColor,
                             strokeDasharray: '',
                             sourceMarker: {
+                                fillColor,
                                 name: 'relation',
-                                relation: '1',
+                                relation: node.shape === 'table' ? '1' : '0',
                             },
                             targetMarker: {
+                                fillColor,
                                 name: 'relation',
-                                relation: 'n',
+                                relation: node.shape === 'table' ? 'n' : 'concave',
                             },
                         },
                     });
@@ -1135,7 +1092,7 @@ export default class ER {
             if (!isScroll && graph.isSelected(node)) {
                 edgeNodeAddTool(node, graph, id, () => {
                     this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-                }, this.getDataSource);
+                }, this.getDataSource, this.updateDataSource);
             }
         }
     };
@@ -1222,7 +1179,7 @@ export default class ER {
         if (this.isErCell(cell)) {
             edgeNodeAddTool(cell, graph, id, () => {
                 this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-            }, this.getDataSource);
+            }, this.getDataSource, this.updateDataSource);
         }
     };
     onScroll = () => {
@@ -1232,14 +1189,14 @@ export default class ER {
         if (this.isErCell(cell) && graph.isSelected(cell)) {
             edgeNodeAddTool(cell, graph, id, () => {
                 this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-            }, this.getDataSource);
+            }, this.getDataSource, this.updateDataSource);
         }
     };
     edgeMoved = (cell, graph, id) => {
         if (this.isErCell(cell) && graph.isSelected(cell)) {
             edgeNodeAddTool(cell, graph, id, () => {
                 this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-            }, this.getDataSource);
+            }, this.getDataSource, this.updateDataSource);
         }
     }
 }

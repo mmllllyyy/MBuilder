@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import hoistNonReactStatics from '../../lib/statics';
 
 const DragCom = (Com) => {
-  const NewCom = React.memo(({dragIndex = 0, offset = 30, ...restProps}) => {
+  const NewCom = React.memo(({dragIndex = 0, offset = 30, refactorPosition, ...restProps}) => {
     const ref = useRef(null);
     useEffect(() => {
       if (ref) {
@@ -16,7 +16,8 @@ const DragCom = (Com) => {
         dragDom.onmousedown = (e) => {
           flag = true;
           position = { x: e.clientX, y: e.clientY };
-          currentRect = current.getBoundingClientRect();
+          const rect = current.getBoundingClientRect();
+          currentRect = refactorPosition ? refactorPosition(rect) : rect;
         };
         dragDom.onmousemove = (e) => {
           if (flag) {

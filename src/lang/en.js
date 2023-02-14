@@ -179,7 +179,6 @@ export default {
     emptyGroup: 'There is no grouping data for now. Click to create a new grouping',
     emptyAppCode: 'There is no data for now. Click to create a new appCode',
     hiddenGroup: 'SIMPLE',
-    hiddenGroupInfo: 'It can be modified by setting / SystemParameter / default display label',
     location: 'Navigate to the open tab',
     moduleList: 'Data Model',
     closeCurrent: 'close current',
@@ -297,6 +296,8 @@ export default {
             relationLabel: 'relationLabel',
             brokenLine: 'brokenLine',
             straightLine: 'straightLine',
+            lineType: 'lineType',
+            lineStyle: 'lineStyle',
         },
         node: {
             delete: 'delete node',
@@ -319,11 +320,18 @@ export default {
             linkNone: 'none',
             linkSearch: 'entity/view/dict/diagrams',
             invalidLink: 'Invalid link',
+            startArrow: 'startArrow',
+            endArrow: 'endArrow',
+            exchange: 'exchange',
         },
         title: 'Drag entity from left entities to diagram',
         isMin: 'It\'s the minimum multiple. It can\'t be reduced',
         isMax: 'It\'s the maximum multiple. It can\'t be enlarged',
         entity: 'entity',
+        myColor: 'myColor',
+        standardColor: 'standardColor',
+        lock: 'lock',
+        unLock: 'unLock',
     },
     standardFields: {
         isStandard: 'isStandard',
@@ -884,6 +892,7 @@ components: {
     colorPicker: {
         recent: 'Recent Colors',
         reset: 'Reset',
+        picker: 'Color Picker',
     },
     compare: {
         db: 'Database metadata extraction',

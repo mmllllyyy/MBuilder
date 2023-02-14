@@ -1,30 +1,58 @@
-import React from 'react';
+import React, { forwardRef, useState } from 'react';
 import {SketchPicker} from 'react-color';
 import FormatMessage from '../formatmessage';
+import Icon from '../icon';
 import {getPrefix} from '../../lib/prefixUtil';
 
 import './style/index.less';
+import {getPresetColors} from '../../lib/datasource_util';
 
-export default React.memo(({prefix, color, onChange, recentColors, restColor}) => {
+export default React.memo(forwardRef(({prefix, onChange, recentColors, defaultColor,
+                                          restColor, isSimple, style, closeable,
+                                          onClose, ...restProps}, ref) => {
+    const [currentColor, setCurrentColor] = useState(defaultColor);
     const currentPrefix = getPrefix(prefix);
-    return <div className={`${currentPrefix}-color-picker`}>
+    const _onChange = (color) => {
+        setCurrentColor(color.hex);
+        onChange && onChange(color);
+    };
+    const onChangeComplete = (color) => {
+       onChange && onChange(color, true);
+    };
+    const _iconClose = () => {
+        onClose && onClose();
+    };
+    const realValue = 'color' in restProps ? restProps.color : currentColor;
+    return <div className={`${currentPrefix}-color-picker`} style={style} ref={ref}>
+      {
+            closeable && <div className={`${currentPrefix}-color-picker-header`}>
+              <FormatMessage id="components.colorPicker.picker"/>
+              <Icon className={`${currentPrefix}-color-picker-header-icon`} type='fa-times' onClick={_iconClose}/>
+            </div>
+      }
       <SketchPicker
         disableAlpha
-        presetColors={['#FFFFFF', '#BFBFBF', '#C00000', '#FFC000', '#F6941D', '#7030A0', '#136534', '#0070C0',
-                '#0D0D0D','#6698CC', '#FA5A5A', '#FFD966', '#F8CBAD', '#CB99C5', '#9ACC98', '#093299']}
-        color={color}
-        onChange={onChange}
+        presetColors={getPresetColors()}
+        color={realValue}
+        onChange={_onChange}
+        onChangeComplete={onChangeComplete}
         />
-      <div className={`${currentPrefix}-color-picker-footer`}>
-        <div><FormatMessage id='components.colorPicker.recent'/></div>
+      {!isSimple && <div className={`${currentPrefix}-color-picker-footer`}>
+        <div><FormatMessage id="components.colorPicker.recent"/></div>
         <div>
           {
-                recentColors.map((r) => {
-                    return <div onClick={() => onChange({hex: r})} key={r} title={r} style={{background: r}} className={`${currentPrefix}-color-picker-footer-item`}>{}</div>;
-                })
-            }
+                    recentColors.map((r) => {
+                        return <div
+                          onClick={() => onChange({hex: r})}
+                          key={r}
+                          title={r}
+                          style={{background: r}}
+                          className={`${currentPrefix}-color-picker-footer-item`}>{}</div>;
+                    })
+                }
         </div>
-        <div><a onClick={() => onChange({hex: restColor})}><FormatMessage id='components.colorPicker.reset'/></a></div>
-      </div>
+        <div><a onClick={() => onChange({hex: restColor})}><FormatMessage
+          id="components.colorPicker.reset"/></a></div>
+        </div>}
     </div>;
-});
+}));

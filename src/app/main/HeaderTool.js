@@ -1,18 +1,14 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
-import {FormatMessage, GroupIcon, Icon, SearchSuggest, Modal, ColorPicker} from 'components';
+import {FormatMessage, GroupIcon, Icon, SearchSuggest, Modal} from 'components';
 import {validateNeedSave} from '../../lib/datasource_util';
 import { checkAlignEnable} from '../../lib/position';
 
 const GroupIconGroup = GroupIcon.GroupIconGroup;
 
-export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorChange, openModal,
+export default React.memo(forwardRef(({currentPrefix, close, iconClick, openModal,
                                         activeTab, dataSource,
                                         jumpPosition, jumpDetail}, ref) => {
   const [isCellSelected, setIsCellSelected] = useState([]);
-  const [colorState, setColor] = useState({
-    fontColor: 'rgba(0, 0, 0, 0.65)',
-    fillColor: '#ACDAFC',
-  });
   const calcIsCellSelected = (isSimple) => {
       if (isSimple) {
           return isCellSelected.length > 0;
@@ -24,15 +20,6 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
       setIsCellSelected,
     };
   }, []);
-  const _colorChange = (key, value) => {
-    setColor((pre) => {
-      return {
-        ...pre,
-        [key]: value.hex,
-      };
-    });
-    colorChange && colorChange(key, value);
-  };
   const _close = () => {
     if (validateNeedSave(dataSource)) {
       Modal.confirm({
@@ -112,52 +99,16 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, colorCha
                 {icon: <span className={`${currentPrefix}-head-circle`}/>, key: 'circle', name: FormatMessage.string({id: 'toolbar.circle'})},
                 {icon: <span className={`${currentPrefix}-head-polygon`}/>,  key: 'polygon', name: FormatMessage.string({id: 'toolbar.polygon'})},
             ]}/>
-      {/*<GroupIcon*/}
-      {/* eslint-disable-next-line max-len */}
-      {/*  hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}*/}
-      {/*  title={FormatMessage.string({id: 'toolbar.mind'})}*/}
-      {/* eslint-disable-next-line max-len */}
-      {/*  icon={<div className={`${currentPrefix}-head-mind ${currentPrefix}-head-mind-${activeTab?.type !== 'diagram' ? 'disable' : 'normal'}`} >*/}
-      {/*    <div className={`${currentPrefix}-head-mind-img`} />*/}
-      {/*  </div>}*/}
-      {/*  groupKey='mind'*/}
-      {/*  onClick={iconClick}*/}
-      {/*  disable={activeTab?.type !== 'diagram'}*/}
-      {/*  />*/}
       <GroupIcon
         hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
-        title={FormatMessage.string({id: 'toolbar.fontColor'})}
-        icon={<div className={`${currentPrefix}-head-font`}>
-          <span><Icon type='icon-zitiyanse'/></span>
+        title={FormatMessage.string({id: 'toolbar.mind'})}
+        icon={<div className={`${currentPrefix}-head-mind ${currentPrefix}-head-mind-${activeTab?.type !== 'diagram' ? 'disable' : 'normal'}`} >
+          <div className={`${currentPrefix}-head-mind-img`} />
         </div>}
-        dropMenuStyle={{
-            left: -59,
-            top: 53,
-          }}
-        dropMenu={<ColorPicker
-          restColor='#000000a6'
-          recentColors={dataSource.profile?.recentColors || []}
-          color={colorState.fontColor}
-          onChange={color => _colorChange('fontColor', color)}
-          />}
-        disable={activeTab?.type !== 'diagram' || !calcIsCellSelected(true)}
-      />
-      <GroupIcon
-        hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
-        title={FormatMessage.string({id: 'toolbar.fillColor'})}
-        icon='icon-tianchongyanse'
-        dropMenuStyle={{
-            left: -59,
-            top: 53,
-          }}
-        dropMenu={<ColorPicker
-          restColor='#DDE5FF'
-          recentColors={dataSource.profile?.recentColors || []}
-          color={colorState.fillColor}
-          onChange={color => _colorChange('fillColor', color)}
-          />}
-        disable={activeTab?.type !== 'diagram' || !calcIsCellSelected(true)}
-      />
+        groupKey='mind'
+        onClick={iconClick}
+        disable={activeTab?.type !== 'diagram'}
+        />
       <GroupIcon
         topStyle={{height: '24px'}}
         dropType='all'

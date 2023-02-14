@@ -30,8 +30,8 @@
       margin-left: 2px;
     }
     &-line {
-      width: 1px;
-      height: 80%;
+      width: 1px !important;
+      height: 80% !important;
       background: @primary-border-color;
     }
     &-item {
@@ -43,6 +43,7 @@
         padding: 5px;
         box-shadow: 0 0 6px 2px @primary-border-color;
         border-radius: 5px;
+        z-index: 999;
         &-line {
           padding: 2px;
           &-selected {
@@ -129,6 +130,18 @@
         }
       }
     }
+    &-customer-circle {
+      cursor: pointer;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      &:hover {
+        background-color: @third-primary-color;
+      }
+    }
   }
 }
 .@{prefix}-node-tooltip {
@@ -143,9 +156,70 @@
       height: 32px;
       line-height: 32px;
       text-align: center;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
       &:hover {
         cursor: pointer;
         background-color: @third-primary-color;
+      }
+    }
+    &-font-circle {
+      cursor: pointer;
+      border: 1px solid @primary-border-color;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+    }
+    &-color-edit {
+      width: 150px;
+      padding: 4px;
+      max-height: 240px;
+      overflow: auto;
+      & > div:first-child {
+        padding-bottom: 6px;
+        border-bottom: 1px solid @primary-border-color;
+        margin-bottom: 6px;
+      }
+      &-container {
+        &-label {
+          margin-left: 6px;
+        }
+        &-list {
+          display: flex;
+          flex-direction: row;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: flex-start;
+          &-item-selected {
+            border: 2px solid @primary-color !important;
+          }
+          &-item-normal, &-item-selected {
+            margin-top: 6px;
+            margin-left: 6px;
+            &:hover {
+              cursor: pointer;
+              border: 2px solid @primary-color;
+            }
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 3px;
+            border: 1px solid @primary-border-color;
+          }
+        }
+      }
+    }
+    &-color-picker {
+      .sketch-picker {
+        border-bottom: none !important;
+      }
+      .flexbox-fix:last-child {
+        display: none !important;
       }
     }
   }

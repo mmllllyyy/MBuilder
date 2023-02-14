@@ -6,7 +6,7 @@ import {getPrefix} from '../../lib/prefixUtil';
 
 const Tooltip = React.memo(forwardRef(({prefix, children, offsetLeft = 0, offsetTop = 0,
                                          title, visible = true, className = '', mouseEnterDelay = 0,
-                                         force, placement = 'bottom', conversion = 1}, ref) => {
+                                         force, placement = 'bottom', conversion = 1, clickClose, propagation}, ref) => {
   const currentPrefix = getPrefix(prefix);
   const containerRef = useRef(null);
   const parentRef = useRef(null);
@@ -32,7 +32,7 @@ const Tooltip = React.memo(forwardRef(({prefix, children, offsetLeft = 0, offset
         setTooltipVisible(true);
       }
     }, mouseEnterDelay * 1000);
-    e.stopPropagation();
+    !propagation && e.stopPropagation();
   };
   const _onMouseLeave = (e) => {
     if (statusRef.current) {
@@ -44,7 +44,7 @@ const Tooltip = React.memo(forwardRef(({prefix, children, offsetLeft = 0, offset
     statusRef.current = setTimeout(() => {
      containerRef.current && setTooltipVisible(false);
     }, 100);
-    e.stopPropagation();
+    !propagation && e.stopPropagation();
   };
   const onContainerMouseOver = () => {
     if (statusRef.current) {
@@ -83,6 +83,12 @@ const Tooltip = React.memo(forwardRef(({prefix, children, offsetLeft = 0, offset
     key: 'parent',
     onMouseOver: _onMouseOver,
     onMouseLeave: _onMouseLeave,
+    onClick: (e) => {
+      if (clickClose) {
+        setTooltipVisible(false);
+      }
+      children.props?.onClick?.(e);
+    },
   }),
   tooltipVisible && visible && ReactDom.createPortal(<div
     className={`${currentPrefix}-tooltip-container`}

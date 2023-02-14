@@ -479,9 +479,6 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
     const getScaleNumber = () => {
       return graph.scale();
     };
-    const updateColor = (key, color) => {
-      eR.updateColor(key, color, dataSourceRef.current);
-    };
     const validateScale = (factor) => {
       graph.zoom(factor);
     };
@@ -498,7 +495,6 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       createTopicNode,
       validateScale,
       getScaleNumber,
-      updateColor,
       alignment,
       exportImg: () => {
         restProps.openLoading(FormatMessage.string({id: 'toolbar.exportImgLoading'}));
@@ -561,6 +557,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       {}
     </div>
     <div id={`${id}-cellTooltip`} />
+    <div id={`${id}-color-picker`} />
     <ToolBar
       undo={undo}
       redo={redo}
