@@ -113,7 +113,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         beforeAddCommand(event, args) {
           if (args.key === 'zIndex' || args.key === 'tools' || args.cell.getProp('isTemp') || args.key === 'visible') {
             return false;
-          } else if (args.key === 'link' && args.previous === undefined) {
+          } else if ((args.key === 'link' || args.key === 'note' || args.key === 'labels') && args.previous === undefined) {
             return false;
           }
           return !args.options.ignoreHistory;
@@ -397,6 +397,9 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       });
       graph.on('node:added', ({cell, options}) => {
         eR.nodeAdded(cell, options, dataSourceRef.current);
+      });
+      graph.on('node:mouseover', ({node, e}) => {
+        eR.nodeMouseOver(node, e);
       });
       graph.on('node:mouseenter', ({node}) => {
         eR.nodeMouseEnter(node, graph, id, isScroll.current);

@@ -3,6 +3,7 @@ import ReactDom from 'react-dom';
 import React, {useRef, useState, forwardRef, useImperativeHandle} from 'react';
 import {Button, ColorPicker, FormatMessage, Icon, Modal, openModal, Tooltip} from 'components';
 import DragCom from 'components/dragcom';
+import NoteEditor from '../NoteEditor';
 import LabelEditor from '../LabelEditor';
 import LinkEditor from '../LinkEditor';
 import { prefix } from '../../../../profile';
@@ -484,6 +485,11 @@ const NodeTooltipContent = ({onUpdate, node, id, position, getDataSource, movePo
     overDownFillRef.current.close();
   };
   return <div className={`${prefix}-node-tooltip-content`}>
+    {
+      !isLock && node.shape !== 'table' && <Tooltip offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.node.note'})}>
+        <Svg onClick={() => onUpdate('note')} style={{cursor: 'pointer', width: '27px'}} type='#icon-part-A'/>
+      </Tooltip>
+    }
     {!isLock && [<OverDown
       ref={overDownFontRef}
       offset={80}
@@ -551,9 +557,11 @@ export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource, upda
       toolParent.setAttribute('class', `${prefix}-cell-tooltip`);
       toolParent.style.position = 'absolute';
       const calcLeft = () => {
-        width = edge.isNode() ? 140 : 250;
+        width = edge.isNode() ? 170 : 250;
         if (edge.getProp('isLock')) {
           width = 45;
+        } else if (edge.shape === 'table') {
+          width = 110;
         }
         left = rect.x - canvasContainerRect.x + rect.width / 2 - width / 2;
         toolParent.style.left = `${left}px`;
@@ -625,33 +633,62 @@ export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource, upda
               graph.select(edge);
               calcLeft();
             }
-          } else if (t === 'label') {
+          } else if (t === 'label' || t === 'note') {
             let modal = null;
-            let value = edge.getLabelAt(0)?.attrs?.text?.text || '';
-            const labelChange = (label) => {
-              value = label;
+            if (t === 'note') {
+              if (edge.getProp('note') === undefined) {
+                edge.setProp('note', '');
+              }
+            } else if (edge.getLabelAt(0)?.attrs?.text?.text === undefined) {
+                edge.setLabels([{
+                  attrs: {
+                    text: {
+                      text: '',
+                    },
+                  },
+                }]);
+              }
+            let value = t === 'label' ? (edge.getLabelAt(0)?.attrs?.text?.text) : edge.getProp('note');
+            const onChange = (newValue) => {
+              value = newValue;
             };
             const onOK = () => {
-              edge.setLabels([{
-                attrs: {
-                  text: {
-                    text: value,
+              if (t === 'label') {
+                edge.setLabels([{
+                  attrs: {
+                    text: {
+                      text: value,
+                    },
                   },
-                },
-              }]);
+                }]);
+              } else {
+                edge.setProp('note', value);
+                if (edge.shape === 'edit-node-polygon' || edge.shape === 'edit-node-circle-svg') {
+                  const size = edge.getBBox();
+                  edge.attr('image', {
+                    x: size.width / 2 - 5,
+                    y: size.height - 20,
+                    style: {
+                      display: value ? '' : 'none',
+                      cursor: 'default',
+                    },
+                  });
+                }
+              }
               dataChange && dataChange();
               modal && modal.close();
             };
             const onCancel = () => {
               modal && modal.close();
             };
+            const Com = t === 'label' ? LabelEditor : NoteEditor;
             modal = openModal(
-              <LabelEditor
-                label={value}
-                labelChange={labelChange}
+              <Com
+                value={value}
+                onChange={onChange}
                 />,
                 {
-                  title: <FormatMessage id='canvas.edge.relationLabel'/>,
+                  title: <FormatMessage id={`canvas.${t === 'note' ? 'node.note' : 'edge.relationLabel'}`}/>,
                   buttons: [
                     <Button key='onOK' onClick={onOK} type='primary'>
                       <FormatMessage id='button.ok'/>

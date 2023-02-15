@@ -180,7 +180,8 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
                         'router',
                         'connector',
                         'attrs.line.strokeDasharray',
-                        'isLock'
+                        'isLock',
+                        'note'
                       ];
                       if (c.shape === 'edit-node' || c.shape === 'edit-node-circle'
                         || c.shape === 'edit-node-polygon'

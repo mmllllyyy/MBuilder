@@ -1199,4 +1199,30 @@ export default class ER {
             }, this.getDataSource, this.updateDataSource);
         }
     }
+    nodeMouseOver = (node, e) => {
+        if (node.shape === 'edit-node-polygon' || node.shape === 'edit-node-circle-svg') {
+            if (e.target.tagName === 'image') {
+                const preDom = document.getElementById(`image_${node.getProp('id')}`);
+                if (preDom) {
+                    document.body.removeChild(preDom);
+                }
+                const dom = document.createElement('div');
+                dom.setAttribute('class', 'chiner-tooltip-container');
+                dom.setAttribute('id', `image_${node.getProp('id')}`);
+                dom.innerHTML = `<div class="chiner-tooltip-content " style="display: block;">
+                   <div>${node.getProp('note')}</div>
+                  <div class="chiner-tooltip-content-arrow-top"></div>
+                  </div>`;
+                document.body.appendChild(dom);
+                const targetReact = e.target.getBoundingClientRect();
+                dom.children[0].style.bottom = `${window.innerHeight - targetReact.top + 10}px`;
+                dom.children[0].style.left = `${targetReact.left - dom.children[0].clientWidth / 2 + targetReact.width / 2}px`;
+            } else {
+                const dom = document.getElementById(`image_${node.getProp('id')}`);
+                if (dom) {
+                    document.body.removeChild(dom);
+                }
+            }
+        }
+    }
 }

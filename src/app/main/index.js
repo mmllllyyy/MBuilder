@@ -1598,10 +1598,10 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
                     </Tooltip>
                   </div>}
                   <span>
-                    <FormatMessage id='hiddenGroup'/>
+                    <FormatMessage id='showGroup'/>
                   </span>
                   <span>
-                    <Checkbox onChange={_groupMenuChange} checked={groupType === 'modalAll'}/>
+                    <Checkbox onChange={_groupMenuChange} checked={groupType === 'modalGroup'}/>
                   </span>
                 </span>
               </div>
