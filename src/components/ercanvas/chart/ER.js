@@ -1201,14 +1201,18 @@ export default class ER {
     }
     nodeMouseOver = (node, e) => {
         if (node.shape === 'edit-node-polygon' || node.shape === 'edit-node-circle-svg') {
-            if (e.target.tagName === 'image') {
-                const preDom = document.getElementById(`image_${node.getProp('id')}`);
+            const domId = `image_${node.getProp('id')}`;
+            const clearDom = () => {
+                const preDom = document.getElementById(domId);
                 if (preDom) {
                     document.body.removeChild(preDom);
                 }
+            };
+            if (e.target.tagName === 'image') {
+                clearDom();
                 const dom = document.createElement('div');
                 dom.setAttribute('class', 'chiner-tooltip-container');
-                dom.setAttribute('id', `image_${node.getProp('id')}`);
+                dom.setAttribute('id', domId);
                 dom.innerHTML = `<div class="chiner-tooltip-content " style="display: block;">
                    <div>${node.getProp('note')}</div>
                   <div class="chiner-tooltip-content-arrow-top"></div>
@@ -1218,10 +1222,7 @@ export default class ER {
                 dom.children[0].style.bottom = `${window.innerHeight - targetReact.top + 10}px`;
                 dom.children[0].style.left = `${targetReact.left - dom.children[0].clientWidth / 2 + targetReact.width / 2}px`;
             } else {
-                const dom = document.getElementById(`image_${node.getProp('id')}`);
-                if (dom) {
-                    document.body.removeChild(dom);
-                }
+                clearDom();
             }
         }
     }
