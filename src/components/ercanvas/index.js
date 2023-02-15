@@ -82,10 +82,9 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
   };
   const sliderChange = (percent) => {
     if (percent === 'fit') {
-      graphRef.current.scale(1);
-      graphRef.current.centerContent();
+      graphRef.current.zoomTo(1);
     } else {
-      graphRef.current.scale(percent * 2 / 100);
+      graphRef.current.zoomTo(percent * 2 / 100);
     }
   };
   useEffect(() => {

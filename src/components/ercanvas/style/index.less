@@ -309,8 +309,8 @@
 }
 .@{prefix}-er-minimapContainer {
   position: absolute;
-  right: 0;
-  top: 0;
+  right: 5px;
+  bottom: 40px;
   z-index: 999;
   textarea {
     pointer-events: none;
@@ -371,12 +371,20 @@
     margin: 0 10px;
   }
   &-slider {
-    width: 112px;
+    background: @background-color;
+    padding: 20px 10px;
+    box-shadow: 0 0 6px 2px @primary-border-color;
+    border-radius: 5px;
+    width: 120px;
     height: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    position: absolute;
+    bottom: 35px;
+    right: 0;
+    z-index: 999;
   }
   &-size {
     width: 42px;
@@ -386,6 +394,13 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    & > span:first-child {
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    i {
+      cursor: pointer;
+    }
   }
   &-map {
     &-open {
