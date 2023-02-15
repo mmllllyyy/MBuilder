@@ -776,7 +776,10 @@ export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource, upda
                     if (t === 'fillColor') {
                       c.attr('body/fill', v.hex);
                     } else {
-                      c.attr('text/style/fill', v.hex);
+                      let linkData = JSON.parse(edge.getProp('link') || '{}');
+                      if (!linkData.type) {
+                        c.attr('text/style/fill', v.hex);
+                      }
                     }
                   }
                 });

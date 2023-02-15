@@ -47,7 +47,7 @@ const EditNode = forwardRef(({node}, ref) => {
   };
   return <div
     ref={ref}
-    className={`chiner-er-editnode ${node.shape === 'edit-node-circle' ? 'chiner-er-editnode-circle' : ''}`}
+    className={`chiner-er-editnode chiner-er-editnode-${linkData.type ? 'link' : 'unlink'} ${node.shape === 'edit-node-circle' ? 'chiner-er-editnode-circle' : ''}`}
     style={{
       background: node.getProp('fillColor'),
       color: node.getProp('fontColor'),
@@ -63,15 +63,12 @@ const EditNode = forwardRef(({node}, ref) => {
         ref={inputRef}
         defaultValue={label}
       /> :
-      <>{(linkData.type ? <a style={{textDecoration: 'underline'}} onClick={nodeClickText}><pre
+      <><pre
+        onClick={nodeClickText}
         ref={preRef}
-              // eslint-disable-next-line react/no-danger
+          // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{__html: getLabel()}}
-          /></a> : <pre
-            ref={preRef}
-              // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{__html: getLabel()}}
-          />)}
+      />
         {note && <Tooltip
           placement='top'
           title={note}
