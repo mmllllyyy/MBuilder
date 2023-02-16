@@ -247,7 +247,7 @@ Graph.registerNode('group', {
   attrs: {
     body: {
       strokeDasharray: '5 5',
-      strokeWidth: 1,
+      strokeWidth: 2,
       stroke: '#000000',
     },
   },

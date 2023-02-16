@@ -22,6 +22,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
                   jumpEntity, diagramKey, relationType,changeTab, openTab, closeTab,
                   ...restProps}) => {
   const isView = false;
+  const isMoveMode = useRef(false);
   const currentPrefix = getPrefix(prefix);
   const isInit = useRef(false);
   const findRef = useRef(null);
@@ -61,9 +62,11 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
   };
   const setSelection = (status) => {
     if (status) {
+      isMoveMode.current = false;
       graphRef.current.enableRubberband();
       graphRef.current.scroller.widgetOptions.modifiers = ['ctrl', 'meta'];
     } else {
+      isMoveMode.current = true;
       graphRef.current.disableRubberband();
       graphRef.current.scroller.widgetOptions.modifiers = [];
     }
@@ -110,9 +113,14 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       history: {
         enabled: true,
         beforeAddCommand(event, args) {
+         // console.log(event, args);
           if (args.key === 'zIndex' || args.key === 'tools' || args.cell.getProp('isTemp') || args.key === 'visible') {
             return false;
           } else if ((args.key === 'link' || args.key === 'note' || args.key === 'labels') && args.previous === undefined) {
+            return false;
+          } else if (args.key === 'children' && args.cell.shape !== 'group') {
+            return false;
+          } else if (args.key === 'parent' && !args.cell.isNode()) {
             return false;
           }
           return !args.options.ignoreHistory;
@@ -182,7 +190,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         },
       },
       interacting: ({cell}) => {
-        if (isView || cell.getProp('isLock')) return false;
+        if (isView || cell.getProp('isLock') || isMoveMode.current) return false;
         if (interactingRef.current) {
           return {
             nodeMovable: (cellView) => {
@@ -412,11 +420,32 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       graph.on('node:moved', ({node}) => {
         eR.nodeMoved(node, graph, id);
       });
+      graph.on('node:embed', ({node, currentParent, previousParent}) => {
+        eR.nodeEmbed(node, currentParent, previousParent);
+      });
+      graph.on('node:embedding', ({node, currentParent, previousParent}) => {
+        eR.nodeEmbedding(node, currentParent, previousParent);
+      });
+      graph.on('node:embedded', ({node, currentParent, previousParent}) => {
+        eR.nodeEmbedded(node, currentParent, previousParent);
+      });
       graph.on('scale', (scale) => {
         toolBarRef.current.scaleChange(scale.sx);
       });
+      const cmdsToFront = (cmds) => {
+        const cells = graph.getCells();
+        cmds.forEach((c) => {
+          const cell = cells.filter(ce => ce.id === c.data.id)[0];
+          if (cell) {
+            cell.toFront();
+          }
+        });
+      };
       graph.history.on('undo', (args) => {
-        console.log(args);
+        cmdsToFront(args.cmds);
+      });
+      graph.history.on('redo', (args) => {
+        cmdsToFront(args.cmds);
       });
     }
     graph.on('node:dblclick', ({cell, e}) => {

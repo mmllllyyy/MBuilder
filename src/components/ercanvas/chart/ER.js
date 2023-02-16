@@ -783,7 +783,7 @@ export default class ER {
             if (cell.isNode()) {
                 cell.attr('body', {
                     stroke: cell.shape === 'group' ? '#000000' : this.currentColor.border,
-                    strokeWidth: 2,
+                    strokeWidth: cell.shape === 'group' ? 2 : 1,
                 }, { ignoreHistory : true});
                 if (cell.shape === 'edit-node-polygon' || cell.shape === 'edit-node-circle-svg' ||
                     cell.shape === 'edit-node' || cell.shape === 'edit-node-circle' || cell.shape === 'group') {
@@ -1072,14 +1072,10 @@ export default class ER {
                     this.updateDataSource && this.updateDataSource(this.addEntityData(cell, 'create', dataSource));
                 }
             }
-            if (cell.shape === 'group') {
-                // setTimeout(() => {
-                //     cell.toBack();
-                // });
-            }
             if (options.undo && cell.isNode()) {
                 cell.attr('body', {
-                    stroke: this.currentColor.border,
+                    stroke: cell.shape === 'group' ? '#000000' : '#DFE3EB',
+                    strokeWidth: cell.shape === 'group' ? 2 : 1,
                 }, { ignoreHistory : true});
             }
         }
@@ -1224,6 +1220,36 @@ export default class ER {
             } else {
                 clearDom();
             }
+        }
+    }
+    nodeEmbed = () => {
+        this.length = this.graph.history.undoStack.length;
+    }
+    nodeEmbedding = () => {
+        //console.log('nodeEmbedding');
+    }
+    nodeEmbedded = () => {
+        const offsetLength = this.graph.history.undoStack.length - this.length;
+        // 合并命令
+        if (offsetLength > 1) {
+            const result = this.graph.history.undoStack.splice(this.length + 1, offsetLength);
+            const position = this.graph.history.undoStack[this.graph.history.undoStack.length - 1];
+            position.push(...result.map((r) => {
+                const key = r.data?.key;
+                return {
+                    ...r,
+                    batch: true,
+                    data: {
+                        ...r.data,
+                        prev: {
+                            [key]: r.data?.prev?.[key] || (key === 'children' ? [] : ''),
+                        },
+                        next: {
+                            [key]: r.data?.next?.[key] || (key === 'children' ? [] : ''),
+                        },
+                    },
+                };
+            }));
         }
     }
 }

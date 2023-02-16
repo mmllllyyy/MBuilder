@@ -70,7 +70,7 @@ export default {
         create: '新建',
         open: '打开',
         relationEnableTitle: '该功能仅在当前激活的tab页为关系图下可用',
-        group: '主题域',
+        group: '分组',
     },
     createProject: '创建新项目...',
     renameProject: '修改项目信息...',
