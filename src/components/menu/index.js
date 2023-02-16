@@ -293,7 +293,7 @@ const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldName
                       title={<div className={`${currentPrefix}-note-tag-list`}>
                         {
                           child.notes?.tags?.map((t, index) => {
-                              return <div>{`${index + 1}.${t.content}`}</div>;
+                              return <div key={index}>{`${index + 1}.${t.content}`}</div>;
                             })
                           }
                       </div>}>

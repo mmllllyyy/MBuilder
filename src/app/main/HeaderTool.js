@@ -128,6 +128,16 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, openModa
                 {icon: <span className={`${currentPrefix}-head-alignRow`}/>, key: 'alignRow', style: {borderTop: '1px solid #DFE3EB'}, name: FormatMessage.string({id: 'toolbar.alignRow'})},
                 {icon: <span className={`${currentPrefix}-head-alignColumn`}/>, key: 'alignColumn', name: FormatMessage.string({id: 'toolbar.alignColumn'})},
             ]}/>
+      <GroupIcon
+        topStyle={{height: '24px'}}
+        dropType='all'
+        groupKey='tool'
+        title={FormatMessage.string({id: 'toolbar.tool'})}
+        icon='fa-briefcase'
+        onClick={iconClick}
+        dropMenu={[
+                {key: 'toggleCase', name: FormatMessage.string({id: 'toolbar.toggleCase'})},
+            ]}/>
     </GroupIconGroup>
     <GroupIconGroup>
       <GroupIcon

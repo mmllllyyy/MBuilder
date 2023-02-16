@@ -2485,3 +2485,58 @@ export const getPresetColors = () => {
     'rgb(25, 25, 26)', 'rgb(208, 67, 138)', 'rgb(211, 122, 17)',
     'rgb(35, 156, 163)', 'rgb(154, 72, 199)'];
 }
+
+const toggleValue = (value, name, toggleCaseValue) => {
+  if (toggleCaseValue[name]) {
+    const tempValue = value || '';
+    return (toggleCaseValue[name] === 'U' ? tempValue.toLocaleUpperCase() : tempValue.toLocaleLowerCase())
+  }
+  return value;
+}
+const toggleViewsAndEntities = (data, toggleCaseValue) => {
+  return data.map(d => {
+    return {
+      ...d,
+      defKey: toggleValue(d.defKey, 'entityDefKey', toggleCaseValue),
+      fields: (d.fields || []).map(f => {
+        return {
+          ...f,
+          type: toggleValue(f.type, 'typeDefKey', toggleCaseValue),
+          defKey: toggleValue(f.defKey, 'fieldDefKey', toggleCaseValue),
+        }
+      }),
+      indexes: (d.indexes || []).map(i => {
+        return {
+          ...i,
+          defKey: toggleValue(i.defKey, 'indexDefKey', toggleCaseValue),
+        }
+      })
+    }
+  })
+}
+export const toggleCaseDataSource = (toggleCaseValue, dataSource) => {
+  return {
+    ...dataSource,
+    entities: toggleViewsAndEntities(dataSource.entities || [], toggleCaseValue),
+    views: toggleViewsAndEntities(dataSource.views || [], toggleCaseValue),
+    dataTypeMapping: {
+      ...dataSource.dataTypeMapping,
+      mappings: (dataSource.dataTypeMapping?.mappings || []).map(m => {
+        const omitNames = ['defKey', 'id', 'defName']
+        return {
+          ...m,
+          ...Object.keys(m).filter(n => !omitNames.includes(n)).reduce((p, n) => {
+            return {
+              ...p,
+              [n]: toggleValue(m[n], 'typeDefKey', toggleCaseValue)
+            }
+          }, {}),
+        }
+      })
+    }
+  };
+}
+
+export const toggleCaseEntityOrView = (data, toggleCaseValue) => {
+  return toggleViewsAndEntities([data], toggleCaseValue)[0]
+}

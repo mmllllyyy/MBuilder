@@ -1566,6 +1566,10 @@ export const getAllDataSQLByFilter = (data, code, filterTemplate, filterDefKey) 
   } catch (e) {
     sqlString = JSON.stringify(e.message);
   }
+  const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
+  if (DDLToggleCase) {
+    return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
+  }
   return sqlString;
 };
 export const getEmptyMessage = (name, dataSource, code) => {
@@ -1586,10 +1590,15 @@ export const getDataByChanges = (changes, dataSource) => {
     const allTemplate = _.get(dataSource, 'profile.codeTemplates', []);
     const codeTemplate = allTemplate.filter(t => t.applyFor === code)[0] || {};
     const sqlSeparator = _.get(dataSource, 'profile.sql.delimiter', ';');
-    return getTemplateString(codeTemplate.update || getDefaultTemplate(code, 'update', dataSource), {
+    let sqlString = getTemplateString(codeTemplate.update || getDefaultTemplate(code, 'update', dataSource), {
       changes,
       separator: sqlSeparator,
     }, false, dataSource, code);
+    const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
+    if (DDLToggleCase) {
+      return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
+    }
+    return sqlString;
     // return changes.map(c => {
     //   if (c.type === 'entity' || c.type === 'view') {
     //     if (c.opt === 'delete') {

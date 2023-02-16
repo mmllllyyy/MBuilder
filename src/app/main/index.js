@@ -29,6 +29,7 @@ import ExportWord from '../container/tools/word';
 import StandardField from '../container/standardfield';
 import HeaderTool from './HeaderTool';
 import MessageHelp from './MessageHelp';
+import ToggleCase from '../container/tools/togglecase';
 import { separator } from '../../../profile';
 import { getMenu, getMenus, dealMenuClick } from '../../lib/contextMenuUtil';
 import { moveArrayPosition } from '../../lib/array_util';
@@ -44,7 +45,13 @@ import {
   calcDomains,
   reset,
   updateHeaders,
-  mergeDataSource, mergeData, mergeDomains, resetHeader, validateNeedSave,
+  mergeDataSource,
+  mergeData,
+  mergeDomains,
+  resetHeader,
+  validateNeedSave,
+  toggleCaseDataSource,
+  toggleCaseEntityOrView,
 } from '../../lib/datasource_util';
 import {
   clearAllTabData,
@@ -862,6 +869,59 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     const cavRef = getCurrentCav();
     cavRef?.alignment(align);
   };
+  const toggleCase = () => {
+    let modal;
+    let tempValue;
+    const onChange = (value) => {
+      tempValue = value;
+    };
+    const onOk = () => {
+      if (tempValue) {
+        const toggleDatasource = toggleCaseDataSource(tempValue, dataSourceRef.current);
+        restProps?.update(
+            {
+              ...toggleDatasource,
+              profile: {
+                ...toggleDatasource.profile,
+                DDLToggleCase: tempValue?.DDLToggleCase || toggleDatasource?.profile?.DDLToggleCase,
+              },
+            }
+        );
+        const allTab = getAllTabData();
+        Object.keys(allTab).map(t => ({tabKey: t, tabData: allTab[t]})).forEach((t) => {
+          const type = t.tabData.type;
+          if (type === 'entity' || type === 'view') {
+            const data = toggleCaseEntityOrView(t.tabData.data, tempValue);
+            if (data) {
+              replaceDataByTabId(t.tabKey, {
+                ...t.tabData,
+                data,
+              });
+              notify('tabDataChange', {id: t.tabData.key, d: data});
+            }
+          }
+        });
+      }
+      Message.success({title: FormatMessage.string({id: 'optSuccess'})});
+      modal && modal.close();
+    };
+    const onCancel = () => {
+      modal && modal.close();
+    };
+    modal = openModal(<ToggleCase
+      onChange={onChange}
+      dataSource={dataSourceRef.current}
+    />, {
+      bodyStyle: { width: '400px' },
+      buttons:  [<Button type='primary' key='ok' onClick={onOk}>
+        <FormatMessage id='button.ok'/>
+      </Button>,
+        <Button key='cancel' onClick={onCancel}>
+          <FormatMessage id='button.cancel'/>
+        </Button>],
+      title: FormatMessage.string({id: 'toolbar.toggleCase'}),
+    });
+  };
   const domainMenu = useMemo(() => [
     {
       id: 'dataTypeMapping',
@@ -1184,7 +1244,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
           };
           const allTab = getAllTabData();
           Object.keys(allTab).map(t => ({tabKey: t, tabData: allTab[t]})).forEach((t) => {
-            if (t.tabData.type === 'entity') {
+            if (t.tabData.type === 'entity' || t.tabData.type === 'view') {
               const data =  {
                 ...t.tabData.data,
                 headers: resetHeader(tempDataSource, t.tabData.data, freeze),
@@ -1300,6 +1360,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       case 'alignRow':
       case 'alignColumn':
       case 'horizontalCenter': alignment(key);break;
+      case 'toggleCase': toggleCase();break;
       default: break;
     }
   };
