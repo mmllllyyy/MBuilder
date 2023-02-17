@@ -15,6 +15,29 @@ Graph.registerEdge('erdRelation-img', {
     },
   },*/
   zIndex: 2,
+  propHooks(metadata) {
+    const { relation, fillColor, ...others } = metadata;
+    if (relation) {
+      return {
+        ...metadata,
+        attrs: {
+          line: {
+            stroke: fillColor,
+            strokeDasharray: metadata?.attrs?.line?.strokeDasharray,
+            sourceMarker: {
+              fillColor,
+              relation: relation.split(':')[0],
+            },
+            targetMarker: {
+              fillColor,
+              relation: relation.split(':')[1],
+            },
+          },
+        },
+      };
+    }
+    return others;
+  },
   attrs: {
     line: {
       refX: 10,

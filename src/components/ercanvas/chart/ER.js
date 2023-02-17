@@ -923,7 +923,7 @@ export default class ER {
                     const fillColor = node.getProp('fillColor') || this.currentColor.fillColor;
                     const newEdge = edge.clone();
                     newEdge.setProp('isTemp', false);
-                    newEdge.setProp('relation', node.shape === 'table' ? '1:n' : '0:concave');
+                    newEdge.setProp('relation', node.shape === 'table' ? '1:n' : 'none:concave');
                     newEdge.setProp('fillColor', fillColor);
                     newEdge.attr({
                         line: {
@@ -932,7 +932,7 @@ export default class ER {
                             sourceMarker: {
                                 fillColor,
                                 name: 'relation',
-                                relation: node.shape === 'table' ? '1' : '0',
+                                relation: node.shape === 'table' ? '1' : 'none',
                             },
                             targetMarker: {
                                 fillColor,
