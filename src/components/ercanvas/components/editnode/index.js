@@ -25,6 +25,16 @@ const EditNode = forwardRef(({node}, ref) => {
     store?.data?.nodeClickText(node);
   };
   useEffect(() => {
+    if (preRef.current && linkData.type) {
+      // 寻找第一行文本
+      const firstChildren = preRef.current.children[0];
+      if (firstChildren){
+        firstChildren.onclick = nodeClickText;
+        firstChildren.setAttribute('class', 'chiner-er-editnode-link');
+      }
+    }
+  });
+  useEffect(() => {
     if (editable) {
       if (window.getComputedStyle(inputRef.current).pointerEvents !== 'none') {
         inputRef.current.focus();
@@ -47,7 +57,7 @@ const EditNode = forwardRef(({node}, ref) => {
   };
   return <div
     ref={ref}
-    className={`chiner-er-editnode chiner-er-editnode-${linkData.type ? 'link' : 'unlink'} ${node.shape === 'edit-node-circle' ? 'chiner-er-editnode-circle' : ''}`}
+    className={`chiner-er-editnode ${node.shape === 'edit-node-circle' ? 'chiner-er-editnode-circle' : ''}`}
     style={{
       background: node.getProp('fillColor'),
       color: node.getProp('fontColor'),
@@ -64,7 +74,6 @@ const EditNode = forwardRef(({node}, ref) => {
         defaultValue={label}
       /> :
       <><pre
-        onClick={nodeClickText}
         ref={preRef}
           // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{__html: getLabel()}}
