@@ -384,22 +384,18 @@ export const simplePackageChanges = (currentDataSource, preDataSource, db, needR
           fieldModified: setNull(fieldsChange.filter(c => c.opt === 'update').map(c => {
             const cF = (cData.fields || []).filter(f => f.defKey === c.data.defKey)[0];
             const pF = (pData.fields || []).filter(f => f.defKey === c.data.defKey)[0];
-            const otherAfter = {};
-            const otherBefore = {};
-            if ('type' in c.data.after) {
-              otherAfter.type = cF.originType;
-              otherBefore.type = pF.originType;
-            }
             return {
               ...c.data,
               defKey: cF.originDefKey || c.defKey,
               after: {
+                ...cF,
                 ...c.data.after,
-                ...otherAfter,
+                type: cF.originType,
               },
               before: {
+                ...pF,
                 ...c.data.before,
-                ...otherBefore,
+                type: pF.originType,
               }
             }
           }))
