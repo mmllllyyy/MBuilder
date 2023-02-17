@@ -992,6 +992,14 @@ export const generatorTableKey = (defKey, dataSource) => {
   }
 }
 
+export const generatorKey = (newKey, data) => {
+  if (!data.includes(newKey)) {
+    return newKey;
+  } else {
+    return generatorKey(`${newKey}_1`, data);
+  }
+}
+
 export  const getTextWidth = (text, font, weight = 'normal') => {
   let dom = document.getElementById('calcTextWidth');
   if (!dom) {

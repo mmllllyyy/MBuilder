@@ -11,7 +11,13 @@ import React, {
 import * as _ from 'lodash/object';
 import * as Component from 'components';
 
-import { getFullColumns, validateFields, emptyField, getColumnWidth } from '../../lib/datasource_util';
+import {
+  getFullColumns,
+  validateFields,
+  emptyField,
+  getColumnWidth,
+  generatorKey,
+} from '../../lib/datasource_util';
 import { moveArrayPositionByArray } from '../../lib/array_util';
 import { addBodyEvent, removeBodyEvent } from '../../lib/listener';
 import { Copy, Paste } from '../../lib/event_tool';
@@ -530,29 +536,18 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
               }
               // 过滤重复字段
               const fieldKeys = fields.map(f => f.defKey);
-              const pasteFieldKeys = pasteFields.map(f => f.defKey);
-              const realFieldKeys = [...new Set(pasteFieldKeys
-                  .filter(key => !fieldKeys.includes(key)))];
-              const finalFields = realFieldKeys.map((k) => {
+              const finalFields = pasteFields.map((f) => {
+                const key = generatorKey(f.defKey, fieldKeys);
+                fieldKeys.push(key);
                 return {
-                  ...pasteFields.filter(f => f.defKey === k)[0],
+                  ...f,
                   id: Math.uuid(),
+                  defKey: key,
                 };
               });
-              if (finalFields.length !== pasteFields.length) {
-                Component.Message.success({
-                  title: Component.FormatMessage.string({
-                    id: 'pasteResult',
-                    data: {
-                      success: finalFields.length,
-                      fail: pasteFields.length - finalFields.length,
-                    }}),
-                });
-              } else {
-                Component.Message.success({
-                  title: Component.FormatMessage.string({id: 'pasteSuccess'}),
-                });
-              }
+              Component.Message.success({
+                title: Component.FormatMessage.string({id: 'pasteSuccess'}),
+              });
               addField(null, finalFields);
             } catch (error) {
               Component.Message.error({

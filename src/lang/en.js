@@ -256,7 +256,6 @@ export default {
     cutWarring: 'cut fail : invalid data',
     pasteWarring: 'paste fail : invalid data',
     pasteSuccess: 'paste success',
-    pasteResult: 'paste succeeded {success} and failed {fail} repeatedly',
     deleteSuccess: 'delete success',
     closeConfirmTitle: 'exit project confirmation',
     closeConfirm: 'quitting the current project will lose all unsaved data, please make sure that the save operation has been executed!',

@@ -256,7 +256,6 @@ export default {
     cutWarring: '无效的剪切数据',
     pasteWarring: '无效的粘贴板数据',
     pasteSuccess: '粘贴成功',
-    pasteResult: '粘贴成功{success}个，因重复失败{fail}个',
     deleteSuccess: '删除成功',
     closeConfirmTitle: '退出项目确认',
     closeConfirm: '退出当前项目将会丢失所有未保存的数据，请确定已经执行保存操作！',
