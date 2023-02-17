@@ -78,14 +78,14 @@ export default React.memo(({prefix, dataSource, dataChange, config, onClose, onO
             if (dbData.flag === 'LOWCASE') {
               return {
                 ...d,
-                defName: currentTable?.defName?.split(';')[0] || d.defName || '',
-                comment: currentTable?.comment || currentTable?.defName?.split(';')[1] || d.comment || '',
+                defName: currentTable?.defName?.split(';')[0] || '',
+                comment: currentTable?.comment || currentTable?.defName?.split(';')[1] || '',
                 group,
                 fields: (d.fields || []).map(f => ({
                   ...f,
                   defKey: f.defKey?.toLocaleLowerCase(),
                   defName: f?.defName?.split(';')[0] || '',
-                  comment: f?.defName?.split(';')[1] || f.comment || '',
+                  comment: f.comment || f?.defName?.split(';')[1] || '',
                   primaryKey: !!f.primaryKey,
                   notNull: !!f.notNull,
                 })),
@@ -94,8 +94,8 @@ export default React.memo(({prefix, dataSource, dataChange, config, onClose, onO
             } else if (dbData.flag === 'UPPERCASE') {
               return {
                 ...d,
-                defName: currentTable?.defName?.split(';')[0] || d.defName || '',
-                comment: currentTable?.comment || currentTable?.defName?.split(';')[1] || d.comment || '',
+                defName: currentTable?.defName?.split(';')[0] || '',
+                comment: currentTable?.comment || currentTable?.defName?.split(';')[1] || '',
                 group,
                 fields: (d.fields || []).map(f => ({
                   ...f,
@@ -110,8 +110,8 @@ export default React.memo(({prefix, dataSource, dataChange, config, onClose, onO
             }
             return {
               ...d,
-              defName: currentTable?.defName?.split(';')[0] || d.defName || '',
-              comment: currentTable?.comment || currentTable?.defName?.split(';')[1] || d.comment || '',
+              defName: currentTable?.defName?.split(';')[0] || '',
+              comment: currentTable?.comment || currentTable?.defName?.split(';')[1] || '',
               group,
               fields: (d.fields || []).map(f => ({
                 ...f,

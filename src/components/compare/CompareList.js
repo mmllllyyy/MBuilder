@@ -138,8 +138,8 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                             const currentMeta = metaData.filter(m => m.defKey === d.defKey)[0];
                             return {
                                 ...d,
-                                defName: currentMeta?.defName || d.defName,
-                                comment: currentMeta?.comment || d.comment,
+                                defName: currentMeta?.defName || '',
+                                comment: currentMeta?.comment || '',
                                 fields: (d.fields || []).map((f) => {
                                     return {
                                         ...f,
