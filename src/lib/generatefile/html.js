@@ -92,8 +92,11 @@ const generateTableColumnListTable = (dataSource, groupKey, tableKey, nameType) 
             if (nameType === 'dicts') {
               tableString += `<tr><td>${field.defKey}</td><td>${field.defName || ''}</td><td>${field.intro || ''}</td></tr>\n`;
             } else {
-              const fieldData = transform(field, dataSource);
-              tableString += `<tr><td>${field.defKey}</td><td>${field.defName || ''}</td><td>${fieldData.type}</td><td>${fieldData.len}</td><td>${field.primaryKey && '√' || ''}</td><td>${field.comment || ''}</td></tr>\n`;
+              const fieldData = {
+                ...field,
+                ...transform(field, dataSource),
+              };
+              tableString += `<tr><td>${field.defKey}</td><td>${field.defName || ''}</td><td>${fieldData.type}</td><td>${fieldData.len || ''}</td><td>${field.primaryKey && '√' || ''}</td><td>${field.comment || ''}</td></tr>\n`;
             }
            });
         }
