@@ -362,7 +362,7 @@ export const simplePackageChanges = (currentDataSource, preDataSource, db, needR
       }
       // 2.字段调整
       const fieldsChange = compareArray(cData.fields, pData.fields, 'field',
-          ['defName', 'comment', 'type', 'len', 'scale'], [], 'defKey');
+          ['defName', 'comment', 'type', 'len', 'scale','notNull'], [], 'defKey');
       if (fieldsChange.length > 0) {
         fieldChanged = {
           fieldAdded: setNull(fieldsChange.filter(c => c.opt === 'add').map(c => {
