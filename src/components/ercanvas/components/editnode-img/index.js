@@ -8,7 +8,8 @@ const EditNode = forwardRef(({node}, ref) => {
   const label = node.getProp('label');
   const getLabel = () => {
     marked.use({ renderer });
-    return marked(label);
+    const reg = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
+    return marked(label).replace(reg, '');
   };
   return <div
     ref={ref}

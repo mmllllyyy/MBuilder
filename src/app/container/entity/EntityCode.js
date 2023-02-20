@@ -165,7 +165,8 @@ const CodeContent = React.memo(({ data, dataSource, group, codeType, codeTemplat
           title: codeTemplate.type === 'dbDDL' ? <FormatMessage id={`tableTemplate.${d}`} defaultMessage={d}/> : d,
           content: <CodeHighlight
             mode={d === 'content' ? 'java' : 'mysql'}
-            data={() => getCodeByDataTable(dataSource, group, data, codeTemplate.id, d)}
+            data={() => getCodeByDataTable(dataSource, group,
+                data, codeTemplate.id, d, codeTemplate.type)}
           />,
         };
       })}

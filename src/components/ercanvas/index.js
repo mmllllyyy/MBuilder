@@ -86,6 +86,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
   const sliderChange = (percent) => {
     if (percent === 'fit') {
       graphRef.current.zoomTo(1);
+      graphRef.current.center();
     } else {
       graphRef.current.zoomTo(percent * 2 / 100);
     }

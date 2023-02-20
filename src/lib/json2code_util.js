@@ -1339,10 +1339,15 @@ const generateIncreaseSql = (dataSource, group, dataTable, code, templateShow) =
   return getTemplateString(template, templateData);
 };
 // 获取单个数据表的各个模板的代码
-export const getCodeByDataTable = (dataSource, group, dataTable, code, templateShow) => {
+export const getCodeByDataTable = (dataSource, group, dataTable, code, templateShow, type) => {
   let sqlString = '';
   try {
       sqlString = generateIncreaseSql(dataSource, group, dataTable, code, templateShow);
+      const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
+      if (DDLToggleCase && type === 'dbDDL') {
+        return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
+      }
+      return sqlString;
   } catch (e) {
     console.error(e);
     Message.error({title: <span>
@@ -1458,6 +1463,11 @@ export const getDataByTemplate = (data, template, isDemo, dataSource, code) => {
   let sqlString = '';
   try {
     sqlString = getTemplateString(template, data, isDemo, dataSource, code);
+    const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
+    if (DDLToggleCase) {
+      return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
+    }
+    return sqlString;
   } catch (e) {
     //Message.error({title: FormatMessage.string({id: 'database.templateError'})});
     sqlString = JSON.stringify(e.message);

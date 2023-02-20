@@ -53,7 +53,8 @@ const EditNode = forwardRef(({node}, ref) => {
   }, [editable]);
   const getLabel = () => {
     marked.use({ renderer });
-    return marked(label);
+    const reg = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
+    return marked(label).replace(reg, '');
   };
   return <div
     ref={ref}
@@ -80,7 +81,7 @@ const EditNode = forwardRef(({node}, ref) => {
       />
         {note && <Tooltip
           placement='top'
-          title={note}
+          title={<pre>{note}</pre>}
           force>
           <Icon
             className='chiner-er-editnode-info'

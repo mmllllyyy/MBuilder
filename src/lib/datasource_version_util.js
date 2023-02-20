@@ -272,10 +272,15 @@ export const getMessageByChanges = (changes, dataSource) => {
     const allTemplate = _.get(dataSource, 'profile.codeTemplates', []);
     const codeTemplate = allTemplate.filter(t => t.applyFor === code)[0] || {};
     const sqlSeparator = _.get(dataSource, 'profile.sql.delimiter', ';');
-    return getTemplateString(codeTemplate.message || getDefaultTemplate(code, 'message', dataSource), {
+    const sqlString = getTemplateString(codeTemplate.message || getDefaultTemplate(code, 'message', dataSource), {
       changes,
       separator: sqlSeparator,
     }, false, dataSource, code);
+    const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
+    if (DDLToggleCase) {
+      return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
+    }
+    return sqlString;
   } catch (e) {
     return JSON.stringify(e.message, null, 2);
   }

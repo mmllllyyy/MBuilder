@@ -863,7 +863,7 @@ export default class ER {
                             this.graph.addEdge({
                                 shape: 'erdRelation',
                                 relation: '1:n',
-                                fillColor: node.getProp('fillColor') || this.currentColor.fillColor,
+                                fillColor: sourceNode.getProp('fillColor') || this.currentColor.fillColor,
                                 source: {
                                     cell: edge.target.cell,
                                     port: `${targetField.id}${separator}out`,
@@ -920,7 +920,7 @@ export default class ER {
                         }
                     }
                 } else {
-                    const fillColor = node.getProp('fillColor') || this.currentColor.fillColor;
+                    const fillColor = sourceNode.getProp('fillColor') || this.currentColor.fillColor;
                     const newEdge = edge.clone();
                     newEdge.setProp('isTemp', false);
                     newEdge.setProp('relation', node.shape === 'table' ? '1:n' : 'none:concave');
