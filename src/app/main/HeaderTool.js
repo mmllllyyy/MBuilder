@@ -9,6 +9,7 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, openModa
                                         activeTab, dataSource,
                                         jumpPosition, jumpDetail}, ref) => {
   const [isCellSelected, setIsCellSelected] = useState([]);
+  const themeMode = dataSource?.profile?.themeMode || 'themeDay';
   const calcIsCellSelected = (isSimple) => {
       if (isSimple) {
           return isCellSelected.length > 0;
@@ -139,6 +140,7 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, openModa
         onClick={iconClick}
         dropMenu={[
                 {key: 'toggleCase', name: FormatMessage.string({id: 'toolbar.toggleCase'})},
+                {key: 'theme', name: FormatMessage.string({id: `toolbar.${themeMode === 'themeDay' ? 'themeNigh' : 'themeDay'}`})},
             ]}/>
     </GroupIconGroup>
     <GroupIconGroup>

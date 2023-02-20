@@ -20,6 +20,8 @@ export default {
         alignment: 'alignment',
         tool: 'Shortcuts',
         toggleCase: 'toggleCase',
+        themeDay: 'Day Mode',
+        themeNigh: 'Night Mode',
         alignLeft: 'alignLeft',
         horizontalCenter: 'horizontalCenter',
         alignRight: 'alignRight',

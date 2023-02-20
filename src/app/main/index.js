@@ -869,6 +869,16 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     const cavRef = getCurrentCav();
     cavRef?.alignment(align);
   };
+  const themeChange = () => {
+    const themeMode = dataSourceRef.current?.profile?.themeMode || 'themeDay';
+    restProps?.update({
+      ...dataSourceRef.current,
+      profile: {
+        ...dataSourceRef.current.profile,
+        themeMode: themeMode === 'themeDay' ? 'themeNigh' : 'themeDay',
+      },
+    });
+  };
   const toggleCase = () => {
     let modal;
     let tempValue;
@@ -1361,6 +1371,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       case 'alignColumn':
       case 'horizontalCenter': alignment(key);break;
       case 'toggleCase': toggleCase();break;
+      case 'theme': themeChange();break;
       default: break;
     }
   };
@@ -1514,6 +1525,10 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       clear();
     };
   }, [config.autoSave]);
+  useEffect(() => {
+    const themeMode = restProps.dataSource?.profile?.themeMode || '';
+    document.body.setAttribute('theme', themeMode);
+  }, [restProps.dataSource?.profile?.themeMode]);
   const getLatelyDataSource = () => {
     return updateAllData(dataSourceRef.current, injectTempTabs.current.concat(tabsRef.current));
   };

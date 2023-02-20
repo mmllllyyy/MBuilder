@@ -20,6 +20,8 @@ export default {
         alignment: '对齐',
         tool: '快捷工具',
         toggleCase: '大小写转换',
+        themeDay: '白天模式',
+        themeNigh: '夜间模式',
         alignLeft: '左对齐',
         horizontalCenter: '水平居中',
         alignRight: '右对齐',
