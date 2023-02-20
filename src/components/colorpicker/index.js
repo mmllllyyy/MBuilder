@@ -8,7 +8,7 @@ import './style/index.less';
 import {getPresetColors} from '../../lib/datasource_util';
 
 export default React.memo(forwardRef(({prefix, onChange, recentColors, defaultColor,
-                                          restColor, isSimple, style, closeable,
+                                          restColor, isSimple, style, closeable, footer,
                                           onClose, ...restProps}, ref) => {
     const [currentColor, setCurrentColor] = useState(defaultColor);
     const currentPrefix = getPrefix(prefix);
@@ -54,5 +54,6 @@ export default React.memo(forwardRef(({prefix, onChange, recentColors, defaultCo
         <div><a onClick={() => onChange({hex: restColor})}><FormatMessage
           id="components.colorPicker.reset"/></a></div>
         </div>}
+      {footer}
     </div>;
 }));

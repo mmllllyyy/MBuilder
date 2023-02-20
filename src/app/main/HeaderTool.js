@@ -47,7 +47,7 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, openModa
         dropType='icon'
         groupKey='save'
         title={FormatMessage.string({id: 'toolbar.save'})}
-        icon='icon-bianzu2'
+        icon='fa-floppy-o'
         onClick={iconClick}
         dropMenu={[
             /*{ key: 'save', name: FormatMessage.string({id: 'toolbar.save'})},*/
@@ -64,6 +64,7 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, openModa
     </GroupIconGroup>
     <GroupIconGroup>
       <GroupIcon
+        draggable
         hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
         title={FormatMessage.string({id: 'toolbar.emptyEntity'})}
         icon='icon-kongbiao'
@@ -74,6 +75,7 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, openModa
         //onMouseDown={e => iconClick(e, 'empty')}
       />
       <GroupIcon
+        draggable
         className={`${currentPrefix}-head-db`}
         hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
         title={FormatMessage.string({id: 'toolbar.group'})}
@@ -94,10 +96,10 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, openModa
         icon='fa-square-o'
         onClick={iconClick}
         dropMenu={[
-                {icon: <span className={`${currentPrefix}-head-rect`}/>, key: 'rect', name: FormatMessage.string({id: 'toolbar.rect'})},
-                {icon: <span className={`${currentPrefix}-head-round`}/>, key: 'round', name: FormatMessage.string({id: 'toolbar.round'})},
-                {icon: <span className={`${currentPrefix}-head-circle`}/>, key: 'circle', name: FormatMessage.string({id: 'toolbar.circle'})},
-                {icon: <span className={`${currentPrefix}-head-polygon`}/>,  key: 'polygon', name: FormatMessage.string({id: 'toolbar.polygon'})},
+                {draggable: true, icon: <span className={`${currentPrefix}-head-rect`}/>, key: 'rect', name: FormatMessage.string({id: 'toolbar.rect'})},
+                {draggable: true, icon: <span className={`${currentPrefix}-head-round`}/>, key: 'round', name: FormatMessage.string({id: 'toolbar.round'})},
+                {draggable: true, icon: <span className={`${currentPrefix}-head-circle`}/>, key: 'circle', name: FormatMessage.string({id: 'toolbar.circle'})},
+                {draggable: true, icon: <span className={`${currentPrefix}-head-polygon`}/>,  key: 'polygon', name: FormatMessage.string({id: 'toolbar.polygon'})},
             ]}/>
       <GroupIcon
         hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}

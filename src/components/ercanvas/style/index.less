@@ -173,9 +173,8 @@
       height: 20px;
     }
     &-color-edit {
-      width: 150px;
+      width: 165px;
       padding: 4px;
-      max-height: 240px;
       overflow: auto;
       & > div:first-child {
         padding-bottom: 6px;
@@ -185,6 +184,11 @@
       &-container {
         &-label {
           margin-left: 6px;
+          &-default {
+            margin-left: 6px;
+            color: @primary-color;
+            cursor: pointer;
+          }
         }
         &-list {
           display: flex;

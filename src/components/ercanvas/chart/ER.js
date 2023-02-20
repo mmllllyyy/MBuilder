@@ -25,6 +25,7 @@ export default class ER {
         fillColor: '#ACDAFC', // 节点和边的背景色
         fontColor: '#000000', // 节点字体色
         circleFill: '#FFF', // 锚点填充色
+        fill: '#DDE5FF',
     };
     commonPort = {
         attrs: {
@@ -418,6 +419,7 @@ export default class ER {
             size: size,
             ports: this.commonPorts,
             nodeClickText: this.nodeTextClick,
+            fillColor: this.currentColor.fill,
         });
         this.dnd.start(node, e.nativeEvent);
     };
@@ -436,7 +438,13 @@ export default class ER {
             label: '',
             size: this.defaultEditNodePolygonSize,
             ports: this.commonPolygonPorts,
+            fillColor: this.currentColor.fill,
             nodeClickText: this.nodeTextClick,
+            attrs: {
+                body: {
+                    fill: this.currentColor.fill,
+                },
+            },
         });
         this.dnd.start(node, e.nativeEvent);
     };
@@ -445,7 +453,13 @@ export default class ER {
             shape: 'edit-node-circle-svg',
             label: '',
             size: this.defaultEditNodePolygonSize,
+            fillColor: this.currentColor.fill,
             ports: this.commonPolygonPorts,
+            attrs: {
+                body: {
+                    fill: this.currentColor.fill,
+                },
+            },
         });
         this.dnd.start(node, e.nativeEvent);
     };

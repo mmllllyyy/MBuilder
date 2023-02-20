@@ -333,6 +333,7 @@ export default {
         isMax: '已经是最大倍数，不可放大',
         entity: '数据表',
         myColor: '我的颜色',
+        default: '使用默认颜色',
         standardColor: '标准颜色',
         lock: '锁定',
         unLock: '解锁',

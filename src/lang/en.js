@@ -333,6 +333,7 @@ export default {
         isMax: 'It\'s the maximum multiple. It can\'t be enlarged',
         entity: 'entity',
         myColor: 'myColor',
+        default: 'Use default color',
         standardColor: 'standardColor',
         lock: 'lock',
         unLock: 'unLock',

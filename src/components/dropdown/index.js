@@ -61,9 +61,11 @@ export default React.memo(({children, trigger, prefix, menus, disable,
             return m;
           }).map((m) => {
             return <div
+              draggable={m.draggable}
               style={m.style}
               key={m.name}
               className={`${currentPrefix}-dropdown-item ${currentPrefix}-dropdown-item-${m.disable ? 'disable' : 'normal'}`}
+              onDragStart={e => onMenuClick(m, e)}
               onClick={e => onMenuClick(m, e)}
             >
               {m.icon}{m.name}

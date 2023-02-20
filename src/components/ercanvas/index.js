@@ -437,7 +437,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         const cells = graph.getCells();
         cmds.forEach((c) => {
           const cell = cells.filter(ce => ce.id === c.data.id)[0];
-          if (cell) {
+          if (cell && cell.shape !== 'group') {
             cell.toFront();
           }
         });

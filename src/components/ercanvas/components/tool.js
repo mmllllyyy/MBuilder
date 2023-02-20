@@ -382,7 +382,8 @@ const EdgeTooltipContent = ({onUpdate, edge, movePosition, getDataSource, positi
 };
 
 
-const ColorEdit = ({onUpdate, close, id, position, getDataSource, movePosition, color}) => {
+const ColorEdit = ({onUpdate, useDefaultColor,
+                     close, id, position, getDataSource, movePosition, color}) => {
   const standardColor = getPresetColors();
   const recentColors = getDataSource().profile?.recentColors || [];
   const currentColor = color;
@@ -400,14 +401,26 @@ const ColorEdit = ({onUpdate, close, id, position, getDataSource, movePosition, 
         top: e.top - movePosition.top,
       };
     };
+    let tempColor;
+    const onOk = () => {
+      if (tempColor) {
+        onUpdate(tempColor);
+      }
+    };
+    const _onUpdate = (c) => {
+      tempColor = c;
+    };
     ReactDom.render(<Com
       refactorPosition={refactorPosition}
       defaultColor={currentColor}
-      onChange={onUpdate}
+      onChange={_onUpdate}
       closeable
       onClose={onClose}
       isSimple
       recentColors={[]}
+      footer={<div style={{textAlign: 'center', marginBottom: 5}}>
+        <Button type='primary' onClick={onOk}><FormatMessage id='button.ok'/></Button>
+      </div>}
       style={{left: `${position.left + 10}px`, top: `${position.top}px`, zIndex: 999}}/>, pickerDom);
   };
   const _close = () => {
@@ -417,7 +430,13 @@ const ColorEdit = ({onUpdate, close, id, position, getDataSource, movePosition, 
   return <div className={`${prefix}-node-tooltip-content-color-edit`}>
     <div className={`${prefix}-node-tooltip-content-color-edit-container`}>
       <div className={`${prefix}-node-tooltip-content-color-edit-container-label`}>
-        <FormatMessage id='canvas.myColor'/></div>
+        <span><FormatMessage id='canvas.myColor'/></span>
+        <span
+          onClick={useDefaultColor}
+          className={`${prefix}-node-tooltip-content-color-edit-container-label-default`}
+        >
+          <FormatMessage id='canvas.default'/></span>
+      </div>
       <div className={`${prefix}-node-tooltip-content-color-edit-container-list`}>
         <div
           onClick={_close}
@@ -494,6 +513,7 @@ const NodeTooltipContent = ({onUpdate, node, id, position, getDataSource, movePo
       ref={overDownFontRef}
       offset={80}
       over={<ColorEdit
+        useDefaultColor={() => _onUpdate('fontColor', {hex: '#000000'}, true)}
         movePosition={movePosition}
         color={fontColor}
         getDataSource={getDataSource}
@@ -510,6 +530,7 @@ const NodeTooltipContent = ({onUpdate, node, id, position, getDataSource, movePo
         offset={80}
         ref={overDownFillRef}
         over={<ColorEdit
+          useDefaultColor={() => _onUpdate('fillColor', {hex: '#DDE5FF'}, true)}
           movePosition={movePosition}
           color={fillColor}
           getDataSource={getDataSource}

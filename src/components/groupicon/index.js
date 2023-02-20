@@ -53,6 +53,7 @@ const GroupIcon = React.memo(({prefix, title, onClick, icon, dropMenu, dropType 
       >
       <div
         onMouseDown={onMouseDown}
+        onDragStart={disable ? () => {} : _onClick}
         draggable={draggable}
         title={hoverTitle}
         className={`${className} ${currentPrefix}-group-icon ${currentPrefix}-group-icon-${disable ? 'disable' : 'normal'} ${currentPrefix}-group-icon-container-${dropMenu ? 'drop' : 'nodrop'}`}
