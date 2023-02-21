@@ -103,6 +103,7 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, openModa
                 {draggable: true, icon: <span className={`${currentPrefix}-head-polygon`}/>,  key: 'polygon', name: FormatMessage.string({id: 'toolbar.polygon'})},
             ]}/>
       <GroupIcon
+        draggable
         hoverTitle={activeTab?.type !== 'diagram' ? FormatMessage.string({id: 'toolbar.relationEnableTitle'}) : ''}
         title={FormatMessage.string({id: 'toolbar.mind'})}
         icon={<div className={`${currentPrefix}-head-mind ${currentPrefix}-head-mind-${activeTab?.type !== 'diagram' ? 'disable' : 'normal'}`} >

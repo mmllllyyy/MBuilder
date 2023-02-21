@@ -41,7 +41,8 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
   const render = () => {
     if (!isInit.current) {
       graphRef.current.fromJSON({
-        cells: mindRef.current.render(erRef.current.render(data, dataSourceRef.current)),
+        cells: mindRef.current.render(data)
+            .concat(erRef.current.render(data, dataSourceRef.current)),
       });
       isInit.current = true;
     } else {
@@ -237,7 +238,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
           // eslint-disable-next-line max-len
       validateTableStatus, updateDataSource, tabKey, relationType, graph, changeTab, dnd, dataChange, tabDataChange, isView, save, openDict, jumpEntity, openTab, closeTab, container, getDataSource, common, changes, versionsData, currentPrefix,
     });
-    const mind = new Mind({graph, dnd});
+    const mind = new Mind({graph, dnd, isView});
     erRef.current = eR;
     mindRef.current = mind;
     if (!isView) {
@@ -451,6 +452,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
     }
     graph.on('node:dblclick', ({cell, e}) => {
       eR.nodeDbClick(e, cell, dataSourceRef.current);
+      mind.nodeDbClick(e, cell);
     });
     graph.on('edge:mouseenter', ({edge}) => {
       eR.edgeOver(edge, graph, id, isScroll.current);

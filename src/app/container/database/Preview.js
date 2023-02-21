@@ -7,7 +7,8 @@ import './style/index.less';
 import {getPrefix} from '../../../lib/prefixUtil';
 import DotHelp from './DotHelp';
 
-export default React.memo(({prefix, template, mode, templateShow = 'createTable', db, dataSource, templateChange}) => {
+export default React.memo(({prefix, template, mode, templateShow = 'createTable', db,
+                             isAppCode, dataSource, templateChange}) => {
   const style = {width: 'auto', height: 'calc(100vh - 80px)'};
   const openDotHelp = () => {
     let modal;
@@ -60,7 +61,7 @@ export default React.memo(({prefix, template, mode, templateShow = 'createTable'
     updateTemplate(value);
     templateChange && templateChange(value);
   };
-  const demoCode = getDataByTemplate(getJsonData(), templateData || '', true, dataSource, db);
+  const demoCode = getDataByTemplate(getJsonData(), templateData || '', true, dataSource, db, isAppCode);
   const currentPrefix = getPrefix(prefix);
   return <div className={`${currentPrefix}-preview`}>
     <div className={`${currentPrefix}-preview-left`}>

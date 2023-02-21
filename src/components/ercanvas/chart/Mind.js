@@ -1,13 +1,18 @@
 import Hierarchy from '@antv/hierarchy';
-import {FormatMessage} from 'components';
+import {Button, FormatMessage, Modal, openDrawer} from 'components';
+import React from 'react';
 import { tree2array } from '../../../lib/tree';
 import { createContentMenu, getChildrenCell } from '../components/util';
+import {separator} from '../../../../profile';
+import {getDataByTabId} from '../../../lib/cache';
+import Entity from '../../../app/container/entity';
 
 export default class Mind {
     count = 1;
-    constructor({graph, dnd}) {
+    constructor({graph, dnd, isView}) {
         this.graph = graph;
         this.dnd = dnd;
+        this.isView = isView;
     }
     filterMindCell = (cells) => {
         // 分支主题 中心主题 连接线
@@ -95,6 +100,7 @@ export default class Mind {
                 width: newNode.width,
                 height: newNode.height,
                 label: `分支主题${this.count}`,
+                fillColor: '#DDE5FF',
                 visible: true,
                 expand: (n) => {
                     this.graph.batchUpdate('expand', () => {
@@ -163,6 +169,7 @@ export default class Mind {
                 label: '中心主题',
                 width: 160,
                 height: 50,
+                fillColor: '#DDE5FF',
             });
             this.dnd.start(node, e.nativeEvent);
         } else {
@@ -188,9 +195,10 @@ export default class Mind {
         this.filterMindCell(removed).forEach((c) => {
             if (c.isNode()) {
                 c.attr('body', {
-                    stroke: '#5F95FF',
+                    stroke: '#DFE3EB',
                     strokeWidth: 1,
                 }, { ignoreHistory : true});
+                c.setProp('editable', false, { ignoreHistory : true });
             } else {
                 c.attr('line/strokeWidth', 1, { ignoreHistory : true});
             }
@@ -212,7 +220,14 @@ export default class Mind {
             console.log('===');
         }
     }
-    render = (cells) => {
-        return cells;
+    render = (data) => {
+        return this.filterMindCell(data?.canvasData?.cells || []);
+    }
+    nodeDbClick = (e, cell) => {
+        if (this.isMindCell(cell)) {
+            if (!this.isView && !cell.getProp('isLock')) {
+                cell.setProp('editable', true, {ignoreHistory: true});
+            }
+        }
     }
 }

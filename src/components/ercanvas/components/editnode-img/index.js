@@ -22,7 +22,7 @@ const EditNode = forwardRef(({node}, ref) => {
         width: '100%',
         height: '100%',
         fontSize: '12px',
-        borderRadius: node.shape === 'edit-node-circle-img' ? '10px' : '0px',
+        borderRadius: (node.shape === 'edit-node-circle' || node.shape === 'mind-topic-branch' || node.shape === 'mind-topic') ? '10px' : '0px',
         border: node.shape === 'group-img' ? '1px dashed #DFE3EB' : '1px solid #DFE3EB',
       }}
   >

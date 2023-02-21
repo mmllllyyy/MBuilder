@@ -201,7 +201,8 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     return tabsRef.current.findIndex(t => t.tabKey === key) >= 0;
   };
   const renderReady = (cav, key) => {
-    cavRefArray.current.push({
+    cavRefArray.current = cavRefArray.current.filter(c => c.key !== key)
+        .concat({
       cav,
       key,
     });
@@ -844,10 +845,9 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     cavRef?.startDrag(e, key);
     return cavRef;
   };
-  const createTopicNode = () => {
-    Message.warring({title: FormatMessage.string({id: 'wait'})});
-    // const cavRef = getCurrentCav();
-    // cavRef?.createTopicNode(e);
+  const createTopicNode = (e) => {
+    const cavRef = getCurrentCav();
+    cavRef?.createTopicNode(e);
   };
   const createNode = (e, type) => {
     const cavRef = getCurrentCav();

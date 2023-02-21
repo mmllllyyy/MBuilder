@@ -188,7 +188,7 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
                         || c.shape === 'edit-node-circle-svg') {
                         pickFields.push('size');
                         pickFields.push('ports');
-                      } else if (c.shape === 'group') {
+                      } else if (c.shape === 'group' || c.shape === 'mind-topic') {
                         pickFields.push('size');
                         pickFields.push('children');
                       }
@@ -197,6 +197,9 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
                       }
                       if (c.shape === 'edit-node-polygon' || c.shape === 'edit-node-circle-svg') {
                         otherData.label = c.label || c?.attrs?.text?.text || '';
+                      }
+                      if(c.shape === 'mind-topic-branch') {
+                        pickFields.push('size');
                       }
                       return {
                         ..._.pick(c, pickFields),
@@ -2523,6 +2526,8 @@ const toggleViewsAndEntities = (data, toggleCaseValue) => {
   })
 }
 export const toggleCaseDataSource = (toggleCaseValue, dataSource) => {
+  const appCode = (dataSource?.profile?.codeTemplates || [])
+      .filter(c => c.type === 'appCode').map(c => c.applyFor);
   return {
     ...dataSource,
     entities: toggleViewsAndEntities(dataSource.entities || [], toggleCaseValue),
@@ -2530,7 +2535,7 @@ export const toggleCaseDataSource = (toggleCaseValue, dataSource) => {
     dataTypeMapping: {
       ...dataSource.dataTypeMapping,
       mappings: (dataSource.dataTypeMapping?.mappings || []).map(m => {
-        const omitNames = ['defKey', 'id', 'defName']
+        const omitNames = ['defKey', 'id', 'defName'].concat(appCode);
         return {
           ...m,
           ...Object.keys(m).filter(n => !omitNames.includes(n)).reduce((p, n) => {

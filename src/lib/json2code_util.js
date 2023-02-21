@@ -1459,12 +1459,12 @@ export const getDemoTemplateData = (templateShow) => {
   return data;
 };
 // 传入模板内容和数据 返回代码信息
-export const getDataByTemplate = (data, template, isDemo, dataSource, code) => {
+export const getDataByTemplate = (data, template, isDemo, dataSource, code, isAppCode) => {
   let sqlString = '';
   try {
     sqlString = getTemplateString(template, data, isDemo, dataSource, code);
     const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
-    if (DDLToggleCase) {
+    if (DDLToggleCase && !isAppCode) {
       return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
     }
     return sqlString;

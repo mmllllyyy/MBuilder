@@ -20,36 +20,3 @@ const MindTopic = ({node}) => {
         }
     </div>;
 };
-
-Graph.registerNode('mind-topic', {
-    inherit: 'react-shape',
-    zIndex: 3,
-    attrs: {
-        body: {
-            rx: 6,
-            ry: 6,
-            stroke: '#5F95FF',
-            fill: '#EFF4FF',
-            strokeWidth: 1,
-        },
-    },
-    component: <MindTopic/>,
-});
-
-Graph.registerNode(
-    'mind-topic-branch',
-    {
-        inherit: 'react-shape',
-        zIndex: 3,
-        attrs: {
-            body: {
-                rx: 6,
-                ry: 6,
-                stroke: '#5F95FF',
-                fill: '#EFF4FF',
-                strokeWidth: 1,
-            },
-        },
-        component: <MindTopic/>,
-    },
-);

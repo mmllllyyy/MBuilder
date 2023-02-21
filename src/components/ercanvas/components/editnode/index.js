@@ -58,7 +58,7 @@ const EditNode = forwardRef(({node}, ref) => {
   };
   return <div
     ref={ref}
-    className={`chiner-er-editnode ${node.shape === 'edit-node-circle' ? 'chiner-er-editnode-circle' : ''}`}
+    className={`chiner-er-editnode ${(node.shape === 'edit-node-circle' || node.shape === 'mind-topic-branch' || node.shape === 'mind-topic') ? 'chiner-er-editnode-circle' : ''}`}
     style={{
       background: node.getProp('fillColor'),
       color: node.getProp('fontColor'),
@@ -263,3 +263,37 @@ Graph.registerNode('group', {
   },
   component: <EditNode/>,
 });
+
+// 中心主题
+Graph.registerNode('mind-topic', {
+  inherit: 'react-shape',
+  zIndex: 3,
+  attrs: {
+    body: {
+      stroke: '#DFE3EB',  // 边框颜色
+      strokeWidth: 1,
+      rx: 10,
+      ry: 10,
+    },
+  },
+  component: <EditNode/>,
+});
+
+// 子主题
+Graph.registerNode(
+    'mind-topic-branch',
+    {
+      inherit: 'react-shape',
+      zIndex: 3,
+      attrs: {
+        body: {
+          stroke: '#DFE3EB',  // 边框颜色
+          strokeWidth: 1,
+          rx: 10,
+          ry: 10,
+        },
+      },
+      component: <EditNode/>,
+    },
+);
+

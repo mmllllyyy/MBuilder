@@ -25,6 +25,7 @@ export default ({prefix, data, onBlur, update, dataSource, type, name}) => {
         };
         if (t === 'previewEdit') {
             modal = openModal(<Preview
+              isAppCode
               dataSource={dataSource}
               template={data}
               db={name}
