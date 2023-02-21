@@ -404,7 +404,8 @@ const ColorEdit = ({onUpdate, useDefaultColor,
     let tempColor;
     const onOk = () => {
       if (tempColor) {
-        onUpdate(tempColor);
+        onUpdate(tempColor, true);
+        onClose();
       }
     };
     const _onUpdate = (c) => {

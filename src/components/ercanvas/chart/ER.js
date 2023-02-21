@@ -1224,7 +1224,7 @@ export default class ER {
                 dom.setAttribute('class', 'chiner-tooltip-container');
                 dom.setAttribute('id', domId);
                 dom.innerHTML = `<div class="chiner-tooltip-content " style="display: block;">
-                   <div>${node.getProp('note')}</div>
+                   <div><pre>${node.getProp('note')}</pre></div>
                   <div class="chiner-tooltip-content-arrow-top"></div>
                   </div>`;
                 document.body.appendChild(dom);
