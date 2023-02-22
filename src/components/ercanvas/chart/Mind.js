@@ -1,6 +1,7 @@
 import Hierarchy from '@antv/hierarchy';
 import {Button, FormatMessage, Modal, openDrawer} from 'components';
 import React from 'react';
+import {edgeNodeAddTool} from 'components/ercanvas/components/tool';
 import { tree2array } from '../../../lib/tree';
 import { createContentMenu, getChildrenCell } from '../components/util';
 import {separator} from '../../../../profile';
@@ -9,10 +10,13 @@ import Entity from '../../../app/container/entity';
 
 export default class Mind {
     count = 1;
-    constructor({graph, dnd, isView}) {
+    constructor({graph, dnd, isView, dataChange, updateDataSource, getDataSource}) {
         this.graph = graph;
         this.dnd = dnd;
         this.isView = isView;
+        this.dataChange = dataChange;
+        this.updateDataSource = updateDataSource;
+        this.getDataSource = getDataSource;
     }
     filterMindCell = (cells) => {
         // 分支主题 中心主题 连接线
@@ -25,7 +29,7 @@ export default class Mind {
     isMindCell = (cell) => {
         return this.filterMindCell(cell).length > 0;
     }
-    updateTree = (node) => {
+    updateTree = (node, v) => {
         const nodes = this.graph.getNodes();
         const getChildrenId = (n) => {
             const children = n.prop('children') || [];
@@ -66,10 +70,10 @@ export default class Mind {
                 .filter(n => getChildrenId(n).includes(node.id))[0];
         }
         // 生成新的节点树
-        return Hierarchy.mindmap(
+        return Hierarchy.compactBox(
             node2Tree(root),
             {
-                direction: 'H',
+                direction: 'V',
                 getHeight(d) {
                     return d.height;
                 },
@@ -84,11 +88,22 @@ export default class Mind {
                 },
             });
     };
+    updateLayout = (node, v) => {
+        // const result = tree2array([this.updateTree(node, v)]);
+        // const nodes = this.graph.getNodes();
+        // result.forEach((n) => {
+        //     const updateNode = nodes.filter(c => c.id === n.id)[0];
+        //     // 更新节点信息
+        //     updateNode?.position(n.x, n.y);
+        //     updateNode?.prop('data/side', n.side);
+        //     updateNode?.toFront();
+        // });
+    };
     addChildNode = (node) => {
         // 创建临时节点
         const newNode = {
             id: Math.uuid(),
-            width: 60,
+            width: 80,
             height: 40,
         };
         this.graph.batchUpdate('addChildNode', () => {
@@ -170,6 +185,7 @@ export default class Mind {
                 width: 160,
                 height: 50,
                 fillColor: '#DDE5FF',
+                layout: 'horizontal',
             });
             this.dnd.start(node, e.nativeEvent);
         } else {
@@ -189,6 +205,7 @@ export default class Mind {
                     strokeWidth: 3,
                 }, { ignoreHistory : true});
             } else {
+                c.attr('line/stroke', '#1890FF', { ignoreHistory : true});
                 c.attr('line/strokeWidth', 2, { ignoreHistory : true});
             }
         });
@@ -200,6 +217,8 @@ export default class Mind {
                 }, { ignoreHistory : true});
                 c.setProp('editable', false, { ignoreHistory : true });
             } else {
+                c.attr('line/stroke', c.getProp('fillColor')
+                    || '#ACDAFC', { ignoreHistory : true});
                 c.attr('line/strokeWidth', 1, { ignoreHistory : true});
             }
         });
@@ -230,4 +249,47 @@ export default class Mind {
             }
         }
     }
+    resizingEnabled = (node) => {
+        return this.isMindCell(node);
+    }
+    delete = () => {
+        const cells = this.graph.getSelectedCells();
+        if (this.filterMindCell(cells).length) {
+            const deleteCells = cells.filter(c => !c.getProp('isLock') && c.isNode() && !c.getProp('editable'));
+            deleteCells.forEach(c => c.removeTools());
+            this.graph.removeCells(deleteCells);
+        }
+    }
+    edgeOver = (edge, graph, id, isScroll) => {
+        if (this.isMindCell(edge)) {
+            if (!isScroll && graph.isSelected(edge)) {
+                edgeNodeAddTool(edge, graph, id, () => {
+                    this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
+                }, this.getDataSource, this.updateDataSource, this.updateLayout);
+            }
+        }
+    }
+    nodeMouseEnter = (node, graph, id, isScroll) => {
+        if (this.isMindCell(node)) {
+            if (!isScroll && graph.isSelected(node)) {
+                edgeNodeAddTool(node, graph, id, () => {
+                    this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
+                }, this.getDataSource, this.updateDataSource, this.updateLayout);
+            }
+        }
+    };
+    cellClick = (cell, graph, id) => {
+        if (this.isMindCell(cell)) {
+            edgeNodeAddTool(cell, graph, id, () => {
+                this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
+            }, this.getDataSource, this.updateDataSource, this.updateLayout);
+        }
+    };
+    nodeMoved = (cell, graph, id) => {
+        if (this.isMindCell(cell) && graph.isSelected(cell)) {
+            edgeNodeAddTool(cell, graph, id, () => {
+                this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
+            }, this.getDataSource, this.updateDataSource, this.updateLayout);
+        }
+    };
 }

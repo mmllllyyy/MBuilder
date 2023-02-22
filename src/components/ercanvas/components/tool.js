@@ -328,50 +328,53 @@ const EdgeTooltipContent = ({onUpdate, edge, movePosition, getDataSource, positi
             </Tooltip>
           </div>
         </OverDown>
-        <div className={`${prefix}-edge-tooltip-content-line`}/>
-        <OverDown over={renderDataType('line')} offset={50}>
-          <div
-            className={`${prefix}-edge-tooltip-content-item`}
+        {
+          edge.shape !== 'mind-edge' && <><div className={`${prefix}-edge-tooltip-content-line`}/>
+            <OverDown over={renderDataType('line')} offset={50}>
+              <div
+                className={`${prefix}-edge-tooltip-content-item`}
+              >
+                <div className={`${prefix}-edge-tooltip-content-item-line`}>
+                  <Tooltip propagation offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.edge.lineType'})}>
+                    <Svg isArrow={false} type={lineState.lineType}/>
+                  </Tooltip>
+                </div>
+              </div>
+            </OverDown>
+            <div className={`${prefix}-edge-tooltip-content-line`}/>
+            <div
+              className={`${prefix}-edge-tooltip-content-item`}
             >
-            <div className={`${prefix}-edge-tooltip-content-item-line`}>
-              <Tooltip propagation offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.edge.lineType'})}>
-                <Svg isArrow={false} type={lineState.lineType}/>
-              </Tooltip>
-            </div>
-          </div>
-        </OverDown>
-        <div className={`${prefix}-edge-tooltip-content-line`}/>
-        <div
-          className={`${prefix}-edge-tooltip-content-item`}
-          >
-          <div className={`${prefix}-edge-tooltip-content-item-arrow`}>
-            <OverDown over={renderDataType('arrow', true)} offset={25}>
-              <div>
-                <Tooltip propagation offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.edge.startArrow'})}>
-                  <Svg
-                    reverse
-                    type={arrowState[0]}
-                  />
-                </Tooltip>
+              <div className={`${prefix}-edge-tooltip-content-item-arrow`}>
+                <OverDown over={renderDataType('arrow', true)} offset={25}>
+                  <div>
+                    <Tooltip propagation offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.edge.startArrow'})}>
+                      <Svg
+                        reverse
+                        type={arrowState[0]}
+                      />
+                    </Tooltip>
+                  </div>
+                </OverDown>
+                <div onClick={() => _onUpdate('arrow-exchange')} className={`${prefix}-edge-tooltip-content-item-arrow-change`}>
+                  <Tooltip offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.edge.exchange'})}>
+                    <Icon type='fa-exchange'/>
+                  </Tooltip>
+                </div>
+                <OverDown over={renderDataType('arrow')} offset={25}>
+                  <div>
+                    <Tooltip propagation offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.edge.endArrow'})}>
+                      <Svg
+                        type={arrowState[1]}
+                      />
+                    </Tooltip>
+                  </div>
+                </OverDown>
               </div>
-            </OverDown>
-            <div onClick={() => _onUpdate('arrow-exchange')} className={`${prefix}-edge-tooltip-content-item-arrow-change`}>
-              <Tooltip offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.edge.exchange'})}>
-                <Icon type='fa-exchange'/>
-              </Tooltip>
             </div>
-            <OverDown over={renderDataType('arrow')} offset={25}>
-              <div>
-                <Tooltip propagation offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.edge.endArrow'})}>
-                  <Svg
-                    type={arrowState[1]}
-                  />
-                </Tooltip>
-              </div>
-            </OverDown>
-          </div>
-        </div>
-        <div className={`${prefix}-edge-tooltip-content-line`}/></>
+            <div className={`${prefix}-edge-tooltip-content-line`}/></>
+        }
+        </>
     }
     <div className={`${prefix}-edge-tooltip-content-item`}>
       <Tooltip clickClose offsetTop={1} placement='top' force title={FormatMessage.string({id: `canvas.${isLock ? 'unLock' : 'lock'}`})}>
@@ -381,6 +384,16 @@ const EdgeTooltipContent = ({onUpdate, edge, movePosition, getDataSource, positi
   </div>;
 };
 
+const Layout = ({onUpdate, layout}) => {
+  return <div className={`${prefix}-node-tooltip-content-layout`}>
+    <div>
+      <Svg onClick={() => onUpdate('layout', 'horizontal')} style={{cursor: 'pointer', width: '27px'}} type={`#icon-mind-map-horizontal${layout === 'horizontal' ? '-checked' : ''}`}/>
+    </div>
+    <div>
+      <Svg onClick={() => onUpdate('layout', 'vertical')} style={{cursor: 'pointer', width: '27px'}} type={`#icon-mind-map-vertical${layout === 'vertical' ? '-checked' : ''}`}/>
+    </div>
+  </div>;
+};
 
 const ColorEdit = ({onUpdate, useDefaultColor,
                      close, id, position, getDataSource, movePosition, color}) => {
@@ -405,8 +418,8 @@ const ColorEdit = ({onUpdate, useDefaultColor,
     const onOk = () => {
       if (tempColor) {
         onUpdate(tempColor, true);
-        onClose();
       }
+      onClose();
     };
     const _onUpdate = (c) => {
       tempColor = c;
@@ -482,6 +495,8 @@ const NodeTooltipContent = ({onUpdate, node, id, position, getDataSource, movePo
   const [fillColor, setFillColor] = useState(node.getProp('fillColor') || defaultColor.fillColor);
   const [fontColor, setFontColor] = useState(node.getProp('fontColor') || defaultColor.fontColor);
 
+  const [layout, setLayout] = useState(node.getProp('layout') || 'horizontal');
+
   const [isLock, setIsLock] = useState(() => {
     return node.getProp('isLock');
   });
@@ -493,6 +508,8 @@ const NodeTooltipContent = ({onUpdate, node, id, position, getDataSource, movePo
       setFontColor(value.hex);
     } else if (t === 'fillColor') {
       setFillColor(value.hex);
+    } else if (t === 'layout') {
+      setLayout(value);
     }
     onUpdate(t, value, complete);
   };
@@ -505,6 +522,16 @@ const NodeTooltipContent = ({onUpdate, node, id, position, getDataSource, movePo
     overDownFillRef.current.close();
   };
   return <div className={`${prefix}-node-tooltip-content`}>
+    { !isLock && node.shape === 'mind-topic' && <OverDown
+      ref={overDownFontRef}
+      offset={20}
+      over={<Layout onUpdate={_onUpdate} layout={layout}/>}
+      key='fontColor'>
+      <div>
+        <Tooltip propagation offsetTop={10} placement='top' force title={FormatMessage.string({id: 'toolbar.layout'})}>
+          <Svg style={{cursor: 'pointer', width: '27px'}} type={`#icon-mind-map-${layout}`}/>
+        </Tooltip>
+      </div></OverDown>}
     {
       !isLock && node.shape !== 'table' && <Tooltip offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.node.note'})}>
         <Svg onClick={() => onUpdate('note')} style={{cursor: 'pointer', width: '27px'}} type='#icon-part-A'/>
@@ -563,7 +590,8 @@ const NodeTooltipContent = ({onUpdate, node, id, position, getDataSource, movePo
 
 let preNode;
 
-export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource, updateDataSource) => {
+export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource, updateDataSource,
+                                updateLayout) => {
   if (preNode !== edge) {
     preNode = edge;
     const cellTooltip = document.getElementById(`${id}-cellTooltip`);
@@ -584,6 +612,10 @@ export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource, upda
           width = 45;
         } else if (edge.shape === 'table') {
           width = 110;
+        } else if (edge.shape === 'mind-edge') {
+          width = 100;
+        } else if (edge.shape === 'mind-topic') {
+          width = 200;
         }
         left = rect.x - canvasContainerRect.x + rect.width / 2 - width / 2;
         toolParent.style.left = `${left}px`;
@@ -777,7 +809,7 @@ export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource, upda
             cells
                 .forEach((c) => {
                   c.setProp(t, v.hex);
-                  if (c.shape === 'erdRelation') {
+                  if (c.shape === 'erdRelation' || c.shape === 'mind-edge') {
                     if (t === 'fillColor') {
                       const tempLine = c.attr('line');
                       c.attr('line', {
@@ -819,6 +851,8 @@ export const edgeNodeAddTool = (edge, graph, id, dataChange, getDataSource, upda
               };
               updateDataSource && updateDataSource(tempDataSource);
             }
+          } else if (t === 'layout') {
+            updateLayout(edge, v);
           }
           t !== 'label' && t !== 'link' && dataChange && dataChange();
         });

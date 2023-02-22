@@ -714,11 +714,11 @@ export default class ER {
             edge.attr('line/stroke', this.currentColor.selected, { ignoreHistory : true});
             edge.attr('line/sourceMarker/fillColor', this.currentColor.selected, { ignoreHistory : true});
             edge.attr('line/targetMarker/fillColor', this.currentColor.selected, { ignoreHistory : true});
-        }
-        if (!isScroll && graph.isSelected(edge)) {
-            edgeNodeAddTool(edge, graph, id, () => {
-                this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-            }, this.getDataSource, this.updateDataSource);
+            if (!isScroll && graph.isSelected(edge)) {
+                edgeNodeAddTool(edge, graph, id, () => {
+                    this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
+                }, this.getDataSource, this.updateDataSource);
+            }
         }
 
     }

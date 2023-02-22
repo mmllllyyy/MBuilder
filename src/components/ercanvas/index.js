@@ -185,7 +185,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         minWidth: 80,
         minHeight: 60,
         enabled:  (node) => {
-          return !node.getProp('isLock') && erRef.current.resizingEnabled(node);
+          return !node.getProp('isLock') && (erRef.current.resizingEnabled(node) || mindRef.current.resizingEnabled(node));
         },
         preserveAspectRatio: (node) => {
           return erRef.current.preserveAspectRatio(node);
@@ -238,7 +238,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
           // eslint-disable-next-line max-len
       validateTableStatus, updateDataSource, tabKey, relationType, graph, changeTab, dnd, dataChange, tabDataChange, isView, save, openDict, jumpEntity, openTab, closeTab, container, getDataSource, common, changes, versionsData, currentPrefix,
     });
-    const mind = new Mind({graph, dnd, isView});
+    const mind = new Mind({graph, dnd, isView, dataChange, updateDataSource, getDataSource});
     erRef.current = eR;
     mindRef.current = mind;
     if (!isView) {
@@ -346,6 +346,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       });
       graph.on('cell:click', ({cell}) => {
         eR.cellClick(cell, graph, id);
+        mind.cellClick(cell, graph, id);
       });
       graph.on('node:click:text', ({cell}) => {
         eR.nodeTextClick(cell);
@@ -400,6 +401,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       });
       graph.bindKey(['backspace', 'delete'], () => {
         eR.delete();
+        mind.delete();
       });
       graph.on('node:contextmenu', ({cell, e}) => {
         mind.nodeContextmenu(e, cell);
@@ -412,6 +414,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       });
       graph.on('node:mouseenter', ({node}) => {
         eR.nodeMouseEnter(node, graph, id, isScroll.current);
+        mind.nodeMouseEnter(node, graph, id, isScroll.current);
       });
       graph.on('node:mouseleave', ({node}) => {
         eR.nodeMouseLeave(node);
@@ -421,6 +424,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       });
       graph.on('node:moved', ({node}) => {
         eR.nodeMoved(node, graph, id);
+        mind.nodeMoved(node, graph, id);
       });
       graph.on('node:embed', ({node, currentParent, previousParent}) => {
         eR.nodeEmbed(node, currentParent, previousParent);
@@ -456,6 +460,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
     });
     graph.on('edge:mouseenter', ({edge}) => {
       eR.edgeOver(edge, graph, id, isScroll.current);
+      mind.edgeOver(edge, graph, id, isScroll.current);
     });
     graph.on('edge:mouseleave', ({edge}) => {
       eR.edgeLeave(edge);

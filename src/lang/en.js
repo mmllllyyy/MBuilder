@@ -36,6 +36,7 @@ export default {
         circle: 'circle',
         polygon: 'polygon',
         mind: 'mind',
+        layout: 'layout',
         fontColor: 'fontColor',
         fillColor: 'fitColor',
         scale: 'scale',

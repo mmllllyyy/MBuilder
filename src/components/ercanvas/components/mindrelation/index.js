@@ -26,6 +26,20 @@ Graph.registerEdge('mind-edge', {
     connector: {
         name: 'mindmap',
     },
+    propHooks(metadata) {
+        const { fillColor, ...others } = metadata;
+        if (fillColor) {
+            return {
+                ...metadata,
+                attrs: {
+                    line: {
+                        stroke: fillColor,
+                    },
+                },
+            };
+        }
+        return others;
+    },
     attrs: {
         line: {
             targetMarker: '',

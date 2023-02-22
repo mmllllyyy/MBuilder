@@ -181,7 +181,8 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
                         'connector',
                         'attrs.line.strokeDasharray',
                         'isLock',
-                        'note'
+                        'note',
+                        'layout'
                       ];
                       if (c.shape === 'edit-node' || c.shape === 'edit-node-circle'
                         || c.shape === 'edit-node-polygon'

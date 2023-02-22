@@ -36,6 +36,7 @@ export default {
         circle: '圆形',
         polygon: '菱形',
         mind: '思维导图',
+        layout: '布局',
         fontColor: '字体颜色',
         fillColor: '填充颜色',
         scale: '比例',
