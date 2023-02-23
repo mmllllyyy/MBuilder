@@ -2554,3 +2554,11 @@ export const toggleCaseDataSource = (toggleCaseValue, dataSource) => {
 export const toggleCaseEntityOrView = (data, toggleCaseValue) => {
   return toggleViewsAndEntities([data], toggleCaseValue)[0]
 }
+
+export const calcUnGroupDefKey = (dataSource, name) => {
+  const allGroupKeys = (dataSource.viewGroups || [])
+      .reduce((a, b) => a.concat(b[`ref${firstUp(name)}`]), []);
+  return (dataSource[name] || [])
+      .filter(e => !(allGroupKeys.includes(e.id)))
+      .map(e => e.id);
+};

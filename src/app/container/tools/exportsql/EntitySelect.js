@@ -2,6 +2,8 @@ import React, {forwardRef, useImperativeHandle, useRef} from 'react';
 
 import {FormatMessage, Tree} from 'components';
 
+import { calcUnGroupDefKey } from '../../../../lib/datasource_util';
+
 import { separator } from '../../../../../profile';
 import {firstUp} from '../../../../lib/string';
 
@@ -14,20 +16,13 @@ export default React.memo(forwardRef(({dataSource, defaultCheckeds, prefix, temp
       },
     };
   }, []);
-  const calcUnGroupDefKey = (name) => {
-    const allGroupKeys = (dataSource.viewGroups || [])
-        .reduce((a, b) => a.concat(b[`ref${firstUp(name)}`]), []);
-    return (dataSource[name] || [])
-        .filter(e => !(allGroupKeys.includes(e.id)))
-        .map(e => e.id);
-  };
   const getTreeData = () => {
     const refData = {};
     if (templateType === 'dict') {
-      refData.refDicts = calcUnGroupDefKey('dicts');
+      refData.refDicts = calcUnGroupDefKey(dataSource, 'dicts');
     } else {
-      refData.refEntities = calcUnGroupDefKey('entities');
-      refData.refViews = calcUnGroupDefKey('views');
+      refData.refEntities = calcUnGroupDefKey(dataSource,'entities');
+      refData.refViews = calcUnGroupDefKey(dataSource,'views');
     }
     return (dataSource.viewGroups || [])
         .concat({

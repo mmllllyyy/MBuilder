@@ -30,6 +30,7 @@ import StandardField from '../container/standardfield';
 import HeaderTool from './HeaderTool';
 import MessageHelp from './MessageHelp';
 import ToggleCase from '../container/tools/togglecase';
+import CompareTable from '../container/tools/comparetable';
 import { separator } from '../../../profile';
 import { getMenu, getMenus, dealMenuClick } from '../../lib/contextMenuUtil';
 import { moveArrayPosition } from '../../lib/array_util';
@@ -303,6 +304,9 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     dealMenuClick(restProps?.dataSource, m, restProps?.update, _tabClose,
         // eslint-disable-next-line no-use-before-define
         callback, restProps?.updateAllVersion, genImg);
+  };
+  const getDataSource = () => {
+    return dataSourceRef.current;
   };
   const resize = (factor) => {
     const cavRef = getCurrentCav();
@@ -850,6 +854,10 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     // const cavRef = getCurrentCav();
     // cavRef?.createTopicNode(e);
   };
+  const quickCompareDb = () => {
+    setMenuType('4');
+    setVersionType('2');
+  };
   const createNode = (e, type) => {
     const cavRef = getCurrentCav();
     cavRef?.startRemarkDrag(e, type);
@@ -878,6 +886,26 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
         ...dataSourceRef.current.profile,
         themeMode: themeMode === 'themeDay' ? 'themeNigh' : 'themeDay',
       },
+    });
+  };
+  const quickCompareTable = () => {
+    let modal;
+    const onCancel = () => {
+      modal && modal.close();
+    };
+    modal = openModal(<CompareTable
+      getDataSource={getDataSource}
+      updateProject={restProps.update}
+      openLoading={restProps.openLoading}
+      closeLoading={restProps.closeLoading}
+      dataSource={dataSourceRef.current}
+    />, {
+      bodyStyle: { width: '90%' },
+      buttons:  [
+        <Button key='cancel' onClick={onCancel}>
+          <FormatMessage id='button.close'/>
+        </Button>],
+      title: FormatMessage.string({id: 'toolbar.compareTable'}),
     });
   };
   const toggleCase = () => {
@@ -1040,9 +1068,6 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
   };
   const hasDestroy = (key) => {
     delete tabInstanceRef.current[key];
-  };
-  const getDataSource = () => {
-    return dataSourceRef.current;
   };
   const otherTabSave = (tab, callback) => {
     saveProject(false, tab, callback);
@@ -1361,6 +1386,8 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       case 'circle': createCircleNode(e);break;
       case 'rect': createNode(e, 'rect');break;
       case 'mind': createTopicNode(e);break;
+      case 'compareDb': quickCompareDb();break;
+      case 'compareTable': quickCompareTable();break;
       case 'polygon': createPolygonNode(e);break;
       case 'group': createGroupNode(e);break;
       case 'alignLeft':

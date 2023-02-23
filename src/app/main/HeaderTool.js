@@ -140,8 +140,34 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, openModa
         icon='fa-briefcase'
         onClick={iconClick}
         dropMenu={[
-                {key: 'toggleCase', name: FormatMessage.string({id: 'toolbar.toggleCase'})},
-                {key: 'theme', name: FormatMessage.string({id: `toolbar.${themeMode === 'themeDay' ? 'themeNigh' : 'themeDay'}`})},
+                {
+                    icon: <svg className={`${currentPrefix}-svg-icon`} aria-hidden="true">
+                      <use xlinkHref={themeMode === 'themeDay' ? '#icon-yueduye-yejianmoshi' : '#icon-baitian-qing'}/>
+                    </svg>,
+                    key: 'theme',
+                    name: FormatMessage.string({id: `toolbar.${themeMode === 'themeDay' ? 'themeNigh' : 'themeDay'}`}),
+                },
+                {
+                    icon: <svg className={`${currentPrefix}-svg-icon`} aria-hidden="true">
+                      <use xlinkHref='#icon-daxiaoxiezhuanhuan'/>
+                    </svg>,
+                    key: 'toggleCase',
+                    name: FormatMessage.string({id: 'toolbar.toggleCase'}),
+                },
+                {
+                    icon: <svg className={`${currentPrefix}-svg-icon`} aria-hidden="true">
+                      <use xlinkHref='#icon-BOMbijiao'/>
+                    </svg>,
+                    key: 'compareDb',
+                    name: FormatMessage.string({id: 'toolbar.compareDb'}),
+                },
+                {
+                    icon: <svg className={`${currentPrefix}-svg-icon`} aria-hidden="true">
+                      <use xlinkHref='#icon-bijiao1'/>
+                    </svg>,
+                    key: 'compareTable',
+                    name: FormatMessage.string({id: 'toolbar.compareTable'}),
+                },
             ]}/>
     </GroupIconGroup>
     <GroupIconGroup>

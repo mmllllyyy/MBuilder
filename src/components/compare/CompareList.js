@@ -11,16 +11,23 @@ import {
     validateItem,
 } from '../../lib/datasource_util';
 
-export default React.memo(forwardRef(({prefix, style, dataSource, config,
-                                          openLoading, closeLoading, mergeFromMeta}, ref) => {
+export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
+                                          openLoading, closeLoading, mergeFromMeta,
+                                          header, defaultMeta = '',
+                                          entitiesKeys, onPicker, onCheck, onRemove,
+                                          leftTitle, rightTitle,
+                                          }, ref) => {
     const currentPrefix = getPrefix(prefix);
     const metaDataSource = dataSource.profile.metaData || [];
     const dbConn = dataSource.dbConn || [];
-    const [meta, setMeta] = useState('');
+    const [meta, setMeta] = useState(defaultMeta);
     const [metaData, setMetaData] = useState([]);
     const [selectedTable, setSelectedTable] = useState([]);
     const [expand, setExpand] = useState([]);
     const selectedTableRef = useRef([]);
+    const [entitiesKeyChecked, setEntitiesKeyChecked] = useState([]);
+    const entitiesKeyCheckedRef = useRef([]);
+    entitiesKeyCheckedRef.current = [...entitiesKeyChecked];
     selectedTableRef.current = [...selectedTable];
     const [changes, setChanges] = useState([]);
     const [metaDataFields, setMetaDataFields] = useState([]);
@@ -29,6 +36,15 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
     const [columnWidth, setColumnWidth] = useState([]);
     const firstRef = useRef(null);
     const secondRef = useRef(null);
+    const mergeMetaDataSourceKeys = (pre, next) => {
+        return (pre || []).concat(next).reduce((a, b) => {
+            if (a.findIndex(d => b.defKey?.toLocaleLowerCase() === d?.toLocaleLowerCase()) < 0) {
+                return a.concat(b.defKey);
+            }
+            return a;
+        }, []);
+    };
+    const allEntitiesKeys = entitiesKeys || mergeMetaDataSourceKeys(dataSource.entities, metaData);
     useImperativeHandle(ref, () => {
         return {
             setMeta: (m, isCustomer) => {
@@ -39,6 +55,15 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                 setMetaDataFields([]);
                 setCustomerMeta(isCustomer);
                 setMeta(m);
+            },
+            setMetaData: (callback) => {
+                setMetaData(callback);
+            },
+            setMetaDataFields: (callback) => {
+                setMetaDataFields(callback);
+            },
+            setChanges: (callback) => {
+                setChanges(callback);
             },
         };
     }, []);
@@ -122,37 +147,77 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
             });
         }
     };
-    const getTableDetail = (table) => {
-        openLoading(FormatMessage.string({id: 'components.compare.scanField'}));
-        const currentConn = dbConn.filter(d => d.defKey === meta)[0];
-        connectDB(dataSource, config, {
-            ...currentConn?.properties,
-            tables: table || selectedTableRef.current.join(','),
-        }, 'DBReverseGetTableDDL', (data) => {
-            if (data.status === 'FAILED') {
-                errorModal(data);
+    const getTableDetail = (table, dData) => {
+        if(defaultMeta) {
+            const entities = dataSource.entities || [];
+            const leftData = entities.filter(e => e.defKey === dData.left)[0] || {};
+            const rightData = entities.filter(e => e.defKey === dData.right)[0] || {};
+            const compareData = {
+                ...dData,
+                left: {
+                    ...leftData,
+                    defKey: dData.key,
+                },
+                right: {
+                    ...rightData,
+                    defKey: dData.key,
+                },
+            };
+            const newChanges = simplePackageChanges({
+                    ...dataSource,
+                    entities: [compareData.left],
+                }, {
+                    ...dataSource,
+                    entities: [compareData.right],
+                },
+                null, true);
+            if (newChanges.length === 0) {
+                setChanges(pre => pre.concat({
+                    data: {
+                        baseInfo: {
+                            defKey: dData.key.toLocaleLowerCase(),
+                        },
+                    },
+                }));
             } else {
-                setMetaDataFields((pre) => {
-                    return pre.filter(p => data.body.findIndex(b => b.defKey === p.defKey) < 0)
-                        .concat(data.body.map((d) => {
-                            const currentMeta = metaData.filter(m => m.defKey === d.defKey)[0];
-                            return {
-                                ...d,
-                                defName: currentMeta?.defName || '',
-                                comment: currentMeta?.comment || '',
-                                fields: (d.fields || []).map((f) => {
-                                    return {
-                                        ...f,
-                                        defName: f?.defName?.split(';')[0] || '',
-                                        comment: f.comment || f?.defName?.split(';')[1] || '',
-                                    };
-                                }),
-                            };
-                        }));
+                setChanges((pre) => {
+                    return pre
+                        .filter(p => p.data?.baseInfo?.defKey !== dData.key?.toLocaleLowerCase())
+                        .concat(newChanges);
                 });
             }
-            closeLoading();
-        });
+        } else {
+            openLoading(FormatMessage.string({id: 'components.compare.scanField'}));
+            const currentConn = dbConn.filter(d => d.defKey === meta)[0];
+            connectDB(dataSource, config, {
+                ...currentConn?.properties,
+                tables: table || selectedTableRef.current.join(','),
+            }, 'DBReverseGetTableDDL', (data) => {
+                if (data.status === 'FAILED') {
+                    errorModal(data);
+                } else {
+                    setMetaDataFields((pre) => {
+                        return pre.filter(p => data.body.findIndex(b => b.defKey === p.defKey) < 0)
+                            .concat(data.body.map((d) => {
+                                const currentMeta = metaData.filter(m => m.defKey === d.defKey)[0];
+                                return {
+                                    ...d,
+                                    defName: currentMeta?.defName || '',
+                                    comment: currentMeta?.comment || '',
+                                    fields: (d.fields || []).map((f) => {
+                                        return {
+                                            ...f,
+                                            defName: f?.defName?.split(';')[0] || '',
+                                            comment: f.comment || f?.defName?.split(';')[1] || '',
+                                        };
+                                    }),
+                                };
+                            }));
+                    });
+                }
+                closeLoading();
+            });
+        }
     };
     const showDDL = () => {
         let modal;
@@ -172,49 +237,82 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
         });
     };
     useEffect(() => {
-        const newChanges = simplePackageChanges(dataSource, {
-            ...dataSource,
-            ...(isCustomerMeta ? customerDataSource : {}),
-            entities: metaDataFields,
-        }, isCustomerMeta ? null : dbConn.filter(d => d.defKey === meta)[0]?.type, isCustomerMeta);
-        setChanges(newChanges.filter((c) => {
-            if (c.opt === 'add') {
-                return metaData
-                    .findIndex(m => m.defKey?.toLocaleLowerCase()
-                        === c.data?.defKey?.toLocaleLowerCase()) < 0;
-            }
-            return true;
-        }));
+        if (!defaultMeta) {
+            const newChanges = simplePackageChanges(dataSource, {
+                    ...dataSource,
+                    ...(isCustomerMeta ? customerDataSource : {}),
+                    entities: metaDataFields},
+                isCustomerMeta ? null :
+                    dbConn.filter(d => d.defKey === meta)[0]?.type, isCustomerMeta);
+            setChanges(newChanges.filter((c) => {
+                if (c.opt === 'add') {
+                    return metaData
+                        .findIndex(m => m.defKey?.toLocaleLowerCase()
+                            === c.data?.defKey?.toLocaleLowerCase()) < 0;
+                }
+                return true;
+            }));
+        }
     }, [metaDataFields, metaData, dataSource.entities, meta]);
     useEffect(() => {
         setColumnWidth([firstRef.current?.clientWidth + 2, secondRef.current?.clientWidth + 1]);
-    }, [changes]);
-    const mergeMetaDataSourceKeys = (pre, next) => {
-        return (pre || []).concat(next).reduce((a, b) => {
-            if (a.findIndex(d => b.defKey?.toLocaleLowerCase() === d?.toLocaleLowerCase()) < 0) {
-                return a.concat(b.defKey);
+    }, [changes, metaData]);
+    useEffect(() => {
+        onCheck && onCheck(allEntitiesKeys.filter(k => entitiesKeyChecked.includes(k.key)));
+    }, [entitiesKeyChecked]);
+    const _mergeFromMeta = (metaKey, d) => {
+        if(defaultMeta) {
+            mergeFromMeta && mergeFromMeta(d);
+        } else {
+            mergeFromMeta && mergeFromMeta(metaDataFields.filter(m => m.defKey === metaKey)
+                .map((m) => {
+                return {
+                    ...m,
+                    id: Math.uuid(),
+                    fields: (m.fields || []).map((f) => {
+                        return {
+                            ...f,
+                            primaryKey: !!f.primaryKey,
+                            notNull: !!f.notNull,
+                            id: Math.uuid(),
+                        };
+                    }),
+                };
+            }), isCustomerMeta ? null : meta, isCustomerMeta ? metaDataSource : null);
+        }
+    };
+    const getStatus = (sourceEntity, metaEntity, d) => {
+        if (defaultMeta) {
+            const currentChange = changes
+                .filter(c => c.data?.baseInfo?.defKey === d.key?.toLocaleLowerCase())[0];
+            if (currentChange) {
+                if (currentChange.data?.fieldAdded ||
+                    currentChange.data?.fieldRemoved || currentChange.data?.fieldModified) {
+                    return [<span className={`${currentPrefix}-compare-list-container-content-list-item-diff`}>
+                      <span>
+                        <Icon type='fa-times-circle-o'/>
+                      </span>
+                      <span><FormatMessage id='components.compare.diff'/></span>
+                    </span>, 'diff'];
+                } else {
+                    return [<span className={`${currentPrefix}-compare-list-container-content-list-item-same`}>
+                      <span>
+                        <Icon type='fa-check-circle-o'/>
+                      </span>
+                      <span><FormatMessage id='components.compare.same'/></span>
+                    </span>, 'same'];
+                }
+            } else {
+                return [<span className={`${currentPrefix}-compare-list-container-content-list-item-wait`}>
+                  <span>
+                    <Icon type='fa-clock-o'/>
+                  </span>
+                  <span><FormatMessage id='components.compare.wait'/></span>
+                </span>, 'wait'];
             }
-            return a;
-        }, []);
-    };
-    const _mergeFromMeta = (metaKey) => {
-        mergeFromMeta && mergeFromMeta(metaDataFields.filter(m => m.defKey === metaKey).map((m) => {
-            return {
-                ...m,
-                id: Math.uuid(),
-                fields: (m.fields || []).map((f) => {
-                    return {
-                        ...f,
-                        primaryKey: !!f.primaryKey,
-                        notNull: !!f.notNull,
-                        id: Math.uuid(),
-                    };
-                }),
-            };
-        }), isCustomerMeta ? null : meta, isCustomerMeta ? metaDataSource : null);
-    };
-    const getStatus = (sourceEntity, metaEntity) => {
-        if(metaEntity.defKey && !metaDataFields.filter(m => m.defKey === metaEntity.defKey)[0]) {
+        }
+        if((metaEntity.defKey && !metaDataFields.filter(m => m.defKey === metaEntity.defKey)[0])
+            || (!sourceEntity.defKey && !metaEntity.defKey && defaultMeta)) {
             return [<span className={`${currentPrefix}-compare-list-container-content-list-item-wait`}>
               <span>
                 <Icon type='fa-clock-o'/>
@@ -266,16 +364,22 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
         }
         return [currentDb];
     };
-    const getChildren = (source, metaEntity) => {
+    const getChildren = (source, metaEntity, d) => {
         const sourceEntity = {
             ...source,
         };
-      const changeEntity = changes
-          .filter(c => (c.data?.defKey?.toLocaleLowerCase()
-                  || c.data?.baseInfo?.defKey?.toLocaleLowerCase()) ===
-              (sourceEntity.defKey || metaEntity.defKey)?.toLocaleLowerCase())[0] || {
-          data: metaEntity,
-      };
+        let changeEntity;
+        if (defaultMeta) {
+            changeEntity = changes
+                .filter(c => c.data?.baseInfo?.defKey === d.key?.toLocaleLowerCase())[0] || {};
+        } else {
+            changeEntity = changes
+                .filter(c => (c.data?.defKey?.toLocaleLowerCase()
+                        || c.data?.baseInfo?.defKey?.toLocaleLowerCase()) ===
+                    (sourceEntity.defKey || metaEntity.defKey)?.toLocaleLowerCase())[0] || {
+                data: metaEntity,
+            };
+        }
       const allFields = mergeMetaDataSourceKeys(sourceEntity.fields || [], metaEntity.fields || []);
       return allFields.map((f) => {
           const [cDb, pDb] = getDb();
@@ -358,124 +462,157 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
           </tr>;
           });
     };
-    const allEntitiesKeys = mergeMetaDataSourceKeys(dataSource.entities, metaData);
-    const _checkBoxChange = (e, key) => {
-        setSelectedTable((pre) => {
-            if (e) {
-                if (!e.target.checked) {
-                    return pre.filter(p => p !== key);
+    const _checkBoxChange = (e, key, dKey) => {
+        if (defaultMeta) {
+            setEntitiesKeyChecked((pre) => {
+                if (e) {
+                    if (!e.target.checked) {
+                        return pre.filter(p => p !== dKey);
+                    }
+                    return pre.concat(dKey);
+                } else if (key === 'ind' || key === 'normal') {
+                    return entitiesKeys
+                        .filter(k => k.right && k.left)
+                        .map(k => k.key);
                 }
-                return pre.concat(key);
-            } else if (key === 'ind' || key === 'normal') {
-                return metaData.map(d => d.defKey);
-            }
-            return [];
-        });
+                return [];
+            });
+        } else {
+            setSelectedTable((pre) => {
+                if (e) {
+                    if (!e.target.checked) {
+                        return pre.filter(p => p !== key);
+                    }
+                    return pre.concat(key);
+                } else if (key === 'ind' || key === 'normal') {
+                    return metaData.map(d => d.defKey);
+                }
+                return [];
+            });
+        }
     };
     // eslint-disable-next-line no-nested-ternary
-    const type = selectedTable.length === metaData.length ? 'all' : ((selectedTable.length && selectedTable.length < metaData.length) ? 'ind' : 'normal');
+    const type = defaultMeta ? (allEntitiesKeys
+            .filter(k => k.right && k.left).length === entitiesKeyChecked.length ? 'all' :
+            ((entitiesKeyChecked.length && entitiesKeyChecked.length < allEntitiesKeys.length) ? 'ind' : 'normal'))
+        // eslint-disable-next-line no-nested-ternary
+        : (selectedTable.length === metaData.length ? 'all' : ((selectedTable.length && selectedTable.length < metaData.length) ? 'ind' : 'normal'));
     return <div style={style} className={`${currentPrefix}-compare-list`}>
       {meta ? <div className={`${currentPrefix}-compare-list-container`}>
-        <div className={`${currentPrefix}-compare-list-container-header`}>
+        {header || <div className={`${currentPrefix}-compare-list-container-header`}>
           <span>
             {
-                  isCustomerMeta ? <Button disable={!meta} type='primary' onClick={extractData}>
-                    <FormatMessage id='components.compare.extractMetadata'/>
-                  </Button> : <><Button disable={!meta} type='primary' onClick={getTableList}>
-                    <FormatMessage id='components.compare.scanTables'/>
+                isCustomerMeta ? <Button disable={!meta} type="primary" onClick={extractData}>
+                  <FormatMessage id="components.compare.extractMetadata"/>
+                </Button> : <><Button disable={!meta} type="primary" onClick={getTableList}>
+                  <FormatMessage id="components.compare.scanTables"/>
+                </Button>
+                  <Button
+                    onClick={() => getTableDetail()}
+                    disable={!meta || selectedTable.length === 0}
+                    type="primary">
+                    <FormatMessage id="components.compare.scanField"/>
                   </Button>
-                    <Button onClick={() => getTableDetail()} disable={!meta || selectedTable.length === 0} type='primary'>
-                      <FormatMessage id='components.compare.scanField'/>
-                    </Button>
-                    <Button onClick={() => showDDL()} disable={!meta || changes.length === 0} type='primary'>
-                      <FormatMessage id='components.compare.ddl'/>
-                    </Button></>
-              }
+                  <Button
+                    onClick={() => showDDL()}
+                    disable={!meta || changes.length === 0}
+                    type="primary">
+                    <FormatMessage id="components.compare.ddl"/>
+                  </Button></>
+            }
           </span>
           <span>
             {
-                  (isCustomerMeta ? metaDataSource : dbConn)
-                      .filter(d => d.defKey === meta)[0]?.defName || meta
-              }
+                (isCustomerMeta ? metaDataSource : dbConn)
+                    .filter(d => d.defKey === meta)[0]?.defName || meta
+            }
           </span>
-        </div>
+        </div>}
         <div className={`${currentPrefix}-compare-list-container-content`}>
           {
-                  metaData.length === 0 ? <div className={`${currentPrefix}-compare-list-container-content-empty`}>
-                    <FormatMessage id={`components.compare.${isCustomerMeta ? 'extractedFirst' : 'scanTablesFirst'}`}/>
-                  </div> : <div className={`${currentPrefix}-compare-list-container-content-list`}>
-                    <table>
-                      <thead>
-                        <tr>
-                          <td colSpan={3} style={{position: 'sticky', left: 0, zIndex: 3}}>
-                            <span><FormatMessage id='components.compare.optOrResult'/></span>
-                          </td>
-                          <td colSpan={4}>
-                            <span><FormatMessage id='components.compare.model'/></span>
-                          </td>
-                          <td>{}</td>
-                          <td colSpan={4}><FormatMessage id={`components.compare.${isCustomerMeta ? 'customerMeta' : 'dbMeta'}`}/></td>
-                        </tr>
-                        <tr>
-                          <td ref={firstRef} style={{position: 'sticky', left: 0, zIndex: 3}}>
-                            {!isCustomerMeta && <span
-                              className={`${currentPrefix}-listselect-opt-${type}`}
-                              onClick={() => _checkBoxChange(null, type)}>
-                                {}
-                              </span>}
-                          </td>
-                          <td ref={secondRef} style={columnWidth[0] ? {position: 'sticky', left: columnWidth[0], zIndex: 3} : {}}>
-                            <span><FormatMessage id='components.compare.view'/></span>
-                          </td>
-                          <td style={columnWidth[0] ? {position: 'sticky', left: columnWidth[0] + columnWidth[1], zIndex: 3} : {}}>
-                            <span><FormatMessage id='components.compare.diffData'/></span>
-                          </td>
-                          <td>
-                            <span><FormatMessage id='components.compare.code'/></span>
-                          </td>
-                          <td>
-                            <span><FormatMessage id='components.compare.name'/></span>
-                          </td>
-                          <td>
-                            <span><FormatMessage id='components.compare.comment'/></span>
-                          </td>
-                          <td>
-                            <span><FormatMessage id='components.compare.fieldCount'/></span>
-                          </td>
-                          <td> <span><FormatMessage id='components.compare.opt'/></span></td>
-                          <td>
-                            <span><FormatMessage id='components.compare.code'/></span>
-                          </td>
-                          <td>
-                            <span><FormatMessage id='components.compare.name'/></span>
-                          </td>
-                          <td>
-                            <span><FormatMessage id='components.compare.comment'/></span>
-                          </td>
-                          <td>
-                            <span><FormatMessage id='components.compare.fieldCount'/></span>
-                          </td>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {allEntitiesKeys.map((d, i) => {
+              (defaultMeta ? allEntitiesKeys.length === 0 : metaData.length === 0) ? <div className={`${currentPrefix}-compare-list-container-content-empty`}>
+                {empty || <FormatMessage id={`components.compare.${isCustomerMeta ? 'extractedFirst' : 'scanTablesFirst'}`}/>}
+              </div> : <div className={`${currentPrefix}-compare-list-container-content-list`}>
+                <table>
+                  <thead>
+                    <tr>
+                      <td colSpan={3} style={{position: 'sticky', left: 0, zIndex: 3}}>
+                        <span><FormatMessage id='components.compare.optOrResult'/></span>
+                      </td>
+                      <td colSpan={4}>
+                        <span>{leftTitle || <FormatMessage id='components.compare.model'/>}</span>
+                      </td>
+                      <td>{}</td>
+                      <td className={defaultMeta ? `${currentPrefix}-compare-list-container-content-list-item-last` : ''} colSpan={4}>{rightTitle || <FormatMessage id={`components.compare.${isCustomerMeta ? 'customerMeta' : 'dbMeta'}`}/>}</td>
+                      {defaultMeta && <td className={`${currentPrefix}-compare-list-container-content-list-item-remove`} />}
+                    </tr>
+                    <tr>
+                      <td ref={firstRef} style={{position: 'sticky', left: 0, zIndex: 3}}>
+                        {!isCustomerMeta && <span
+                          className={`${currentPrefix}-listselect-opt-${type}`}
+                          onClick={() => _checkBoxChange(null, type)}>
+                          {}
+                        </span>}
+                      </td>
+                      <td ref={secondRef} style={columnWidth[0] ? {position: 'sticky', left: columnWidth[0], zIndex: 3} : {}}>
+                        <span><FormatMessage id='components.compare.view'/></span>
+                      </td>
+                      <td style={columnWidth[0] ? {position: 'sticky', left: columnWidth[0] + columnWidth[1], zIndex: 3} : {}}>
+                        <span><FormatMessage id='components.compare.diffData'/></span>
+                      </td>
+                      <td>
+                        <span><FormatMessage id='components.compare.code'/></span>
+                      </td>
+                      <td>
+                        <span><FormatMessage id='components.compare.name'/></span>
+                      </td>
+                      <td>
+                        <span><FormatMessage id='components.compare.comment'/></span>
+                      </td>
+                      <td>
+                        <span><FormatMessage id='components.compare.fieldCount'/></span>
+                      </td>
+                      <td> <span><FormatMessage id='components.compare.opt'/></span></td>
+                      <td>
+                        <span><FormatMessage id='components.compare.code'/></span>
+                      </td>
+                      <td>
+                        <span><FormatMessage id='components.compare.name'/></span>
+                      </td>
+                      <td>
+                        <span><FormatMessage id='components.compare.comment'/></span>
+                      </td>
+                      <td className={defaultMeta ? `${currentPrefix}-compare-list-container-content-list-item-last` : ''}>
+                        <span><FormatMessage id='components.compare.fieldCount'/></span>
+                      </td>
+                      {defaultMeta && <td className={`${currentPrefix}-compare-list-container-content-list-item-remove`}><FormatMessage id='components.compare.delete'/></td>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allEntitiesKeys.map((d, i) => {
                               const sourceEntity = (dataSource.entities || [])
                                   .filter(e => e.defKey?.toLocaleLowerCase()
-                                      === d?.toLocaleLowerCase())[0] || {};
+                                      === (defaultMeta ? d.left : d)?.toLocaleLowerCase())[0] || {};
                               const metaEntity = (metaData || [])
                                   .filter(e => e.defKey?.toLocaleLowerCase()
-                                      === d?.toLocaleLowerCase())[0] || {};
+                                      === (defaultMeta ? d.right : d)
+                                          ?.toLocaleLowerCase())[0] || {};
                             const metaEntityData = (metaDataFields || [])
                                 .filter(e => e.defKey?.toLocaleLowerCase()
-                                    === d?.toLocaleLowerCase())[0] || {};
-                            const [statusCom, status] = getStatus(sourceEntity, metaEntity);
-                              return [<tr key={d} className={`${currentPrefix}-compare-list-container-content-list-item`}>
+                                    === (defaultMeta ? d.right : d)?.toLocaleLowerCase())[0] || {};
+                            const [statusCom, status] = getStatus(sourceEntity, metaEntity, d);
+                              return [<tr key={d.key || d} className={`${currentPrefix}-compare-list-container-content-list-item`}>
                                 <td style={{position: 'sticky', left: 0, zIndex: 2}}>
                                   {
                                         !isCustomerMeta && <Checkbox
-                                          disable={!metaEntity.defKey}
-                                          onChange={e => _checkBoxChange(e, metaEntity.defKey)}
-                                          checked={selectedTable.includes(metaEntity.defKey)}
+                                          disable={defaultMeta
+                                              ? (!metaEntity.defKey || !sourceEntity.defKey)
+                                              : !metaEntity.defKey}
+                                          onChange={e => _checkBoxChange(e,
+                                              metaEntity.defKey, d.key)}
+                                          checked={defaultMeta ?
+                                              entitiesKeyChecked.includes(d.key)
+                                              : selectedTable.includes(metaEntity.defKey)}
                                         />
                                     }
                                   <span>{i + 1}</span>
@@ -488,8 +625,11 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                 <td style={columnWidth[0] ? {position: 'sticky', left: columnWidth[0] + columnWidth[1], zIndex: 2} : {}}>
                                   {statusCom}
                                 </td>
-                                <td>
-                                  <span>{sourceEntity.defKey}</span>
+                                <td className={`${currentPrefix}-compare-list-container-content-list-item-defKey`}>
+                                  <span>
+                                    {sourceEntity.defKey}
+                                  </span>
+                                  {defaultMeta && <a onClick={() => onPicker(d.key, 'left')}><FormatMessage id='components.compare.entityPicker'/></a>}
                                 </td>
                                 <td>
                                   <span>{sourceEntity.defName}</span>
@@ -502,24 +642,28 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                 </td>
                                 <td>
                                   {
-                                        metaEntity.defKey && <span>
-                                          {!isCustomerMeta && <a
-                                            onClick={() => getTableDetail(metaEntity.defKey)}
+                                      (defaultMeta ? (sourceEntity.defKey && metaEntity.defKey)
+                                          : metaEntity.defKey) && <span>
+                                            {!isCustomerMeta && <a
+                                              onClick={() => getTableDetail(metaEntity.defKey, d)}
                                           >
-                                            <FormatMessage id="components.compare.scan"/>
-                                          </a>}
-                                          {status !== 'wait' && <>{ !isCustomerMeta && (status !== 'same') && <span className={`${currentPrefix}-compare-list-container-content-list-item-line`}>{}</span>}
+                                              <FormatMessage id="components.compare.scan"/>
+                                            </a>}
+                                            {status !== 'wait' && <>{ !isCustomerMeta && (status !== 'same') && <span className={`${currentPrefix}-compare-list-container-content-list-item-line`}>{}</span>}
                                               {status !== 'same' && <a
-                                                onClick={() => _mergeFromMeta(metaEntity.defKey)}
+                                                onClick={() => _mergeFromMeta(metaEntity.defKey, d)}
                                               >
                                                 <FormatMessage
                                                   id="components.compare.mergeToModel"/>
                                               </a>}</>}
-                                        </span>
+                                          </span>
                                     }
                                 </td>
-                                <td>
-                                  <span>{metaEntity.defKey}</span>
+                                <td className={`${currentPrefix}-compare-list-container-content-list-item-defKey`}>
+                                  <span>
+                                    {metaEntity.defKey}
+                                  </span>
+                                  {defaultMeta && <a onClick={() => onPicker(d.key, 'right')}>选取表</a>}
                                 </td>
                                 <td>
                                   <span>{metaEntity.defName}</span>
@@ -527,11 +671,15 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                 <td className={`${currentPrefix}-compare-list-container-content-list-item-comment`}>
                                   <span>{metaEntity.comment}</span>
                                 </td>
-                                <td style={{textAlign: 'right'}}>
+                                <td className={defaultMeta ? `${currentPrefix}-compare-list-container-content-list-item-last` : ''} style={{textAlign: 'right'}}>
                                   <span>{metaEntityData.fields?.length}</span>
                                 </td>
+                                {defaultMeta && <td
+                                  className={`${currentPrefix}-compare-list-container-content-list-item-remove`}>
+                                  <span onClick={() => onRemove(d)}><FormatMessage id='components.compare.remove'/></span>
+                                  </td>}
                               </tr>, <tr style={{display: expand.includes(d) ? 'table-row' : 'none'}} key={`${d}-1`} className={`${currentPrefix}-compare-list-container-content-list-item-child`}>
-                                <td colSpan={10}>
+                                <td colSpan={defaultMeta ? 13 : 12}>
                                   <table>
                                     <thead>
                                       <tr>
@@ -539,7 +687,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                         <td colSpan={6}>
                                           <span><FormatMessage id='components.compare.model'/></span>
                                         </td>
-                                        <td colSpan={6}><FormatMessage id={`components.compare.${isCustomerMeta ? 'customerMeta' : 'dbMeta'}`}/></td>
+                                        <td colSpan={defaultMeta ? 7 : 6}><FormatMessage id={`components.compare.${isCustomerMeta ? 'customerMeta' : 'dbMeta'}`}/></td>
                                       </tr>
                                       <tr>
                                         <td />
@@ -583,15 +731,15 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config,
                                     </thead>
                                     <tbody>
                                       {expand.includes(d) &&
-                                          getChildren(sourceEntity, metaEntityData)}
+                                          getChildren(sourceEntity, metaEntityData, d)}
                                     </tbody>
                                   </table>
                                 </td>
                               </tr>];
                           })}
-                      </tbody>
-                    </table>
-                  </div>
+                  </tbody>
+                </table>
+              </div>
               }
         </div>
       </div> :
