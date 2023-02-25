@@ -804,6 +804,8 @@ export default {
             'oracle-all_tables_defKey': 'ORACLE(Through all_tables to query the table structure)',
             sqlserver_defKey: 'SQLServer(the official driver supports java8 by default. If you are a JDK of other versions, please customize the driver)',
             postgresql_defKey: 'PostgreSQL',
+            postgresql_chema_defKey: 'PostgreSQL(Use information_ Schema Query Table Structure)',
+            postgresql_chema: 'jdbc:postgresql://ip:port/name?metaFromSQL=1&schemaOwner=dbname',
             db2_defKey: 'DB2',
             dm_defKey: 'DM(DM)',
             gaussdb_defKey: 'GuassDB',
@@ -997,7 +999,8 @@ projectTemplate: {
     excel: {
         importExcel: 'Select EXCEL file and import',
         template: 'EXCEL Document Template',
-        download: 'Download filling template',
+        downloadSimple: 'Simple template download',
+        downloadGroup: 'Theme grouping template download',
     },
     word: {
         exportWord: 'Export File',

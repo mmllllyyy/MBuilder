@@ -1555,7 +1555,7 @@ export const getAllDataSQLByFilter = (data, code, filterTemplate, filterDefKey) 
       const templateData = {
         ...data,
         group: (dataSource.viewGroups || [])
-            .filter(g => g[e.groupType].includes(e.id))
+            .filter(g => (g[e.groupType] || []).includes(e.id))
             .map(g => _.pick(g, ['defKey', 'defName'])),
         separator: sqlSeparator
       };

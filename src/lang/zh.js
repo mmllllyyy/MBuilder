@@ -805,6 +805,8 @@ export default {
             'oracle-all_tables_defKey': 'ORACLE(通过all_tables进行查询表结构)',
             sqlserver_defKey: 'SQLServer（官方驱动默认支持java8，如果您是其他版本的JDK，请自定义驱动）',
             postgresql_defKey: 'PostgreSQL',
+            postgresql_chema_defKey: 'PostgreSQL(使用information_schema查询表结构)',
+            postgresql_chema: 'jdbc:postgresql://IP地址:端口号/数据库名?metaFromSQL=1&schemaOwner=数据库名',
             db2_defKey: 'DB2',
             dm_defKey: 'DM(达梦)',
             gaussdb_defKey: 'GuassDB',
@@ -996,7 +998,8 @@ export default {
     excel: {
         importExcel: '选择EXCEL文件并导入',
         template: 'EXCEL文档模板',
-        download: '下载填写模板',
+        downloadSimple: '简单模板下载',
+        downloadGroup: '主题分组式模板下载',
     },
     word: {
         exportWord: '导出文档',

@@ -377,6 +377,11 @@ export const getDemoDbConnect = () => {
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.postgresql'}),
       driverClass: 'org.postgresql.Driver',
     },
+    'postgresql_chema': {
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.postgresql_chema_defKey'}),
+      driverClass: 'org.postgresql.Driver',
+      url: FormatMessage.string({id: 'dbConnect.demoDbConnect.postgresql_chema'})
+    },
     db2: {
       defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.db2_defKey'}),
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.db2'}),
@@ -421,7 +426,7 @@ export const getDemoDbConnect = () => {
       defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.gbase_defKey'}),
       driverClass: 'com.gbasedbt.jdbc.Driver',
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.GBase'})
-    }
+    },
   }
 };
 

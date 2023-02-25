@@ -563,6 +563,20 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
           ...t,
           id: Math.uuid(),
           fields,
+          oldId: t.id,
+        };
+      });
+      const viewGroups = result.body?.groupTopics?.map((g) => {
+        return {
+          ...g,
+          id: dataSourceRef.current.viewGroups
+              ?.filter(group => group.defKey === g.defKey)[0]?.id || g.id || Math.uuid(),
+          fields: (entities || [])
+              .filter(e => (g.refEntities || [])
+                  .includes(e.oldId)).map(e => _.omit(e, 'oldId')),
+          refViews: [],
+          refDiagrams: [],
+          refDicts: [],
         };
       });
       let modal;
@@ -580,10 +594,27 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
         const finallyDomains = mergeData(dataSourceRef.current?.domains || [],
             domains,false, false);
         injectDataSource(mergeDataSource(dataSourceRef.current,
-            {domains}, calcDomain(importData, null, finallyDomains), true), modal);
+            {
+              domains,
+              viewGroups: (viewGroups || [])
+                  .map((g) => {
+                    return {
+                      ..._.omit(g, 'fields'),
+                      refEntities: g.fields.map(f => f.id),
+                    };
+                  }),
+            }, calcDomain(importData, null, finallyDomains), true), modal);
       };
+      const allRefEntities = (viewGroups || [])
+          .reduce((a, b) => a.concat(b.fields.map(f => f.id)), []);
       modal = openModal(<ImportPd
-        data={entities}
+        customerData={viewGroups ? viewGroups.concat({
+            id: '',
+            defKey: '',
+            defName: FormatMessage.string({id: 'components.select.empty'}),
+            fields: entities.filter(e => !allRefEntities.includes(e.id)).map(e => _.omit(e, 'oldId')),
+          }) : null}
+        data={entities.map(e => _.omit(e, 'oldId'))}
         ref={importPdRef}
         dataSource={dataSourceRef.current}
       />, {

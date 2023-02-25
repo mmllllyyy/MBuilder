@@ -9,7 +9,7 @@
   "profile": {
     "default": {
       "db": "A4E23CB7-BB01-4BD1-9F71-F73F3E15A542",
-      "dbConn": "D4843C6A-F7EC-480D-A8DB-4F6655F65F92",
+      "dbConn": "",
       "entityInitFields": [
         {
           "defKey": "TENANT_ID",

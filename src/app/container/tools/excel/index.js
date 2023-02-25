@@ -20,9 +20,15 @@ export default React.memo(({prefix, onPicker}) => {
           <div>{FormatMessage.string({id: 'excel.template'})}</div>
           <div>{}</div>
         </div>
-        <div>
-          <Icon type='fa-file-excel-o'/>
-          <a onClick={() => saveAsTemplate('PDManer-excel-tpl', 'xlsx')}>{FormatMessage.string({id: 'excel.download'})}</a>
+        <div className={`${currentPrefix}-import-excel-template-list`}>
+          <span>
+            <Icon type='fa-file-excel-o'/>
+            <a onClick={() => saveAsTemplate('PDManer-excel-tpl', 'xlsx')}>{FormatMessage.string({id: 'excel.downloadSimple'})}</a>
+          </span>
+          <span>
+            <Icon type='fa-file-excel-o'/>
+            <a onClick={() => saveAsTemplate('PDManer-excel-group-tpl', 'xlsx')}>{FormatMessage.string({id: 'excel.downloadGroup'})}</a>
+          </span>
         </div>
       </div>
     </div>;
