@@ -12,7 +12,7 @@ import {
 } from 'components';
 import moment from 'moment';
 import CompareList from 'components/compare/CompareList';
-import {calcUnGroupDefKey} from '../../../../lib/datasource_util';
+import {calcUnGroupDefKey, mergeDataSource} from '../../../../lib/datasource_util';
 
 import './style/index.less';
 import { separator } from '../../../../../profile';
@@ -34,35 +34,22 @@ export default React.memo(({dataSource, getDataSource, prefix,
     checkedRef.current = [...checked];
     const entitiesKeysRef = useRef([]);
     entitiesKeysRef.current = entitiesKeys;
-    const mergeFromMeta = (d) => {
-        compareListRef.current.setChanges((pre) => {
-            return pre.map((p) => {
-                if (p.data?.baseInfo?.defKey === d.key?.toLocaleLowerCase()) {
-                    return {
-                        data: {
-                            baseInfo: {
-                                defKey: d.key?.toLocaleLowerCase(),
-                            },
-                        },
-                    };
-                }
-                return p;
-            });
-        });
-        updateProject({
-            ...tempDataSource,
-            entities: (tempDataSource.entities || []).map((e) => {
-                if (d.left === e.defKey) {
-                    const mergeData = (tempDataSource.entities || [])
-                        .filter(entity => entity.defKey === d.right)[0];
-                    return {
-                        ...e,
-                        fields: mergeData?.fields || e.fields || [],
-                    };
-                }
-                return e;
-            }),
-        });
+    const mergeFromMeta = (d, callback) => {
+        const entities = tempDataSource.entities || [];
+        const leftData = entities.filter(e => e.defKey === d.left)[0];
+        const rightData = entities.filter(e => e.defKey === d.right)[0];
+        const currentDataSource = {
+            ...dataSource,
+            entities,
+        };
+        const mergeData = {
+            ...mergeDataSource(currentDataSource, currentDataSource, [{
+                ...leftData,
+                fields: (rightData.fields || []),
+            }], true),
+        };
+        callback(mergeData.entities);
+        updateProject(mergeData);
     };
     const onCheck = (values) => {
         setChecked(values);

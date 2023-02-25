@@ -967,7 +967,7 @@ components: {
         invalidTableList: 'Invalid manifest file',
         tableListEmpty: 'Please click the 【Add row】/【Load comparison list】 button first',
         compareList: 'comparison-list',
-        mergeToLeft: 'Merge differences to the left',
+        mergeToLeft: 'Merge delta to the left',
     },
 },
 projectTemplate: {

@@ -147,9 +147,9 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
             });
         }
     };
-    const getTableDetail = (table, dData) => {
+    const getTableDetail = (table, dData, newEntities) => {
         if(defaultMeta) {
-            const entities = dataSource.entities || [];
+            const entities = newEntities || dataSource.entities || [];
             const leftData = entities.filter(e => e.defKey === dData.left)[0] || {};
             const rightData = entities.filter(e => e.defKey === dData.right)[0] || {};
             const compareData = {
@@ -270,7 +270,9 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
     }, [entitiesKeyChecked]);
     const _mergeFromMeta = (metaKey, d) => {
         if(defaultMeta) {
-            mergeFromMeta && mergeFromMeta(d);
+            mergeFromMeta && mergeFromMeta(d, (data) => {
+                getTableDetail(metaKey, d, data);
+            });
         } else {
             mergeFromMeta && mergeFromMeta(metaDataFields.filter(m => m.defKey === metaKey)
                 .map((m) => {
@@ -401,7 +403,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
           const metaTempField = (metaEntity.fields || [])
               .filter(e => e.defKey?.toLocaleLowerCase()
                   === f?.toLocaleLowerCase())[0];
-          const metaField = (metaTempField && isCustomerMeta) ?
+          const metaField = (metaTempField && (isCustomerMeta || defaultMeta)) ?
               {
                   ...metaTempField,
                   ...transform(metaTempField, {
