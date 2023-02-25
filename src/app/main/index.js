@@ -1754,10 +1754,14 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
                 dragTable={createEmptyTable}
                 groupType={groupType}
                 emptyData={<div
-                  onClick={() => _contextMenuClick(null, createGroupMenu)}
                   className={`${currentPrefix}-home-menu-empty`}
                   >
-                  <FormatMessage id='emptyGroup'/>
+                  <div>
+                    <FormatMessage id='emptyGroup'/>
+                  </div>
+                  <div>
+                    <FormatMessage id='click'/>[<a onClick={() => _contextMenuClick(null, createGroupMenu)}><FormatMessage id='createGroup'/></a>]
+                  </div>
                 </div>}
               />
             </div>
@@ -1810,10 +1814,14 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
                 contextMenuClick={_contextMenuClick}
                 data={menus.appCode}
                 emptyData={<div
-                  onClick={() => _contextMenuClick(null, createAppCodeMenu)}
                   className={`${currentPrefix}-home-menu-empty`}
                 >
-                  <FormatMessage id='emptyAppCode'/>
+                  <div>
+                    <FormatMessage id='emptyAppCode'/>
+                  </div>
+                  <div>
+                    <FormatMessage id='click'/>[<a onClick={() => _contextMenuClick(null, createAppCodeMenu)}><FormatMessage id='createAppCode'/></a>]
+                  </div>
                 </div>}
               />
             </div>
