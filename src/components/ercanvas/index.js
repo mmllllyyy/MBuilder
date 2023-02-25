@@ -96,6 +96,8 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
     const container = document.getElementById(id);
     const graph = new Graph({
       async: true,
+      width: restProps.width,
+      height: restProps.height,
       container,
       autoResize: false,
       snapline: true,

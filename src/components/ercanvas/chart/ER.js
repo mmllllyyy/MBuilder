@@ -1254,22 +1254,32 @@ export default class ER {
         if (offsetLength > 1) {
             const result = this.graph.history.undoStack.splice(this.length + 1, offsetLength);
             const position = this.graph.history.undoStack[this.graph.history.undoStack.length - 1];
-            position.push(...result.map((r) => {
-                const key = r.data?.key;
-                return {
-                    ...r,
-                    batch: true,
-                    data: {
-                        ...r.data,
-                        prev: {
-                            [key]: r.data?.prev?.[key] || (key === 'children' ? [] : ''),
+            if (position) {
+                const finalResult = result.map((r) => {
+                    const key = r.data?.key;
+                    return {
+                        ...r,
+                        batch: true,
+                        data: {
+                            ...r.data,
+                            prev: {
+                                [key]: r.data?.prev?.[key] || (key === 'children' ? [] : ''),
+                            },
+                            next: {
+                                [key]: r.data?.next?.[key] || (key === 'children' ? [] : ''),
+                            },
                         },
-                        next: {
-                            [key]: r.data?.next?.[key] || (key === 'children' ? [] : ''),
-                        },
-                    },
-                };
-            }));
+                    };
+                });
+                if (Array.isArray(position)) {
+                    position.push(...finalResult);
+                } else {
+                    this.graph.history.undoStack[this.graph.history.undoStack.length - 1] = [{
+                        ...position,
+                        batch: true,
+                    }].concat(finalResult);
+                }
+            }
         }
     }
 }
