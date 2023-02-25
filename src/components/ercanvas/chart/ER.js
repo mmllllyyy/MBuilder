@@ -3,7 +3,8 @@ import React from 'react';
 import _ from 'lodash/object';
 import {Shape} from '@antv/x6';
 import ReactDOM from 'react-dom';
-import {getChildrenCell} from 'components/ercanvas/components/util';
+import {getChildrenCell, renderer } from 'components/ercanvas/components/util';
+import marked from 'marked';
 import {
     calcCellData,
     calcNodeData,
@@ -1220,11 +1221,16 @@ export default class ER {
             };
             if (e.target.tagName === 'image') {
                 clearDom();
+                const getNote = () => {
+                    marked.use({ renderer });
+                    const reg = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
+                    return marked(node.getProp('note') || '').replace(reg, '');
+                };
                 const dom = document.createElement('div');
                 dom.setAttribute('class', 'chiner-tooltip-container');
                 dom.setAttribute('id', domId);
                 dom.innerHTML = `<div class="chiner-tooltip-content " style="display: block;">
-                   <div><pre>${node.getProp('note')}</pre></div>
+                   <div><pre>${getNote()}</pre></div>
                   <div class="chiner-tooltip-content-arrow-top"></div>
                   </div>`;
                 document.body.appendChild(dom);

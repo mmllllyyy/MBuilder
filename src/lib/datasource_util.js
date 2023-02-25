@@ -2158,7 +2158,7 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
           defKey: currentData.defKey,
           fields: (d.fields || []).map((f) => {
             const currentField = (currentData.fields || [])
-                .filter(e => e.defKey?.toLocaleLowerCase() === d.defKey?.toLocaleLowerCase())[0];
+                .filter(e => e.defKey?.toLocaleLowerCase() === f.defKey?.toLocaleLowerCase())[0];
             if (currentField) {
               return {
                 ...f,

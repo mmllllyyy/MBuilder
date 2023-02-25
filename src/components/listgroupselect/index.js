@@ -108,13 +108,13 @@ export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
   };
   return <div className={`${currentPrefix}-listselect`}>
     <div className={`${currentPrefix}-listselect-opt`}>
-      <span className={`${currentPrefix}-listselect-opt-${type}`} onClick={() => _iconClick(type)}>
-        {}
-      </span>
       <span>{formatResult && formatResult(newData, repeatData)}</span>
     </div>
     <div className={`${currentPrefix}-listselect-container`}>
       <Left
+        header={<span className={`${currentPrefix}-listselect-opt-${type}`} onClick={() => _iconClick(type)}>
+          {}
+        </span>}
         defaultSelected={tempSelected}
         prefix={currentPrefix}
         checked={checked}

@@ -186,6 +186,14 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
                         .concat(newChanges);
                 });
             }
+            if (Object.keys(rightData).length > 0) {
+                setMetaDataFields((pre) => {
+                    if (pre.findIndex(p => p.defKey === rightData.defKey) < 0) {
+                        return pre.concat(rightData);
+                    }
+                    return pre;
+                });
+            }
         } else {
             openLoading(FormatMessage.string({id: 'components.compare.scanField'}));
             const currentConn = dbConn.filter(d => d.defKey === meta)[0];
@@ -601,6 +609,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
                                 .filter(e => e.defKey?.toLocaleLowerCase()
                                     === (defaultMeta ? d.right : d)?.toLocaleLowerCase())[0] || {};
                             const [statusCom, status] = getStatus(sourceEntity, metaEntity, d);
+                            console.log(metaEntityData, metaEntity);
                               return [<tr key={d.key || d} className={`${currentPrefix}-compare-list-container-content-list-item`}>
                                 <td style={{position: 'sticky', left: 0, zIndex: 2}}>
                                   {
@@ -654,7 +663,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
                                                 onClick={() => _mergeFromMeta(metaEntity.defKey, d)}
                                               >
                                                 <FormatMessage
-                                                  id="components.compare.mergeToModel"/>
+                                                  id={`components.compare.${defaultMeta ? 'mergeToLeft' : 'mergeToModel'}`}/>
                                               </a>}</>}
                                           </span>
                                     }
@@ -685,9 +694,9 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
                                       <tr>
                                         <td />
                                         <td colSpan={6}>
-                                          <span><FormatMessage id='components.compare.model'/></span>
+                                          <span>{leftTitle || <FormatMessage id='components.compare.model'/>}</span>
                                         </td>
-                                        <td colSpan={defaultMeta ? 7 : 6}><FormatMessage id={`components.compare.${isCustomerMeta ? 'customerMeta' : 'dbMeta'}`}/></td>
+                                        <td colSpan={defaultMeta ? 7 : 6}>{rightTitle || <FormatMessage id={`components.compare.${isCustomerMeta ? 'customerMeta' : 'dbMeta'}`}/>}</td>
                                       </tr>
                                       <tr>
                                         <td />

@@ -22,7 +22,7 @@ const Item = React.memo(({prefix, repeatData, checkBoxChange, checked, d, i, def
 });
 
 export default React.memo(({prefix, newData, checkBoxChange,
-                             repeatData, checked, defaultSelected, onSearch}) => {
+                             repeatData, checked, defaultSelected, onSearch, header}) => {
   const [filterData, setFilterData] = useState([]);
   useEffect(() => {
     setFilterData(newData);
@@ -44,6 +44,10 @@ export default React.memo(({prefix, newData, checkBoxChange,
         placeholder={FormatMessage.string({id: 'components.listSelect.search'})}
         onChange={_onChange}
       />
+    </div>
+    <div className={`${prefix}-listselect-left-header`}>
+      {header}
+      <span><FormatMessage id='components.listSelect.all'/></span>
     </div>
     <div className={`${prefix}-listselect-left-container`}>
       <table>

@@ -966,6 +966,7 @@ export default {
             invalidTableList: '无效的清单文件',
             tableListEmpty: '请先点击【添加行】或【加载对比清单】按钮',
             compareList: '对比清单',
+            mergeToLeft: '合并差异至左边',
         },
     },
     projectTemplate: {

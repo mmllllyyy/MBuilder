@@ -51,10 +51,10 @@ const EditNode = forwardRef(({node}, ref) => {
       });
     }
   }, [editable]);
-  const getLabel = () => {
+  const getHtml = (str) => {
     marked.use({ renderer });
     const reg = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
-    return marked(label).replace(reg, '');
+    return marked(str).replace(reg, '');
   };
   return <div
     ref={ref}
@@ -77,11 +77,14 @@ const EditNode = forwardRef(({node}, ref) => {
       <><pre
         ref={preRef}
           // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{__html: getLabel()}}
+        dangerouslySetInnerHTML={{__html: getHtml(label || '')}}
       />
         {note && <Tooltip
           placement='top'
-          title={<pre>{note}</pre>}
+          title={<pre
+              // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{__html: getHtml(note || '')}}
+          />}
           force>
           <Icon
             className='chiner-er-editnode-info'
