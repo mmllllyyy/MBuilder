@@ -45,6 +45,7 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, openModa
     </div>
     <GroupIconGroup>
       <GroupIcon
+        className={`${currentPrefix}-head-db`}
         dropType='icon'
         groupKey='save'
         title={FormatMessage.string({id: 'toolbar.save'})}

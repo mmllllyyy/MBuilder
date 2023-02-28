@@ -881,9 +881,9 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     return cavRef;
   };
   const createTopicNode = (e) => {
-    Message.warring({title: FormatMessage.string({id: 'wait'})});
-    // const cavRef = getCurrentCav();
-    // cavRef?.createTopicNode(e);
+    // Message.warring({title: FormatMessage.string({id: 'wait'})});
+    const cavRef = getCurrentCav();
+    cavRef?.createTopicNode(e);
   };
   const quickCompareDb = () => {
     setMenuType('4');

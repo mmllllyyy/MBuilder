@@ -172,7 +172,9 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
                 },
                 null, true);
             if (newChanges.length === 0) {
-                setChanges(pre => pre.concat({
+                setChanges(pre => pre
+                    .filter(p => p.data?.baseInfo?.defKey !== dData.key?.toLocaleLowerCase())
+                    .concat({
                     data: {
                         baseInfo: {
                             defKey: dData.key.toLocaleLowerCase(),

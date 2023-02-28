@@ -43,7 +43,9 @@ export default React.memo(({dataSource, getDataSource, prefix,
             entities,
         };
         const mergeData = {
-            ...mergeDataSource(currentDataSource, currentDataSource, [{
+            ...mergeDataSource(currentDataSource, {
+                entities,
+            }, [{
                 ...leftData,
                 fields: (rightData.fields || []),
             }], true),

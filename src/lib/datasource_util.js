@@ -2211,6 +2211,7 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
     return {
       ...d,
       defKey,
+      id: Math.uuid(),
       canvasData: {
         ...d.canvasData,
         cells: (d.canvasData?.cells || []).map(c => {
