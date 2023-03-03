@@ -1176,15 +1176,18 @@ export default class ER {
         }
     }
     findParent = (node) => {
-        const bbox = node.getBBox();
-        return this.graph.getNodes().filter((n) => {
-            const shape = n.shape;
-            if (shape === 'group') {
-                const targetBBox = n.getBBox();
-                return bbox.isIntersectWithRect(targetBBox);
-            }
-            return false;
-        });
+        if (this.isErCell(node)) {
+            const bbox = node.getBBox();
+            return this.graph.getNodes().filter((n) => {
+                const shape = n.shape;
+                if (shape === 'group') {
+                    const targetBBox = n.getBBox();
+                    return bbox.isIntersectWithRect(targetBBox);
+                }
+                return false;
+            });
+        }
+        return false;
     }
     cellClick = (cell, graph, id) => {
         if (this.isErCell(cell)) {
@@ -1242,42 +1245,47 @@ export default class ER {
             }
         }
     }
-    nodeEmbed = () => {
-        this.length = this.graph.history.undoStack.length;
+    nodeEmbed = (node) => {
+        if (this.isErCell(node)) {
+            this.length = this.graph.history.undoStack.length;
+        }
     }
     nodeEmbedding = () => {
         //console.log('nodeEmbedding');
     }
-    nodeEmbedded = () => {
-        const offsetLength = this.graph.history.undoStack.length - this.length;
-        // 合并命令
-        if (offsetLength > 1) {
-            const result = this.graph.history.undoStack.splice(this.length + 1, offsetLength);
-            const position = this.graph.history.undoStack[this.graph.history.undoStack.length - 1];
-            if (position) {
-                const finalResult = result.map((r) => {
-                    const key = r.data?.key;
-                    return {
-                        ...r,
-                        batch: true,
-                        data: {
-                            ...r.data,
-                            prev: {
-                                [key]: r.data?.prev?.[key] || (key === 'children' ? [] : ''),
+    nodeEmbedded = (node) => {
+        if (this.isErCell(node)) {
+            const offsetLength = this.graph.history.undoStack.length - this.length;
+            // 合并命令
+            if (offsetLength > 1) {
+                const result = this.graph.history.undoStack.splice(this.length + 1, offsetLength);
+                // eslint-disable-next-line max-len
+                const position = this.graph.history.undoStack[this.graph.history.undoStack.length - 1];
+                if (position) {
+                    const finalResult = result.map((r) => {
+                        const key = r.data?.key;
+                        return {
+                            ...r,
+                            batch: true,
+                            data: {
+                                ...r.data,
+                                prev: {
+                                    [key]: r.data?.prev?.[key] || (key === 'children' ? [] : ''),
+                                },
+                                next: {
+                                    [key]: r.data?.next?.[key] || (key === 'children' ? [] : ''),
+                                },
                             },
-                            next: {
-                                [key]: r.data?.next?.[key] || (key === 'children' ? [] : ''),
-                            },
-                        },
-                    };
-                });
-                if (Array.isArray(position)) {
-                    position.push(...finalResult);
-                } else {
-                    this.graph.history.undoStack[this.graph.history.undoStack.length - 1] = [{
-                        ...position,
-                        batch: true,
-                    }].concat(finalResult);
+                        };
+                    });
+                    if (Array.isArray(position)) {
+                        position.push(...finalResult);
+                    } else {
+                        this.graph.history.undoStack[this.graph.history.undoStack.length - 1] = [{
+                            ...position,
+                            batch: true,
+                        }].concat(finalResult);
+                    }
                 }
             }
         }

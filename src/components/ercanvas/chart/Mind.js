@@ -1,22 +1,18 @@
 import Hierarchy from '@antv/hierarchy';
-import {Button, FormatMessage, Modal, openDrawer} from 'components';
-import React from 'react';
+import {FormatMessage} from 'components';
 import {edgeNodeAddTool} from 'components/ercanvas/components/tool';
 import { tree2array } from '../../../lib/tree';
-import { createContentMenu, getChildrenCell } from '../components/util';
-import {separator} from '../../../../profile';
-import {getDataByTabId} from '../../../lib/cache';
-import Entity from '../../../app/container/entity';
+import {getChildrenCell } from '../components/util';
 
 export default class Mind {
-    count = 1;
-    constructor({graph, dnd, isView, dataChange, updateDataSource, getDataSource}) {
+    constructor({graph, dnd, isView, dataChange, updateDataSource, getDataSource, historyChange}) {
         this.graph = graph;
         this.dnd = dnd;
         this.isView = isView;
         this.dataChange = dataChange;
         this.updateDataSource = updateDataSource;
         this.getDataSource = getDataSource;
+        this.historyChange = historyChange;
     }
     filterMindCell = (cells) => {
         // 分支主题 中心主题 连接线
@@ -29,18 +25,28 @@ export default class Mind {
     isMindCell = (cell) => {
         return this.filterMindCell(cell).length > 0;
     }
-    updateTree = (node, v) => {
-        const nodes = this.graph.getNodes();
-        const getChildrenId = (n) => {
-            const children = n.prop('children') || [];
-            if (children.length === 0) {
-                return [];
-            }
-            return children.reduce((a, b) => {
-                const bNode = nodes.filter(cNode => cNode.id === b)[0];
-                return a.concat(bNode ? getChildrenId(bNode) : []);
-            }, children);
-        };
+    getChildrenId = (n, nodes) => {
+        const children = n.prop('children') || [];
+        if (children.length === 0) {
+            return [];
+        }
+        return children.reduce((a, b) => {
+            const bNode = nodes.filter(cNode => cNode.id === b)[0];
+            return a.concat(bNode ? this.getChildrenId(bNode, nodes).concat(bNode.id) : []);
+        }, children);
+    };
+    getRoot = (node, nodes) => {
+        if (node.shape === 'mind-topic') {
+            return node;
+        }
+        return nodes.filter(n => n.shape === 'mind-topic')
+            .filter((n) => {
+                return this.getChildrenId(n, nodes).includes(node.id);
+            })[0];
+    }
+    updateTree = (node, v, filterCells = []) => {
+        const nodes = this.graph.getNodes()
+            .filter(n => filterCells.findIndex(c => c.id === n.id) < 0);
         const node2Tree = (root) => {
             const getChildrenNode = (children) => {
                 return children.map((c) => {
@@ -66,14 +72,14 @@ export default class Mind {
         if (node.shape === 'mind-topic') {
             root = node;
         } else {
-            root = nodes.filter(n => n.shape === 'mind-topic')
-                .filter(n => getChildrenId(n).includes(node.id))[0];
+            root = this.getRoot(node, nodes);
         }
         // 生成新的节点树
-        return Hierarchy.compactBox(
+        //console.log(node2Tree(root));
+        return {data: Hierarchy.compactBox(
             node2Tree(root),
             {
-                direction: 'V',
+                direction: v === 'vertical' ? 'V' : 'H',
                 getHeight(d) {
                     return d.height;
                 },
@@ -86,18 +92,77 @@ export default class Mind {
                 getVGap() {
                     return 20;
                 },
-            });
+            }),
+            root};
     };
-    updateLayout = (node, v) => {
-        // const result = tree2array([this.updateTree(node, v)]);
-        // const nodes = this.graph.getNodes();
-        // result.forEach((n) => {
-        //     const updateNode = nodes.filter(c => c.id === n.id)[0];
-        //     // 更新节点信息
-        //     updateNode?.position(n.x, n.y);
-        //     updateNode?.prop('data/side', n.side);
-        //     updateNode?.toFront();
-        // });
+    updateLayout = (node, v, filterCells) => {
+        const {data,root} = this.updateTree(node, v, filterCells);
+        const result = tree2array([data]);
+        const currentNode = result[0];
+        const prePosition = root.position();
+        const offset = {x: currentNode.x - prePosition.x, y: currentNode.y - prePosition.y};
+        const nodes = this.graph.getNodes();
+        result.forEach((n) => {
+            const updateNode = nodes.filter(c => c.id === n.id)[0];
+            // 更新节点信息
+            updateNode?.position(n.x - offset.x, n.y - offset.y);
+            updateNode?.prop('layout', v);
+        });
+        const edges = this.graph.getEdges();
+        const mindEdge = edges
+            .filter(n => n.shape === 'mind-edge' &&
+                result.findIndex(r => (r.id === n.target.cell) || (r.id === n.source.cell)) >= 0);
+        mindEdge.forEach((e) => {
+            // 更新连线信息
+            const source = e.getSourceCell();
+            const target = e.getTargetCell();
+            if (node.prop('layout') === 'vertical') {
+                const sY = source.position().y;
+                const tY = target.position().y;
+                if (sY > tY) {
+                    e.prop('source/port', 'top');
+                    e.prop('target/port', 'bottom');
+                } else {
+                    e.prop('source/port', 'bottom');
+                    e.prop('target/port', 'top');
+                }
+            } else {
+                const sX = source.position().x;
+                const tX = target.position().x;
+                if (sX < tX) {
+                    e.prop('source/port', 'right');
+                    e.prop('target/port', 'left');
+                } else {
+                    e.prop('source/port', 'left');
+                    e.prop('target/port', 'right');
+                }
+            }
+            e.toFront();
+        });
+        setTimeout(() => {
+            result.forEach((n) => {
+                const updateNode = nodes.filter(c => c.id === n.id)[0];
+                updateNode.toFront();
+            });
+        });
+    };
+    expand = (n) => {
+        this.graph.batchUpdate('expand', () => {
+            const currentExpand = n.prop('isExpand') !== false;
+            const children = getChildrenCell(n, this.graph.getNodes());
+            n.prop('isExpand', !currentExpand);
+            children.filter(c => c.isNode()).forEach((c) => {
+                c.toggleVisible(!currentExpand);
+            });
+            setTimeout(() => {
+                children.filter(c => c.isNode()).forEach((c) => {
+                    c.toFront();
+                });
+            });
+        });
+    };
+    id2Nodes = (ids) => {
+        return this.graph.getNodes().filter(node => ids.includes(node.id));
     };
     addChildNode = (node) => {
         // 创建临时节点
@@ -114,20 +179,10 @@ export default class Mind {
                 shape: 'mind-topic-branch',
                 width: newNode.width,
                 height: newNode.height,
-                label: `分支主题${this.count}`,
+                label: FormatMessage.string({id: 'canvas.node.topicBranch'}),
                 fillColor: '#DDE5FF',
-                visible: true,
-                expand: (n) => {
-                    this.graph.batchUpdate('expand', () => {
-                        const currentExpand = !n.prop('isExpand');
-                        const children = getChildrenCell(n, this.graph.getNodes());
-                        children.forEach((c) => {
-                            currentExpand ? c.show() : c.hide();
-                        });
-                        n.prop('isExpand', currentExpand);
-                    });
-                },
-                isExpand: true,
+                layout: node.prop('layout'),
+                expand: this.expand,
             });
             // 增加连接线
             this.graph.addEdge({
@@ -140,52 +195,22 @@ export default class Mind {
                     cell: newNode.id,
                 },
             });
-            this.count += 1;
             // 更新当前界节点的子节点数据
-            node.prop('children', (node.prop('children') || []).concat(newNode.id));
+            node.setChildren(this.id2Nodes((node.prop('children') || []).concat(newNode.id)), {needUndo: true});
             // 重新生成新的布局
-            const result = tree2array([this.updateTree(node)]);
-            // 更新整个树
-            const nodes = this.graph.getNodes();
-            // 计算坐标差
-            const currentNode = result.filter(n => n.id === node.id)[0];
-            const prePosition = node.position();
-            const offset = {x: currentNode.x - prePosition.x, y: currentNode.y - prePosition.y};
-            // 所有连接线;
-            const edges = this.graph.getEdges();
-            const mindEdge = edges.filter(n => n.shape === 'mind-edge');
-            result.forEach((n) => {
-                const updateNode = nodes.filter(c => c.id === n.id)[0];
-                // 更新节点信息
-                updateNode?.position(n.x - offset.x, n.y - offset.y);
-                updateNode?.prop('data/side', n.side);
-                updateNode?.toFront();
-            });
-            mindEdge.forEach((e) => {
-                // 更新连线信息
-                const source = e.getSourceCell();
-                const target = e.getTargetCell();
-                if (source) {
-                    e.prop('source/anchor/name', source.prop('data/side'));
-                }
-                if (target) {
-                    e.prop('target/anchor/name', target.prop('data/side') === 'left' ? 'right' : 'left');
-                }
-            });
-            setTimeout(() => {
-                node.toFront();
-            });
+            this.updateLayout(node, node.prop('layout'));
         });
     };
     createTopicNode = (e, isRoot) => {
         if (isRoot) {
             const node =  this.graph.createNode({
                 shape: 'mind-topic',
-                label: '中心主题',
+                label: FormatMessage.string({id: 'canvas.node.topic'}),
                 width: 160,
                 height: 50,
                 fillColor: '#DDE5FF',
-                layout: 'horizontal',
+                layout: 'vertical',
+                expand: this.expand,
             });
             this.dnd.start(node, e.nativeEvent);
         } else {
@@ -225,40 +250,83 @@ export default class Mind {
     }
     interacting = ({cell}) => {
         if (this.isMindCell(cell)) {
-            return cell.shape === 'mind-topic' && !cell.getProp('editable');
+            return (cell.shape === 'mind-topic' || cell.shape === 'mind-topic-branch') && !cell.getProp('editable');
         }
         return true;
     }
-    nodeContextmenu = (e, cell) => {
-        if (this.isMindCell(cell)) {
-            createContentMenu(e, [
-                {name: FormatMessage.string({id: 'canvas.node.link'})},
-            ], () => {
-
-            });
-            console.log('===');
-        }
-    }
     render = (data) => {
-        return this.filterMindCell(data?.canvasData?.cells || []);
+        return this.filterMindCell((data?.canvasData?.cells || []).map((cell) => {
+            return {
+                ...cell,
+                expand: this.expand,
+            };
+        }));
     }
     nodeDbClick = (e, cell) => {
         if (this.isMindCell(cell)) {
-            if (!this.isView && !cell.getProp('isLock')) {
-                cell.setProp('editable', true, {ignoreHistory: true});
-            }
+            if (e.target.getAttribute('class')?.includes('chiner-er-editnode-mind')) {
+                this.graph.unselect(cell);
+            } else if (!this.isView && !cell.getProp('isLock')) {
+                    cell.setProp('editable', true, {ignoreHistory: true});
+                }
+        }
+    }
+    nodeSelected = (node) => {
+        if (this.isMindCell(node)) {
+            node.addTools([{
+                name: 'showSizeTool',
+            }]);
         }
     }
     resizingEnabled = (node) => {
         return this.isMindCell(node);
     }
     delete = () => {
-        const cells = this.graph.getSelectedCells();
-        if (this.filterMindCell(cells).length) {
-            const deleteCells = cells.filter(c => !c.getProp('isLock') && c.isNode() && !c.getProp('editable'));
-            deleteCells.forEach(c => c.removeTools());
-            this.graph.removeCells(deleteCells);
-        }
+        this.graph.batchUpdate('delete', () => {
+            const cells = this.graph.getSelectedCells();
+            if (this.filterMindCell(cells).length) {
+                const deleteCells = cells.filter(c => !c.getProp('isLock') && c.isNode() && !c.getProp('editable'));
+                const roots = [];
+                const deleteNodes =  deleteCells.filter(c => c.isNode());
+                const allCells = this.graph.getNodes();
+                const childrenCells = [];
+                deleteNodes.forEach((c) => {
+                    c.removeTools();
+                    this.graph.unselect(c);
+                    if (c.prop('children')?.length > 0){
+                        childrenCells.push(...getChildrenCell(c, this.graph.getCells()));
+                    }
+                    const root = this.getRoot(c, allCells);
+                    if (root && c.id !== root.id && roots.findIndex(r => r.id === root.id) < 0) {
+                        roots.push(root);
+                    }
+                });
+                // 找到每个删除节点的跟节点
+                roots.forEach((r) => {
+                    this.updateLayout(r, r.prop('layout'), deleteNodes);
+                });
+                const allDeleteCells = deleteCells.concat(childrenCells);
+                const allNodes = this.graph.getNodes();
+                allDeleteCells.forEach((c) => {
+                    if (c.isNode()) {
+                        if (c.prop('children')?.length > 0){
+                            c.setChildren([], {needUndo: true});
+                        }
+                        const parent = allNodes.filter(no => no.prop('children')?.includes(c.id))[0];
+                        if (parent) {
+                            parent.setChildren(parent.getChildren()
+                                .filter(child => child.id !== c.id), {needUndo: true});
+                        }
+                    }
+                });
+                const allEdges = this.graph.getEdges().filter((e) => {
+                    const targetNodeIndex = allDeleteCells.findIndex(n => n.id === e.target.cell);
+                    const sourceNodeIndex = allDeleteCells.findIndex(n => n.id === e.source.cell);
+                    return targetNodeIndex > -1 || sourceNodeIndex > -1;
+                });
+                this.graph.removeCells(allEdges.concat(allDeleteCells));
+            }
+        });
     }
     edgeOver = (edge, graph, id, isScroll) => {
         if (this.isMindCell(edge)) {
@@ -278,11 +346,15 @@ export default class Mind {
             }
         }
     };
-    cellClick = (cell, graph, id) => {
+    cellClick = (cell, graph, id, e) => {
         if (this.isMindCell(cell)) {
-            edgeNodeAddTool(cell, graph, id, () => {
-                this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
-            }, this.getDataSource, this.updateDataSource, this.updateLayout);
+            if (e.target.getAttribute('class')?.includes('chiner-er-editnode-mind')) {
+                this.graph.unselect(cell);
+            } else {
+                edgeNodeAddTool(cell, graph, id, () => {
+                    this.dataChange && this.dataChange(this.graph.toJSON({diff: true}));
+                }, this.getDataSource, this.updateDataSource, this.updateLayout);
+            }
         }
     };
     nodeMoved = (cell, graph, id) => {
@@ -292,4 +364,164 @@ export default class Mind {
             }, this.getDataSource, this.updateDataSource, this.updateLayout);
         }
     };
+    nodeResized = (node) => {
+        if (this.isMindCell(node)) {
+            this.updateLayout(node, node.prop('layout'));
+        }
+    }
+    nodeEmbed = (node) => {
+        const selectedCells = this.graph.getSelectedCells();
+        const nodes = this.filterMindCell(this.graph.isSelected(node) ? selectedCells : [node]);
+        this.embedData = nodes.map((n) => {
+            return {
+                shape: n.shape,
+                id: n.id,
+                parent: this.graph.getNodes()
+                    .filter(no => no.prop('children')?.includes(n.id))[0],
+                position: n.isNode() ? n.position() : {},
+            };
+        });
+    };
+    nodeEmbedded = (embeddedNode, currentParent) => {
+        const nodes = this.embedData.filter(node => node.shape === 'mind-topic-branch');
+        let needReplace = false;
+        this.graph.batchUpdate('updateEmbed', () => {
+            if (currentParent) {
+                this.embedData.filter(node => node.shape === 'mind-topic').forEach((node) => {
+                    const edges = this.graph.getEdges();
+                    const currentNode = this.graph.getNodes().filter(n => node.id === n.id)[0];
+                    const allCells = getChildrenCell(currentNode, this.graph.getNodes());
+                    const mindEdge = edges
+                        .filter(n => n.shape === 'mind-edge' &&
+                            allCells
+                                .findIndex(r => (r.id === n.target.cell)
+                                    || (r.id === n.source.cell)) >= 0);
+                    mindEdge.forEach((e) => {
+                        e.toFront();
+                    });
+                    allCells.forEach((c) => {
+                        c.toFront();
+                    });
+                    currentNode.toFront();
+                });
+            }
+            if (nodes.length > 0) {
+                const roots = [];
+                const edges = this.graph.getEdges();
+                const currentReset = [];
+                const preReset = [];
+                nodes.forEach((n) => {
+                    const graphNodes = this.graph.getNodes();
+                    const currentNode = graphNodes.filter(node => node.id === n.id)[0];
+                    const previousParent = n.parent;
+                    if (currentParent && (previousParent !== currentParent)) {
+                        currentReset.push(n.id);
+                        const index = preReset.findIndex(p => p.data.id === previousParent.id);
+                        if (index < 0) {
+                            preReset.push({
+                                data: previousParent,
+                                children: [n.id],
+                            });
+                        } else {
+                            preReset[index].children = preReset[index].children.concat(n.id);
+                        }
+                    } else {
+                        const currentPosition = currentNode?.position();
+                        const offset = {
+                            x: n.position.x - currentPosition.x,
+                            y: n.position.y - currentPosition.y,
+                        };
+                        currentNode?.position(n.position.x, n.position.y);
+                        if (currentNode) {
+                            getChildrenCell(currentNode, this.graph.getNodes()).forEach((c) => {
+                                const cPosition = c.position();
+                                c.position(cPosition.x + offset.x, cPosition.y + offset.y);
+                            });
+                        }
+                    }
+                });
+                const addRoot = (node) => {
+                    if (!roots.some(r => r.id === node.id)) {
+                        roots.push(node);
+                    }
+                };
+                if (preReset.length > 0) {
+                    preReset.forEach((p) => {
+                        const previousParentChildren = p.data.prop('children');
+                        p.data
+                            .setChildren(this.id2Nodes(
+                                [...new Set(previousParentChildren.concat(p.children))]));
+                        p.data
+                            .setChildren(this.id2Nodes([...new Set(previousParentChildren
+                                .filter(id => !p.children.includes(id)))]), {needUndo: true});
+                        const preRoot = this.getRoot(p.data, this.graph.getNodes());
+                        addRoot(preRoot);
+                    });
+                }
+                if (currentReset.length > 0) {
+                    const currentParentChildren = currentParent.prop('children');
+                    currentParent
+                        .setChildren(this.id2Nodes([...new Set(currentParentChildren
+                            .filter(id => !currentReset.includes(id)))]));
+                    currentParent.setChildren(
+                        this.id2Nodes([...new Set(currentParentChildren
+                            .concat(currentReset))]), {needUndo: true});
+                    edges.forEach((e) => {
+                        if (currentReset.findIndex(id => id === e.target.cell) > -1) {
+                            e.prop('source/cell', currentParent?.id);
+                        }
+                    });
+                    const root = this.getRoot(currentParent, this.graph.getNodes());
+                    addRoot(root);
+                    needReplace = true;
+                }
+                this.graph.unselect(this.embedData);
+                roots.forEach((r) => {
+                    this.updateLayout(r, r.prop('layout'));
+                });
+            }
+        });
+        if (needReplace) {
+            const position = this.graph.history.undoStack.splice(-2, 1);
+            const length = this.graph.history.undoStack.length;
+            this.graph.history.undoStack[length - 1] = []
+                .concat(this.graph.history.undoStack[length - 1])
+                .map((p) => {
+                    if (p.data.key === 'position') {
+                        const replacePosition = [].concat(position[0])
+                            .filter(r => r.data.key === 'position' && r.data.id === p.data.id)[0];
+                        return {
+                            ...p,
+                            data: {
+                                ...p.data,
+                                prev: {
+                                    position: replacePosition?.data?.prev?.position
+                                        || p.data.prev?.position,
+                                },
+                            },
+                        };
+                    }
+                    return p;
+                });
+        } else {
+            this.graph.history.undoStack.splice(-2, 2);
+            this.historyChange();
+        }
+    }
+    findParent = (node) => {
+        if (this.isMindCell(node)) {
+            const bbox = node.getBBox();
+            return this.graph.getNodes().filter((n) => {
+                const shape = n.shape;
+                // 暂不支持脑图置于分组
+                if (node.shape !== 'mind-topic' &&
+                    (shape === 'mind-topic-branch' || shape === 'mind-topic')) {
+                    const targetBBox = n.getBBox();
+                    return bbox.isIntersectWithRect(targetBBox);
+                }
+                return false;
+            });
+        }
+        return false;
+    }
 }

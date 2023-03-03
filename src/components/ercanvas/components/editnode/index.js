@@ -17,8 +17,18 @@ const EditNode = forwardRef(({node}, ref) => {
   const linkData = JSON.parse(node.getProp('link') || '{}');
   const inputRef = useRef(null);
   const editable = node.getProp('editable');
+  const shape = node.getProp('shape');
+  const isExpand = node.getProp('isExpand') !== false;
+  const isMindNode = shape === 'mind-topic' || shape === 'mind-topic-branch';
+  const children = (node.getChildren() || []).filter(c => c.isNode());
   const onChange = () => {
     node.setProp('label', inputRef.current.value);
+  };
+  const expand = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const store = node.store;
+    store?.data?.expand(node);
   };
   const nodeClickText = () => {
     const store = node.store;
@@ -51,6 +61,27 @@ const EditNode = forwardRef(({node}, ref) => {
       });
     }
   }, [editable]);
+  const getPosition = () => {
+    const children1 = children[0];
+    if (children1 && children1.isNode()) {
+      if (node.prop('layout') === 'vertical') {
+        const cY = children1.position().y;
+        const nY = node.position().y;
+        return {
+          left: (node.size().width - 15) / 2,
+          bottom: cY > nY ? -10 : node.size().height - 7.5,
+        };
+      } else {
+        const cX = children1.position().x;
+        const nX = node.position().x;
+        return {
+          bottom: (node.size().height - 15) / 2,
+          right: cX > nX ? -10 : node.size().width - 7.5,
+        };
+      }
+    }
+    return  {};
+  };
   const getHtml = (str) => {
     marked.use({ renderer });
     const reg = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
@@ -91,6 +122,20 @@ const EditNode = forwardRef(({node}, ref) => {
             type='fa-info-circle'
           />
         </Tooltip>}
+        {
+          isMindNode && children?.length > 0 && <span
+            onClick={expand}
+            style={{
+              ...getPosition(),
+              display: isExpand ? 'none' : 'flex',
+            }}
+            className='chiner-er-editnode-mind'
+            >
+            {
+            isExpand ? <Icon className='chiner-er-editnode-mind-icon' type='fa-minus'/> : children.length
+          }
+          </span>
+        }
       </>
     }
   </div>;
@@ -267,10 +312,69 @@ Graph.registerNode('group', {
   component: <EditNode/>,
 });
 
+const commPortStyle = {
+  attrs: {
+    circle: {
+      r: 4,
+      magnet: true,
+      strokeWidth: 1,
+      style: {
+        visibility: 'hidden',
+      },
+    },
+  },
+  zIndex: 3,
+};
+
+const allGroups =  {
+  groupTop: {
+    ...commPortStyle,
+    position: 'top',
+  },
+  groupBottom: {
+    ...commPortStyle,
+    position: 'bottom',
+  },
+  groupLeft: {
+    ...commPortStyle,
+    position: 'left',
+  },
+  groupRight: {
+    ...commPortStyle,
+    position: 'right',
+  },
+};
+
 // 中心主题
 Graph.registerNode('mind-topic', {
   inherit: 'react-shape',
   zIndex: 3,
+  propHooks(metadata) {
+    return {
+      ...metadata,
+      ports: {
+        groups: allGroups,
+        items: [
+          {
+            id: 'top',
+            group: 'groupTop',
+          },
+          {
+            id: 'bottom',
+            group: 'groupBottom',
+          },
+          {
+            id: 'left',
+            group: 'groupLeft',
+          },
+          {
+            id: 'right',
+            group: 'groupRight',
+          },
+        ],
+      },
+    };
+  },
   attrs: {
     body: {
       stroke: '#DFE3EB',  // 边框颜色
@@ -286,17 +390,8 @@ Graph.registerNode('mind-topic', {
 Graph.registerNode(
     'mind-topic-branch',
     {
-      inherit: 'react-shape',
       zIndex: 3,
-      attrs: {
-        body: {
-          stroke: '#DFE3EB',  // 边框颜色
-          strokeWidth: 1,
-          rx: 10,
-          ry: 10,
-        },
-      },
-      component: <EditNode/>,
+      inherit: 'mind-topic',
     },
 );
 

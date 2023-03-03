@@ -335,6 +335,8 @@ export default {
             endArrow: 'endArrow',
             exchange: 'exchange',
             note: 'note',
+            topicBranch: 'topicBranch',
+            topic: 'topic',
         },
         title: 'Drag entity from left entities to diagram',
         isMin: 'It\'s the minimum multiple. It can\'t be reduced',

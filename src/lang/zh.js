@@ -335,6 +335,8 @@ export default {
             linkSearch: '数据表/多表透视/数据字典/关系图',
             invalidLink: '无效的链接',
             note: '备注',
+            topicBranch: '分支主题',
+            topic: '中心主题',
         },
         title: '从左侧数据表中拖拽数据表至关系图中',
         isMin: '已经是最小倍数，不可缩小',

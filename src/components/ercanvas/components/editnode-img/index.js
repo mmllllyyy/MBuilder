@@ -22,7 +22,7 @@ const EditNode = forwardRef(({node}, ref) => {
         width: '100%',
         height: '100%',
         fontSize: '12px',
-        borderRadius: (node.shape === 'edit-node-circle' || node.shape === 'mind-topic-branch' || node.shape === 'mind-topic') ? '10px' : '0px',
+        borderRadius: (node.shape === 'edit-node-circle-img' || node.shape === 'mind-topic-branch-img' || node.shape === 'mind-topic-img') ? '10px' : '0px',
         border: node.shape === 'group-img' ? '1px dashed #DFE3EB' : '1px solid #DFE3EB',
       }}
   >
@@ -117,3 +117,75 @@ Graph.registerNode('group-img', {
   },
   component: <EditNode/>,
 });
+
+const commPortStyle = {
+    attrs: {
+        circle: {
+            r: 4,
+            magnet: true,
+            strokeWidth: 1,
+            style: {
+                visibility: 'hidden',
+            },
+        },
+    },
+    zIndex: 3,
+};
+
+const allGroups =  {
+    groupTop: {
+        ...commPortStyle,
+        position: 'top',
+    },
+    groupBottom: {
+        ...commPortStyle,
+        position: 'bottom',
+    },
+    groupLeft: {
+        ...commPortStyle,
+        position: 'left',
+    },
+    groupRight: {
+        ...commPortStyle,
+        position: 'right',
+    },
+};
+// 中心主题
+Graph.registerNode('mind-topic-img', {
+  inherit: 'react-shape',
+  propHooks(metadata) {
+        return {
+            ...metadata,
+            ports: {
+                groups: allGroups,
+                items: [
+                    {
+                        id: 'top',
+                        group: 'groupTop',
+                    },
+                    {
+                        id: 'bottom',
+                        group: 'groupBottom',
+                    },
+                    {
+                        id: 'left',
+                        group: 'groupLeft',
+                    },
+                    {
+                        id: 'right',
+                        group: 'groupRight',
+                    },
+                ],
+            },
+        };
+    },
+  component: <EditNode/>,
+});
+
+// 子主题
+Graph.registerNode(
+    'mind-topic-branch-img',
+    {
+      inherit: 'mind-topic-img',
+    },
+);

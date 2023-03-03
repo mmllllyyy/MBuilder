@@ -118,14 +118,19 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         enabled: true,
         beforeAddCommand(event, args) {
          // console.log(event, args);
-          if (args.key === 'zIndex' || args.key === 'tools' || args.cell.getProp('isTemp') || args.key === 'visible') {
+          if (args.key === 'zIndex' || args.key === 'tools' || args.cell.getProp('isTemp') || args.key === 'visible' || args.key === 'isExpand') {
             return false;
           } else if ((args.key === 'link' || args.key === 'note' || args.key === 'labels') && args.previous === undefined) {
             return false;
-          } else if (args.key === 'children' && args.cell.shape !== 'group') {
-            return false;
-          } else if (args.key === 'parent' && !args.cell.isNode()) {
-            return false;
+          } else if (args.key === 'children') {
+            if (args.cell.shape === 'mind-topic-branch' || args.cell.shape === 'mind-topic') {
+              return !!args.options.needUndo;
+            } else if(args.cell.shape !== 'group') {
+              return false;
+            }
+            return !args.options.ignoreHistory;
+          } else if (args.key === 'parent') {
+             return false;
           }
           return !args.options.ignoreHistory;
         },
@@ -210,7 +215,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       embedding: {
         enabled: true,
         findParent({ node }) {
-          return erRef.current.findParent(node);
+          return erRef.current.findParent(node) || mindRef.current.findParent(node);
         },
       },
       highlighting: {
@@ -240,7 +245,16 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
           // eslint-disable-next-line max-len
       validateTableStatus, updateDataSource, tabKey, relationType, graph, changeTab, dnd, dataChange, tabDataChange, isView, save, openDict, jumpEntity, openTab, closeTab, container, getDataSource, common, changes, versionsData, currentPrefix,
     });
-    const mind = new Mind({graph, dnd, isView, dataChange, updateDataSource, getDataSource});
+    const mind = new Mind({
+      graph,
+      dnd,
+      isView,
+      dataChange,
+      updateDataSource,
+      getDataSource,
+      historyChange:() => {
+              toolBarRef.current.historyChange(graph.history);
+      }});
     erRef.current = eR;
     mindRef.current = mind;
     if (!isView) {
@@ -346,9 +360,9 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       graph.on('cell:added', () => {
         dataChange && dataChange(graph.toJSON({diff: true}));
       });
-      graph.on('cell:click', ({cell}) => {
+      graph.on('cell:click', ({cell, e}) => {
         eR.cellClick(cell, graph, id);
-        mind.cellClick(cell, graph, id);
+        mind.cellClick(cell, graph, id, e);
       });
       graph.on('node:click:text', ({cell}) => {
         eR.nodeTextClick(cell);
@@ -363,6 +377,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       });
       graph.on('node:selected', ({ node }) => {
         eR.nodeSelected(node, graph, id);
+        mind.nodeSelected(node);
       });
       graph.on('node:unselected', ({ node }) => {
         edgeNodeRemoveTool(id);
@@ -405,9 +420,6 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         eR.delete();
         mind.delete();
       });
-      graph.on('node:contextmenu', ({cell, e}) => {
-        mind.nodeContextmenu(e, cell);
-      });
       graph.on('node:added', ({cell, options}) => {
         eR.nodeAdded(cell, options, dataSourceRef.current);
       });
@@ -430,26 +442,36 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       });
       graph.on('node:embed', ({node, currentParent, previousParent}) => {
         eR.nodeEmbed(node, currentParent, previousParent);
+        mind.nodeEmbed(node, currentParent, previousParent);
       });
       graph.on('node:embedding', ({node, currentParent, previousParent}) => {
         eR.nodeEmbedding(node, currentParent, previousParent);
       });
       graph.on('node:embedded', ({node, currentParent, previousParent}) => {
         eR.nodeEmbedded(node, currentParent, previousParent);
+        mind.nodeEmbedded(node, currentParent, previousParent);
+      });
+      graph.on('node:resized', ({node}) => {
+        mind.nodeResized(node);
       });
       graph.on('scale', (scale) => {
         toolBarRef.current.scaleChange(scale.sx);
       });
       const cmdsToFront = (cmds) => {
-        const cells = graph.getCells();
-        cmds.forEach((c) => {
-          const cell = cells.filter(ce => ce.id === c.data.id)[0];
-          if (cell && cell.shape !== 'group') {
-            cell.toFront();
-          }
+        setTimeout(() => {
+          const cells = graph.getCells();
+          const allCells = cmds.map(c => cells.filter(ce => ce.id === c.data.id)[0])
+              .filter(c => c && c.shape !== 'group');
+          allCells.filter(c => c.isEdge()).forEach((c) => {
+            c.toFront();
+          });
+          allCells.filter(c => c.isNode()).forEach((c) => {
+            c.toFront();
+          });
         });
       };
       graph.history.on('undo', (args) => {
+        console.log(args);
         cmdsToFront(args.cmds);
       });
       graph.history.on('redo', (args) => {

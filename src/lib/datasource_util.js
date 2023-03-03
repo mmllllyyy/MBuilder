@@ -189,7 +189,7 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
                         || c.shape === 'edit-node-circle-svg') {
                         pickFields.push('size');
                         pickFields.push('ports');
-                      } else if (c.shape === 'group' || c.shape === 'mind-topic') {
+                      } else if (c.shape === 'group' || c.shape === 'mind-topic' || c.shape === 'mind-topic-branch') {
                         pickFields.push('size');
                         pickFields.push('children');
                       }
@@ -198,9 +198,6 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
                       }
                       if (c.shape === 'edit-node-polygon' || c.shape === 'edit-node-circle-svg') {
                         otherData.label = c.label || c?.attrs?.text?.text || '';
-                      }
-                      if(c.shape === 'mind-topic-branch') {
-                        pickFields.push('size');
                       }
                       return {
                         ..._.pick(c, pickFields),
