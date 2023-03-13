@@ -653,7 +653,7 @@ export const getColumnWidth = () => {
     notNull: 90,
     autoIncrement: 70,
     domain: 110,
-    type: 100,
+    type: 150,
     len: 70,
     scale: 100,
     comment: 300,
