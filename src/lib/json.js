@@ -538,27 +538,35 @@ export const basename = (fileName, extension) => {
 
 export const getBackupAllFile = ({core, config}, callback) => {
   if (core.info && config.autoBackup) {
-    const dir = path.join(path.dirname(core.info), `.back_${core.data.name}`);
-    // 文件名-backup-${年月日时分秒}.chnr.json
-    //const name = basename(core.info, '.json');
-    ensureDirectoryExistence(dir);
-    const reg = new RegExp(`${core.data.name}-backup-\(\\d)+.pdma.json`);
-    fs.readdir(dir, (error, files) => {
-      if (!error) {
-        const allFiles = files.filter(f => reg.test(f)).sort((a, b) => {
-          return moment(a.match(/(\d)+/)[0]).isAfter(b.match(/(\d)+/)[0]);
-        });
-        if (allFiles.length >= config.autoBackup) {
-          // 删除最旧的
-          fs.unlinkSync(path.join(dir, allFiles[0]));
+    try {
+      const dir = path.join(path.dirname(core.info), `.back_${core.data.name}`);
+      // 文件名-backup-${年月日时分秒}.chnr.json
+      //const name = basename(core.info, '.json');
+      ensureDirectoryExistence(dir);
+      const reg = new RegExp(`${core.data.name}-backup-\(\\d)+.pdma.json`);
+      fs.readdir(dir, (error, files) => {
+        if (!error) {
+          try {
+            const allFiles = files.filter(f => reg.test(f)).sort((a, b) => {
+              return moment(a.match(/(\d)+/)[0]).isAfter(b.match(/(\d)+/)[0]);
+            });
+            if (allFiles.length >= config.autoBackup) {
+              // 删除最旧的
+              fs.unlinkSync(path.join(dir, allFiles[0]));
+            }
+            const fileName = `${core.data.name}-backup-${moment().format('YYYYMDHHmmss')}.pdma.json`;
+            fs.writeFileSync(path.join(dir, fileName), JSON.stringify(core.data, null, 2));
+            callback && callback();
+          } catch (e) {
+            callback && callback(e);
+          }
+        } else {
+          callback && callback(error);
         }
-        const fileName = `${core.data.name}-backup-${moment().format('YYYYMDHHmmss')}.pdma.json`;
-        fs.writeFileSync(path.join(dir, fileName), JSON.stringify(core.data, null, 2));
-        callback && callback();
-      } else {
-        callback && callback();
-      }
-    });
+      });
+    } catch (e) {
+      callback && callback(e);
+    }
   } else {
     callback && callback();
   }

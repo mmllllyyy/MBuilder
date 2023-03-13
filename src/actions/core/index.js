@@ -215,11 +215,16 @@ export const saveProject = (data, saveAs, callback) => {
       } else {
         saveJsonPromise(info, tempData)
           .then(() => {
-            getBackupAllFile(getState(), () => {
+            getBackupAllFile(getState(), (err) => {
               isSaving = false;
-              setMemoryCache('data', tempData);
-              callback && callback();
-              dispatch(saveProjectSuccess(tempData));
+              if (err) {
+                callback && callback(err);
+                dispatch(saveProjectFail(err));
+              } else {
+                setMemoryCache('data', tempData);
+                callback && callback();
+                dispatch(saveProjectSuccess(tempData));
+              }
             });
           })
           .catch((err) => {
