@@ -240,15 +240,16 @@ export default class ER {
     isErCell = (cell) => {
         return this.filterErCell(cell).length > 0;
     }
-    updateFields = (dataSource, originKey, fields) => {
+    updateFields = (originKey, fields) => {
         if (!this.validateTableStatus(`${originKey}${separator}entity`)) {
             const getKey = (f) => {
                 return `${f.defKey}${f.defName}`;
             };
             const result = {};
+            const currentDataSource = this.getDataSource();
             const newDataSource = {
-                ...dataSource,
-                entities: dataSource.entities.map((e) => {
+                ...currentDataSource,
+                entities: currentDataSource.entities.map((e) => {
                     if (e.id === originKey) {
                         const success = fields
                             .filter(f => (e.fields || [])
@@ -399,8 +400,7 @@ export default class ER {
             ports: this.relationType === 'entity' ? this.commonEntityPorts : ports,
             originKey: empty.id,
             count,
-            updateFields: (originKey, fieldData) =>
-                this.updateFields(dataSource, originKey, fieldData),
+            updateFields: this.updateFields,
             nodeClickText: this.nodeTextClick,
             data: {
                 ...empty,
@@ -499,7 +499,7 @@ export default class ER {
     render = (data, dataSource) => {
         return calcCellData(data?.canvasData?.cells || [],
             dataSource,
-            (originKey, fields) => this.updateFields(dataSource, originKey, fields),
+            this.updateFields,
             this.getTableGroup(), this.commonPorts, this.relationType,
             this.commonEntityPorts, this.nodeTextClick);
     }
@@ -513,7 +513,7 @@ export default class ER {
                         data: c.getProp('data'),
                     },
                     dataSource,
-                    (originKey, fields) => this.updateFields(dataSource, originKey, fields),
+                    this.updateFields,
                     this.getTableGroup(),
                     this.commonPorts, this.relationType, this.commonEntityPorts,
                     this.nodeTextClick) || {};
@@ -564,8 +564,7 @@ export default class ER {
         cells.forEach((c) => {
             c.removeTools();
             if (c.shape === 'table') {
-                c.setProp('updateFields', (originKey, fieldData) =>
-                    this.updateFields(dataSource, originKey, fieldData), { ignoreHistory : true});
+                c.setProp('updateFields', this.updateFields, { ignoreHistory : true});
             }
             c.setProp('nodeClickText', this.nodeTextClick, { ignoreHistory : true});
             c.attr('body', {

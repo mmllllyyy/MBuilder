@@ -330,7 +330,9 @@ export default React.memo(({prefix, importProject, createProject, openTemplate,
                       <div className={`${currentPrefix}-home-container-body-right-list-tab-item-body-icon`}>
                         {p.avatar ? <img src={p.avatar} alt='avatar'/> : <Icon type='fa-file'/>}
                       </div>
-                      <div className={`${currentPrefix}-home-container-body-right-list-tab-item-body-desc`}>
+                      <div
+                        className={`${currentPrefix}-home-container-body-right-list-tab-item-body-desc`}
+                      >
                         {p.describe}
                       </div>
                     </div>
