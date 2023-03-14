@@ -5,7 +5,7 @@ import { Table } from 'components';
 export default React.memo(({data, dataSource, update, FieldsExtraOpt,customerHeaders,
                              dataChange, offsetHeight, updateDataSource, ready, freeze, param,
                              hasRender, hasDestory, getDataSource, openDict, defaultGroups,
-                             getRestData, updateAllVersion}) => {
+                             getRestData, updateAllVersion, type}) => {
   const tableRef = useRef(null);
   useEffect(() => {
     hasRender && hasRender({
@@ -18,6 +18,7 @@ export default React.memo(({data, dataSource, update, FieldsExtraOpt,customerHea
     };
   }, []);
   return <Table
+    isEntity={type === 'entity'}
     updateAllVersion={updateAllVersion}
     getRestData={getRestData}
     ref={tableRef}

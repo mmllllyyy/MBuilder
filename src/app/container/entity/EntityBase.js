@@ -253,6 +253,7 @@ export default React.memo(({prefix, data, dataSource, BaseExtraCom, customerHead
           style={{width: size.width, height: '100%'}}
         >
           <EntityFields
+            type={type}
             updateAllVersion={updateAllVersion}
             getRestData={getRestData}
             openDict={openDict}

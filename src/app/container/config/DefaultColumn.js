@@ -1,19 +1,31 @@
 import React, {useState, useRef} from 'react';
-import { FormatMessage, IconTitle, Icon} from 'components';
+import {FormatMessage, IconTitle, Icon, Checkbox, Input} from 'components';
 import { moveArrayPosition } from '../../../lib/array_util';
 import {getPrefix} from '../../../lib/prefixUtil';
-import {getFullColumns} from '../../../lib/datasource_util';
+import {getFullColumns, attNames} from '../../../lib/datasource_util';
 
 
 export default React.memo(({prefix, dataSource, columnsChange, className}) => {
+    const useEnable = ['isStandard', 'uiHint', 'extProps'];
     const [data, updateData] = useState(() => {
         const full = getFullColumns();
-        return (dataSource?.profile?.headers || []).map(h => {
+        const currentData = (dataSource?.profile?.headers || []).map(h => {
+            if (attNames.includes(h.refKey)) {
+                return h;
+            }
             return {
                 ...h,
                 value: full.filter(f => f.newCode === h.refKey)[0]?.value || h.refKey
             }
         })
+        return currentData.concat(attNames
+            .filter(a => currentData.findIndex(c => c.refKey === a) < 0)
+            .map(a => ({
+                refKey: a,
+                value: a,
+                hideInGraph: true,
+                enable: false
+            })))
     });
     const [selected, updateSelected] = useState('');
     const dataRef = useRef(data);
@@ -38,6 +50,22 @@ export default React.memo(({prefix, dataSource, columnsChange, className}) => {
             propsChange(tempData);
         }
     };
+    const onValueChange = (e, p) => {
+        const value = e.target.value;
+        updateData((pre) => {
+            const temp = pre.map(d => {
+                if (d.refKey === p.refKey) {
+                    return {
+                        ...d,
+                        value,
+                    }
+                }
+                return d;
+            })
+            propsChange(temp);
+            return temp;
+        });
+    }
     const currentPrefix = getPrefix(prefix);
     const onClick = (p) => {
         updateData((pre) => {
@@ -54,6 +82,22 @@ export default React.memo(({prefix, dataSource, columnsChange, className}) => {
             return temp;
         });
     }
+    const onEnableChange = (e, p) => {
+        const value = e.target.checked;
+        updateData((pre) => {
+            const temp = pre.map(d => {
+                if (d.refKey === p.refKey) {
+                    return {
+                        ...d,
+                        enable: value,
+                    }
+                }
+                return d;
+            })
+            propsChange(temp);
+            return temp;
+        });
+    }
     return <div className={`${currentPrefix}-entity-base-properties ${className}`}>
         <div className={`${currentPrefix}-entity-base-properties-list-opt`}>
            <IconTitle disable={!selected} title={FormatMessage.string({id: 'tableEdit.moveUp'})} onClick={() => optProperty('up')} type='fa-arrow-up'/>
@@ -62,9 +106,12 @@ export default React.memo(({prefix, dataSource, columnsChange, className}) => {
         <div className={`${currentPrefix}-entity-base-properties-list-container`}>
             <table>
                 <thead>
-                    <th/>
-                    <th><FormatMessage id='config.columnName'/></th>
-                    <th><FormatMessage id='config.hideInGraph'/></th>
+                   <tr>
+                       <th/>
+                       <th style={{zIndex: 2}}><FormatMessage id='config.enable'/></th>
+                       <th><FormatMessage id='config.columnName'/></th>
+                       <th><FormatMessage id='config.hideInGraph'/></th>
+                   </tr>
                 </thead>
                 <tbody>
                 {data.map((p, index) => {
@@ -74,7 +121,16 @@ export default React.memo(({prefix, dataSource, columnsChange, className}) => {
                             className={`${selected === p.refKey ? `${currentPrefix}-entity-base-properties-list-selected` : ''}`}
                         >
                                 <td style={{width: '30px'}}>{index + 1}</td>
-                                <td>{p.value}</td>
+                                <td>
+                                    <Checkbox
+                                        disable={!attNames.concat(useEnable).includes(p.refKey)}
+                                        style={{width: '100%'}}
+                                        defaultChecked={p.enable !== false}
+                                        onChange={e => onEnableChange(e, p)}
+                                    >
+                                    </Checkbox>
+                                </td>
+                                <td>{attNames.includes(p.refKey) ? <Input onChange={e => onValueChange(e, p)} defaultValue={p.value}/> : p.value}</td>
                                 <td><Icon onClick={() => onClick(p)} style={{cursor: 'pointer'}} type={`fa-eye${p.hideInGraph ? '-slash' : ''}`}/>{p.hideInGraph}</td>
                         </tr>
                     );

@@ -716,6 +716,7 @@ export default {
             defKey: 'UI code',
             defName: 'UI name',
         },
+        enable: 'enable',
         columnName: 'columnName',
         hideInGraph: 'hideInGraph',
         title: 'setting',

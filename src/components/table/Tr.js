@@ -67,7 +67,7 @@ export default React.memo(({f, i, expand, onMouseOver, tempHeaders, calcPosition
     </td>}
     {
       tempHeaders
-          .filter(h => !hiddenFields.includes(h.refKey))
+          .filter(h => !hiddenFields.includes(h.refKey) && (h.enable !== false))
           .map((h, cI) => {
             const zIndex = tempHeaders.length - cI + 2;
             const style = (h?.freeze && freeze) ? {position: 'sticky', zIndex, ...calcPosition(h, cI)} : {};

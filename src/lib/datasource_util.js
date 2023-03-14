@@ -589,7 +589,13 @@ export const validateFields = (fields) => {
     domain: f?.domain || f?.dbType,
     refDict: f?.refDict || '',
     extProps: f?.extProps || {},
-    notes: f?.notes || {}
+    notes: f?.notes || {},
+    ...attNames.reduce((p, n) => {
+      return {
+        ...p,
+        [n]: f?.[n] || ''
+      }
+    }, {})
   }))
 };
 
@@ -642,6 +648,8 @@ const indexesTransform = (i) => {
   }
 }
 
+export const attNames = ['attr1', 'attr2', 'attr3', 'attr4', 'attr5', 'attr6', 'attr7', 'attr8', 'attr9'];
+
 export const getColumnWidth = () => {
   return {
     refEntity: 100,
@@ -661,7 +669,13 @@ export const getColumnWidth = () => {
     isStandard: 100,
     intro: 200,
     uiHint: 100,
-    extProps: 100
+    extProps: 100,
+    ...attNames.reduce((p, n) => {
+      return {
+        ...p,
+        [n]: 300
+      }
+    }, {})
   };
 };
 
@@ -1197,7 +1211,11 @@ export const transformTable = (data, dataSource, code, type = 'id', codeType = '
 
 export  const calcNodeData = (preData, nodeData, dataSource, groups) => {
   // 节点源数据
-  const headers = (nodeData?.headers || []).filter(h => !h.hideInGraph);
+  const headers = (nodeData?.headers || []).filter(h => {
+    const columnOthers = (dataSource?.profile?.headers || [])
+        .filter(c => c.refKey === h.refKey)[0] || {};
+    return (!h.hideInGraph) && (columnOthers.enable !== false);
+  });
   const fields = (nodeData?.fields || []).filter(f => !f.hideInGraph)
       .map(f => ({...f, ...transform(f, dataSource), extProps: Object.keys(f.extProps || {}).length}));
   // 计算表头的宽度
@@ -2565,3 +2583,4 @@ export const calcUnGroupDefKey = (dataSource, name) => {
       .filter(e => !(allGroupKeys.includes(e.id)))
       .map(e => e.id);
 };
+

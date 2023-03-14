@@ -1,7 +1,7 @@
 import React, {useEffect, useRef} from 'react';
 import * as _ from 'lodash/object';
 import * as Component from 'components/index';
-import {emptyDict, getColumnWidth, validateDictBase} from '../../lib/datasource_util';
+import {attNames, emptyDict, getColumnWidth, validateDictBase} from '../../lib/datasource_util';
 import DictBase from '../../app/container/dict/DictBase';
 import EntityBasePropertiesList from '../../app/container/entity/EntityBasePropertiesList';
 
@@ -229,7 +229,7 @@ export default React.memo(({f, name, remarkChange, onKeyDown, currentPrefix,
       onClick={() => onChange({target: { value: !f[name]}})}/>;
   } else if (numberComponents.includes(name)) {
     return <Component.NumberInput value={f[name]} onChange={onChange}/>;
-  } else if (name === 'intro' || name === 'comment') {
+  } else if (name === 'intro' || name === 'comment' || attNames.includes(name)) {
     return <Component.Input
       onKeyDown={onKeyDown}
       ref={cell}

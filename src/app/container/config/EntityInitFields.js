@@ -3,6 +3,7 @@ import { Table, SimpleTab, FormatMessage } from 'components';
 import {getPrefix} from '../../../lib/prefixUtil';
 import DefaultColumn from './DefaultColumn';
 import EntityBasePropertiesList from './EntityInitProperties';
+import {attNames} from '../../../lib/datasource_util';
 
 export default React.memo(({ prefix, dataSource, dataChange, updateDataSource, getDataSource }) => {
   const data = dataSource?.profile?.default?.entityInitFields || [];
@@ -54,7 +55,7 @@ export default React.memo(({ prefix, dataSource, dataChange, updateDataSource, g
               freeze
               data={{
                   fields: data,
-                  headers: (dataSource.profile?.headers)
+                  headers: (dataSource.profile?.headers?.filter(h => h.enabled !== false && !attNames.includes(h.refKey)))
               }}
               dataSource={dataSource}
               tableDataChange={fieldsChange}

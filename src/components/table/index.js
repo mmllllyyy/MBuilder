@@ -40,7 +40,8 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                                className, expand, otherOpt = true, disableHeaderReset,
                                updateDataSource, disableAddStandard, ready, twinkle, getDataSource,
                                disableDragRow = true, freeze = false, reading = false,
-                               fixHeader = true, openDict, defaultGroups, updateAllVersion},
+                               fixHeader = true, openDict, defaultGroups, updateAllVersion,
+                                       isEntity},
                                      refInstance) => {
   const { lang } = useContext(ConfigContent);
   const { valueContext, valueSearch } = useContext(TableContent);
@@ -101,14 +102,17 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
   const tempHeaders = useMemo(() => {
     return restData.headers.map((h) => {
       let refKey = h.refKey || h.newCode;
-      const column = allColumns.filter(c => c.newCode === refKey)[0] || {};
+      const columnOthers = (dataSource?.profile?.headers || [])
+          .filter(c => c.refKey === refKey)[0] || {};
+      const column = allColumns.filter(c => c.newCode === refKey)[0] || {value: columnOthers.value};
       return {
         ...h,
         ...column,
+        enable: columnOthers.enable,
         refKey,
       };
     });
-  }, [restData.headers, allColumns]);
+  }, [restData.headers, allColumns, dataSource?.profile?.headers]);
   const cellClick = (h, f) => {
     if (h !== 'domain' || (h === 'domain' && !selectedFieldsRef.current.includes(f.id))) {
       updateSelectedFields((pre) => {
@@ -173,7 +177,10 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
     left: 4,
     right: 3,
   };
-  const hiddenFields = ['hideInGraph', 'isStandard'];
+  const hiddenFields = ['hideInGraph'];
+  if (!isEntity){
+    hiddenFields.push('isStandard');
+  }
   const updateTableDataByHeader = (key, type, value, i) => {
     let newHeaders = [...tempHeaders];
     if (type === 'move') {
@@ -703,7 +710,8 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
       updateTableData,
     });
   }, []);
-  const finalTempHeaders = tempHeaders.filter(h => !hiddenFields.includes(h.refKey));
+  const finalTempHeaders = tempHeaders
+      .filter(h => (!hiddenFields.includes(h.refKey)) && (h.enable !== false));
   const cellRef = (ref, row, cell) => {
     if(!inputRef.current[row]) {
       inputRef.current[row] = {};
@@ -932,14 +940,15 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
   useEffect(() => {
     ioRef.current = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
-        if (e.intersectionRatio > 0) {
+        if (e.isIntersecting) {
           e.target.style.visibility = 'visible';
         } else {
           e.target.style.visibility = 'hidden';
         }
       });
     }, {
-      threshold: [0, 0.25, 0.5, 0.75, 1],
+      threshold: [0, 0.25, 0.5, 1],
+      //threshold: [0, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95, 1],
     });
     return () => {
       ioRef.current.disconnect();

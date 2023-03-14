@@ -5,7 +5,7 @@ import './style/index.less';
 import {getPrefix} from '../../lib/prefixUtil';
 import Icon from '../icon';
 
-const Checkbox = React.memo(({prefix, onChange, name, value, disable,
+const Checkbox = React.memo(({prefix, onChange, name, value, disable, style,
                                children, indeterminate = false, defaultChecked, ...restProps}) => {
   const currentPrefix = getPrefix(prefix);
   const [state, setState] = useState(!!defaultChecked);
@@ -29,6 +29,7 @@ const Checkbox = React.memo(({prefix, onChange, name, value, disable,
   };
   return (
     <span
+      style={style}
       onClick={_onClick}
       className={`${currentPrefix}-checkbox ${currentPrefix}-checkbox-${disable ? 'disable' : 'normal'}`}
     >
