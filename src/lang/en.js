@@ -386,6 +386,7 @@ export default {
         edit: 'edit',
     },
     tableEdit: {
+        changeDb: 'change default db',
         data: 'table',
         dbDDL: 'dbDDL',
         appCode: 'appCode',

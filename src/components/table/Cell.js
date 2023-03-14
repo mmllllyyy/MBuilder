@@ -289,6 +289,20 @@ export default React.memo(({f, name, remarkChange, onKeyDown, currentPrefix,
     return <a style={{textAlign: 'center', display: 'inline-block', width: '100%'}} onClick={() => openExtProps(f[name] || {})}>
       <span><Component.FormatMessage id='tableHeaders.ext'/></span><span style={{marginLeft: 5}}>{Object.keys(f[name] || {}).length || ''}</span>
     </a>;
+  } else if (name === 'type') {
+    const currentDataSource = getDataSource();
+    const db = currentDataSource.profile?.default?.db;
+    const mapping = currentDataSource?.dataTypeMapping?.mappings || [];
+    return <Component.Select value={f[name]} onChange={onChange} showNotMatch>
+      {mapping.map((m) => {
+        return (<Component.Select.Option
+          key={m.id}
+          value={m[db]}
+        >
+          {`${m.defName}-${m[db]}`}
+        </Component.Select.Option>);
+      })}
+    </Component.Select>;
   }
   return <Component.Input
     onKeyDown={onKeyDown}

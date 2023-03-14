@@ -8,6 +8,24 @@
   }
 }
 .@{prefix}-table {
+  &-type-link {
+    margin-left: 5px;
+    font-size: 12px;
+    text-decoration: underline;
+  }
+  &-type-edit {
+    padding: 5px 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    & > div:first-child {
+      width: 100%;
+      & > div:first-child {
+        width: 100%;
+      }
+    }
+  }
   &-td-tag {
     transform: scale(0.6);
     position: absolute;

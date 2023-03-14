@@ -6,9 +6,10 @@ import './style/index.less';
 
 
 const Select = React.memo(({prefix, children = [], style, disable,
+                             showNotMatch = false,
                              defaultValue, onChange, notAllowEmpty, ...restProps}) => {
   const [state, updateState] = useState([defaultValue]);
-  const emptyChild = notAllowEmpty ? '' :
+  const emptyChild = (notAllowEmpty || showNotMatch) ? '' :
   <MultipleSelect.Option key='__empty' value=''>
     {FormatMessage.string({id: 'components.select.empty'})}
   </MultipleSelect.Option>;
@@ -33,6 +34,7 @@ const Select = React.memo(({prefix, children = [], style, disable,
     onChange={values => _onChange(values)}
     checkValue={tempValue}
     simple
+    showNotMatch={showNotMatch}
     disable={disable}
   >
     {

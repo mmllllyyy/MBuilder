@@ -1385,7 +1385,6 @@ const moveOpt = (dataSource, menu, updateDataSource) => {
     tempA[type].push(b.key);
     return tempA;
   }, {});
-  console.log(allGroupData);
   const dataChange = (groups) => {
     oldData = groups;
   };

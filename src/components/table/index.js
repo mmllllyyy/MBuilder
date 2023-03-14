@@ -16,7 +16,7 @@ import {
   validateFields,
   emptyField,
   getColumnWidth,
-  generatorKey,
+  generatorKey, transformFieldType,
 } from '../../lib/datasource_util';
 import { moveArrayPositionByArray } from '../../lib/array_util';
 import { addBodyEvent, removeBodyEvent } from '../../lib/listener';
@@ -40,7 +40,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                                className, expand, otherOpt = true, disableHeaderReset,
                                updateDataSource, disableAddStandard, ready, twinkle, getDataSource,
                                disableDragRow = true, freeze = false, reading = false,
-                               fixHeader = true, openDict, defaultGroups},
+                               fixHeader = true, openDict, defaultGroups, updateAllVersion},
                                      refInstance) => {
   const { lang } = useContext(ConfigContent);
   const { valueContext, valueSearch } = useContext(TableContent);
@@ -55,6 +55,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
   const mapping = _.get(dataSource, 'dataTypeMapping.mappings', []);
   const uiHint =  _.get(dataSource, 'profile.uiHint', []);
   const db = _.get(dataSource, 'profile.default.db', _.get(dataSource, 'profile.dataTypeSupports[0].id'));
+  const dbData = _.get(dataSource, 'profile.dataTypeSupports', []).filter(d => d.id === db)[0] || {};
   const tableRef = useRef(null);
   const dragRef = useRef(null);
   const optRef = useRef(null);
@@ -959,6 +960,65 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
       valueSearch: search,
     };
   }, [searchValue]);
+  const jumpDb = (e) => {
+    e.stopPropagation();
+    let modal = null;
+    let changeValue = '';
+    const onChange = (v) => {
+      changeValue = v.target.value;
+    };
+    const onOk = () => {
+      if(changeValue && changeValue !== dbData.id) {
+       updateDataSource({
+         ...transformFieldType({
+           ...dataSource,
+           profile: {
+             ...dataSource.profile,
+             default: {
+               ...dataSource.profile?.default,
+               db: changeValue,
+             },
+           },
+         }, changeValue, updateAllVersion),
+       });
+      }
+      Component.Message.success({title: FormatMessage.string({id: 'optSuccess'})});
+      modal && modal.close();
+    };
+    const onCancel = () => {
+      modal && modal.close();
+    };
+    const codeTemplates = _.get(dataSource, 'profile.codeTemplates', []);
+    const dataTypeSupports = _.get(dataSource, 'profile.dataTypeSupports', [])
+        .filter((d) => {
+          const code = codeTemplates.filter(c => c.applyFor === d.id)[0];
+          return code?.type === 'dbDDL';
+        });
+    modal = Component.openModal(<div className={`${currentPrefix}-table-type-edit`}>
+      <Component.Select
+        notAllowEmpty
+        onChange={onChange}
+        defaultValue={dbData.id}
+        allowClear={false}>
+        {dataTypeSupports.map((m) => {
+          return (<Component.Select.Option
+            key={m.id}
+            value={m.id}
+          >
+            {m.defKey}
+          </Component.Select.Option>);
+        })}
+      </Component.Select>
+    </div>, {
+      title: Component.FormatMessage.string({id: 'tableEdit.changeDb'}),
+      buttons: [<Component.Button type='primary' key='ok' onClick={onOk}>
+        <Component.FormatMessage id='button.ok'/>
+      </Component.Button>,
+        <Component.Button key='cancel' onClick={onCancel}>
+          <Component.FormatMessage id='button.cancel'/>
+        </Component.Button>],
+    });
+  };
   const isView = finalTempHeaders.some(h => h.refKey === 'refEntity');
   return (
     <div className={`${currentPrefix}-table-container ${className || ''}`}>
@@ -1055,6 +1115,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                     {/*  type={type}*/}
                     {/*  style={{ marginLeft: 5,cursor: 'pointer' }}*/}
                     {/*/>}*/}
+                    {h?.newCode === 'type' && updateAllVersion && <a onClick={jumpDb} className={`${currentPrefix}-table-type-link`}>{dbData.defKey}</a>}
                     {freeze &&
                     ((i < freezeCount.left) ||
                         (i > (finalTempHeaders.length - freezeCount.right - 1)))

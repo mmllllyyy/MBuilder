@@ -386,6 +386,7 @@ export default {
         edit: '编辑',
     },
     tableEdit: {
+        changeDb: '切换数据库方言',
         data: '数据表',
         dbDDL: '数据库代码',
         appCode: '程序代码',

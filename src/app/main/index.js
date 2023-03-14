@@ -1127,6 +1127,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     if (type === 'entity') {
       return (
         <Entity
+          updateAllVersion={restProps.updateAllVersion}
           saveUserData={restProps.saveUserData}
           getConfig={getConfig}
           type={type}
@@ -1146,6 +1147,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
           />);
     } else if (type === 'view') {
       return <View
+        updateAllVersion={restProps.updateAllVersion}
         saveUserData={restProps.saveUserData}
         getConfig={getConfig}
         type={type}

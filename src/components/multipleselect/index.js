@@ -8,7 +8,8 @@ import './style/index.less';
 import {getPrefix} from '../../lib/prefixUtil';
 
 const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear = true,
-                                     defaultCheckValues, onChange, simple = false, disable,
+                                     defaultCheckValues, showNotMatch = false,
+                                     onChange, simple = false, disable,
                                      ...restProps}) => {
   const inputRef = useRef(null);
   const optionsRef = useRef(null);
@@ -16,14 +17,21 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
   const inputOffsetRef = useRef(null);
   const [visible, setVisible] = useState(false);
   const id = useMemo(() => Math.uuid(), []);
-  const [searchValue, updateSearch] = useState('');
   const [checkValues, updateCheckValues] = useState(() => {
     if ('checkValue' in restProps) {
       return restProps.checkValue;
     }
     return defaultCheckValues || [];
   });
+  const [searchValue, updateSearch] = useState('');
+  const searchValueRef = useRef(null);
+  searchValueRef.current = searchValue;
   const currentPrefix = getPrefix(prefix);
+  useEffect(() => {
+    if ('checkValue' in restProps && showNotMatch) {
+      updateSearch(restProps.checkValue[0]);
+    }
+  }, [restProps.checkValue]);
   useEffect(() => {
     const { current } = selectRef;
     addBodyClick(id, (e) => {
@@ -34,7 +42,9 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
         if (!simple) {
           inputRef.current.style.width = '4px';
         }
-        updateSearch('');
+        if (!showNotMatch) {
+          updateSearch('');
+        }
       }
     });
     return () => {
@@ -64,7 +74,9 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
     }
     updateCheckValues(tempValues);
     onChange && onChange(tempValues);
-    updateSearch('');
+    if (!showNotMatch) {
+      updateSearch('');
+    }
   };
   const closeClick = (value) => {
     const tempValues = checkValues.filter(v => v !== value);
@@ -96,7 +108,7 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
     const { current } = inputRef;
     current && current.focus();
     setVisible(true);
-    if (!simple && (e.target !== current)) {
+    if (!simple && (e.target !== current) && !showNotMatch) {
       inputRef.current.style.width = '4px';
       updateSearch('');
     }
@@ -141,6 +153,11 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
     updateCheckValues([]);
     onChange && onChange([]);
   };
+  const inputBlur = () => {
+    if (showNotMatch) {
+      onChange && onChange([searchValueRef.current]);
+    }
+  };
   const getEmptyChildren = () => {
     const firstChildren = [].concat(children)[0];
     if (firstChildren && firstChildren.props.value === '') {
@@ -154,7 +171,7 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
         title={selected[0]?.props?.children || ''}
         className={`${currentPrefix}-multiple-select-data-item-simple`}
           >{
-            searchValue ? '' : (selected[0]?.props?.children || getEmptyChildren())
+            (searchValue || showNotMatch) ? '' : (selected[0]?.props?.children ||  getEmptyChildren())
           }{allowClear && selected[0]
           && !disable && <span
             onClick={onClear}
@@ -187,6 +204,7 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
         onFocus={onFocus}
         onChange={inputChange}
         value={searchValue}
+        onBlur={inputBlur}
         className={`${currentPrefix}-multiple-select-data-${simple ? 'simple' : 'normal'}-input`}
       />
       <span
