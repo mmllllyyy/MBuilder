@@ -94,7 +94,9 @@ export default React.memo(({ prefix, options = [], customerTitle, customerFooter
           ),
         )
       }
-      {customerFooter}
+      {customerFooter && React.cloneElement(customerFooter, {
+        active,
+      })}
       {
         edit && <span onClick={add} style={{minWidth: '60px', textAlign: 'center'}} className={`${currentPrefix}-simple-tab-titles-title-default`}>
           <Icon type='fa-plus'/>

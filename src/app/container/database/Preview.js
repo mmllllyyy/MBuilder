@@ -8,7 +8,7 @@ import {getPrefix} from '../../../lib/prefixUtil';
 import DotHelp from './DotHelp';
 
 export default React.memo(({prefix, template, mode, templateShow = 'createTable', db,
-                             isAppCode, dataSource, templateChange}) => {
+                             isAppCode, dataSource, templateChange, previewData}) => {
   const style = {width: 'auto', height: 'calc(100vh - 80px)'};
   const openDotHelp = () => {
     let modal;
@@ -61,14 +61,15 @@ export default React.memo(({prefix, template, mode, templateShow = 'createTable'
     updateTemplate(value);
     templateChange && templateChange(value);
   };
-  const demoCode = getDataByTemplate(getJsonData(), templateData || '', true, dataSource, db, isAppCode);
+  const demoCode = getDataByTemplate(previewData ? JSON.parse(previewData) : getJsonData(),
+      templateData || '', !previewData, dataSource, db, isAppCode);
   const currentPrefix = getPrefix(prefix);
   return <div className={`${currentPrefix}-preview`}>
     <div className={`${currentPrefix}-preview-left`}>
       <span className={`${currentPrefix}-preview-left-title`}>
         <FormatMessage id='database.preview.demoData'/>
       </span>
-      <CodeHighlight style={style} readOnly={false} data={data} mode='json' onChange={e => updateJsonData(e.target.value)}/>
+      <CodeHighlight style={style} readOnly={false} data={previewData || data} mode='json' onChange={e => updateJsonData(e.target.value)}/>
       {/*<CodeHighlight data={demoData} style={style} mode='json'/>*/}
     </div>
     <div className={`${currentPrefix}-preview-data`}>

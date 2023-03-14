@@ -1,13 +1,23 @@
 import React, {useRef} from 'react';
 import * as _ from 'lodash/object';
 
-import {SimpleTab, CodeHighlight, FormatMessage, Button, openModal, Modal, CodeEditor} from 'components';
+import {
+    SimpleTab,
+    CodeHighlight,
+    FormatMessage,
+    Button,
+    openModal,
+    Modal,
+    CodeEditor,
+    Message,
+} from 'components';
 //import { separator } from '../../../../profile';
-import { getCodeByDataTable } from '../../../lib/json2code_util';
+import { getCodeByDataTable, getDefaultEnv } from '../../../lib/json2code_util';
 import {getPrefix} from '../../../lib/prefixUtil';
 import PathEnvEdit from './PathEnvEdit';
 import { saveAllTemplate } from '../../../lib/middle';
 import {defaultTemplate, transformTable} from '../../../lib/datasource_util';
+import Preview from '../database/Preview';
 
 const CodeContent = React.memo(({ data, dataSource, group, codeType, codeTemplate,
                                     getConfig, saveUserData, dataChange, prefix,
@@ -115,11 +125,11 @@ const CodeContent = React.memo(({ data, dataSource, group, codeType, codeTemplat
                 <Button key='cancel' onClick={onCancel}>{FormatMessage.string({id: 'button.cancel'})}</Button>],
           });
       };
-      return <div>
+      return <div className={`${currentPrefix}-entity-template-customer-title`}>
         <div>
           <Button key='onOK' onClick={openConfig}><FormatMessage id='tableBase.pathAndEnv'/></Button>
         </div>
-        <div style={{marginTop: 5}}>
+        <div>
           <Button
             style={{display: 'inline-block', width: '100%'}}
             key='onOK'
@@ -130,7 +140,24 @@ const CodeContent = React.memo(({ data, dataSource, group, codeType, codeTemplat
         </div>
       </div>;
   };
-  const CustomerFooter = () => {
+  const CustomerFooter = ({active}) => {
+      const sqlSeparator = _.get(dataSourceRef.current, 'profile.sql.delimiter', ';');
+      const modelData = JSON.stringify(
+          {
+              [codeType]: transformTable(
+                  {
+                      ...dataRef.current,
+                      env: getDefaultEnv(dataRef.current),
+                  },
+                  dataSourceRef.current,
+                  codeTemplate.id,
+                  'id',
+                  codeTemplate.type,
+              ),
+              group,
+              separator: sqlSeparator,
+          },
+          null, 2);
     const showModelData = () => {
         let modal;
         const onCancel = () => {
@@ -142,7 +169,7 @@ const CodeContent = React.memo(({ data, dataSource, group, codeType, codeTemplat
           mode='json'
           width='100%'
           height='70vh'
-          value={JSON.stringify(transformTable(dataRef.current, dataSourceRef.current, codeTemplate.id, 'id', codeTemplate.type), null, 2)}
+          value={modelData}
         />, {
             bodyStyle: {width: '60%'},
             title: FormatMessage.string({id: 'tableBase.model'}),
@@ -150,7 +177,64 @@ const CodeContent = React.memo(({ data, dataSource, group, codeType, codeTemplat
               <Button key='cancel' onClick={onCancel}>{FormatMessage.string({id: 'button.close'})}</Button>],
         });
     };
-    return  <div className={`${currentPrefix}-entity-template-footer`}><Button key='onOK' onClick={showModelData}><FormatMessage id='tableBase.model'/></Button></div>;
+    const editCodeTemplate = () => {
+        let modal = null;
+        let cacheTemplate = '';
+        const templateChange = (tempValue) => {
+            cacheTemplate = tempValue;
+        };
+        const onOk = () => {
+            if (cacheTemplate) {
+                updateDataSource({
+                    ...dataSourceRef.current,
+                    profile: {
+                        ...dataSourceRef.current?.profile,
+                        codeTemplates: (dataSourceRef.current?.profile?.codeTemplates || [])
+                            .map((c) => {
+                            if (c.applyFor === codeTemplate.id) {
+                                return {
+                                    ...c,
+                                    [active]: cacheTemplate,
+                                };
+                            }
+                            return c;
+                        }),
+                    },
+                });
+                Message.success({title: FormatMessage.string({id: 'saveSuccess'})});
+            }
+            modal && modal.close();
+        };
+        const onCancel = () => {
+            modal && modal.close();
+        };
+        modal = openModal(<Preview
+          isAppCode={codeTemplate.type === 'appCode'}
+          previewData={modelData}
+          dataSource={dataSource}
+          template={codeTemplate[active]}
+          db={codeTemplate.applyFor}
+          mode={codeTemplate.type === 'appCode' ? 'java' : 'SQL'}
+          templateChange={templateChange}
+        />, {
+            fullScreen: true,
+            title: FormatMessage.string({id: 'database.templateEditOpt.previewEdit'}),
+            buttons: [<Button type='primary' key='ok' onClick={onOk}>
+              <FormatMessage id='button.ok'/>
+            </Button>,
+              <Button key='cancel' onClick={onCancel}>
+                <FormatMessage id='button.cancel'/>
+              </Button>],
+        });
+    };
+    return  <div className={`${currentPrefix}-entity-template-footer`}>
+      <span>
+        <Button onClick={showModelData}><FormatMessage id='tableBase.model'/></Button>
+      </span>
+      <span>
+        <Button onClick={editCodeTemplate}><FormatMessage id='tableBase.editTemplate'/></Button>
+      </span>
+    </div>;
   };
   return <SimpleTab
     offsetHeight={30}

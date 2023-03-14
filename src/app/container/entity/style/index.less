@@ -257,10 +257,40 @@
     }
   }
   &-template {
+    &-customer-title {
+      min-width: 110px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      & > div {
+        width: 100%;
+        & > span {
+          width: 100%;
+        }
+      }
+      & > div:last-child {
+        margin-top: 5px;
+      }
+    }
     &-footer {
       position: absolute;
       bottom: 5px;
       background: @background-color;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      & > span {
+        display: inline-block;
+        width: 100%;
+        & > span {
+          width: 100%;
+        }
+      }
+      & > span:first-child {
+        margin-bottom: 5px;
+      }
     }
     &-opt {
       color: @primary-color;

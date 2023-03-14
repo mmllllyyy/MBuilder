@@ -1088,7 +1088,7 @@ export const camel = (str, firstUpper) => {
   }
   return ret;
 };
-const getDefaultEnv = (e) => {
+export const getDefaultEnv = (e) => {
   return {
     ...(e.env || {}),
     base: {

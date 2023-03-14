@@ -472,6 +472,7 @@ export default {
         table: '数据表',
         example: '例如：Java代码的Controller&Service&Mapper生成配置如下：',
         model: '模型数据',
+        editTemplate: '编辑代码模板',
         emptyDefault: '未匹配到默认设置',
         useDefault: '设置为默认',
         search: '搜索数据表',

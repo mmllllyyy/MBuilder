@@ -471,6 +471,7 @@ export default {
         saveAndGenerate: 'ok and generate',
         example: 'For example, the controller & Service & mapper generation configuration of Java code is as follows:',
         model: 'model data',
+        editTemplate: 'edit template',
         emptyDefault: 'The default settings are not matched',
         useDefault: 'Use Default',
         search: 'Search Entity',
