@@ -88,8 +88,13 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
         } else {
           entityRepeatError.push(newDefKey);
         }
-        if (dataSource[t.type === 'view' ? 'views' : 'entities']?.filter(e => e.defKey?.toLocaleLowerCase()
-            === newDefKey?.toLocaleLowerCase()).length > 0) {
+        if (dataSource[t.type === 'view' ? 'views' : 'entities']?.filter(e => {
+          if (e.id === t.data.id) {
+            return e.defKey === newDefKey;
+          }
+          return e.defKey?.toLocaleLowerCase()
+              === newDefKey?.toLocaleLowerCase();
+        }).length > 0) {
           entityRepeatError.push(newDefKey);
         }
       }
