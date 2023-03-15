@@ -214,7 +214,7 @@ const imgOpt = (dataSource, menu, genImg) => {
 
 const notesOpt = (dataSource, menu, updateDataSource) => {
   const otherMenus = menu.otherMenus || [];
-  let modal;
+  let drawer;
   let changeData;
   let notes = otherMenus.filter(m => m.type === 'entity' || m.type === 'view')
       .map(o => {
@@ -248,19 +248,19 @@ const notesOpt = (dataSource, menu, updateDataSource) => {
         views: updateNotes(dataSource.views || [], 'view'),
       })
     }
-    modal && modal.close();
+    drawer && drawer.close();
   };
   const onCancel = () => {
-    modal && modal.close();
+    drawer && drawer.close();
   };
-  modal = Component.openModal(<Note
+  drawer = Component.openDrawer(<Note
       updateDataSource={updateDataSource}
       dataSource={dataSource}
       data={notes}
       dataChange={dataChange}
   />, {
-    bodyStyle: {width: '80%'},
-    title: Component.FormatMessage.string({id: 'standardFields.selectGroup'}),
+    width: '80%',
+    title: Component.FormatMessage.string({id: 'tableEdit.note'}),
     buttons: [<Component.Button type='primary' key='ok' onClick={onOk}>
       <Component.FormatMessage id='button.ok'/>
     </Component.Button>,
