@@ -155,6 +155,7 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
                 const allNodes = currentData?.cells || [];
                 return {
                   ...d,
+                  comment: currentData?.comment || '',
                   canvasData: {
                     cells: allNodes.map(c => {
                       if (c.shape === 'erdRelation') {
@@ -778,6 +779,7 @@ export const emptyDiagram = {
   defKey: '',
   defName: '',
   id: '',
+  comment: '',
   relationType: 'field',
   canvasData: {}
 };

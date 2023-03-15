@@ -2,12 +2,13 @@ import moment from 'moment';
 import html2canvas from 'html2canvas';
 import React, {useEffect, useRef, useMemo} from 'react';
 import { Graph, Addon, DataUri } from '@antv/x6';
-import {FormatMessage} from 'components';
+import { FormatMessage, Tooltip} from 'components';
 import './components';
 import {getPrefix} from '../../lib/prefixUtil';
 import { img } from '../../lib/generatefile/img';
 import FindEntity from './FindEntity';
 import ToolBar from './ToolBar';
+import CommentEditor from './CommentEditor';
 import clipCanvasEmptyPadding from './_util/clip_canvas';
 import * as align from '../../lib/position';
 import ER from './chart/ER';
@@ -17,7 +18,7 @@ import { edgeNodeRemoveTool } from './components/tool';
 const { Dnd } = Addon;
 
 export default ({data, dataSource, renderReady, updateDataSource, validateTableStatus, prefix,
-                  dataChange, openEntity, tabKey, activeKey, common, tabDataChange,
+                  dataChange, openEntity, tabKey, activeKey, common, tabDataChange, commentChange,
                   changes, versionsData, save, getDataSource, openDict, selectionChanged,
                   jumpEntity, diagramKey, relationType,changeTab, openTab, closeTab,
                   ...restProps}) => {
@@ -608,6 +609,9 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
   const getGraph = () => {
     return graphRef?.current;
   };
+  const _commentChange = (v) => {
+    commentChange && commentChange(graphRef.current.toJSON({diff: true}), v);
+  };
   return <>
     <div
       id={id}
@@ -623,6 +627,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
     >
       {}
     </div>
+    <CommentEditor currentPrefix={currentPrefix} data={data} commentChange={_commentChange}/>
     <div id={`${id}-cellTooltip`} />
     <div id={`${id}-color-picker`} />
     <ToolBar

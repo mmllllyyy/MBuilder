@@ -46,6 +46,17 @@ const Relation = React.memo(({dataSource, renderReady, diagramKey, validateTable
       },
     });
   };
+  const commentChange = (canvasData, comment) => {
+    tabDataChange && tabDataChange({
+      type: 'diagram',
+      key: diagramKey,
+      data: {
+        ...canvasData,
+        comment,
+        id: diagramKey,
+      },
+    });
+  };
   return <div style={{width: '100%', height: '100%'}} ref={relationRef}>
     <ErCanvas
       validateTableStatus={validateTableStatus}
@@ -73,6 +84,7 @@ const Relation = React.memo(({dataSource, renderReady, diagramKey, validateTable
       diagramKey={diagramKey}
       openLoading={openLoading}
       closeLoading={closeLoading}
+      commentChange={commentChange}
     />
   </div>;
 });

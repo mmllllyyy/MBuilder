@@ -337,6 +337,9 @@ export default {
             note: 'note',
             topicBranch: 'topicBranch',
             topic: 'topic',
+            commentEmpty: 'Comment Empty',
+            commentPlaceholder: 'Please enter the canvas annotation to support markdown',
+            comment: 'comment',
         },
         title: 'Drag entity from left entities to diagram',
         isMin: 'It\'s the minimum multiple. It can\'t be reduced',
@@ -384,6 +387,7 @@ export default {
         close: 'close',
         save: 'save',
         edit: 'edit',
+        preview: '预览',
     },
     tableEdit: {
         changeDb: 'change default db',

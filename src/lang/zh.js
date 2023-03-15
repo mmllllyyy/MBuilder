@@ -337,6 +337,9 @@ export default {
             note: '备注',
             topicBranch: '分支主题',
             topic: '中心主题',
+            comment: '画布批注',
+            commentEmpty: '暂无批注',
+            commentPlaceholder: '请输入画布批注，支持markdown',
         },
         title: '从左侧数据表中拖拽数据表至关系图中',
         isMin: '已经是最小倍数，不可缩小',
@@ -384,6 +387,7 @@ export default {
         close: '关闭',
         save: '保存',
         edit: '编辑',
+        preview: '预览',
     },
     tableEdit: {
         changeDb: '切换数据库方言',
