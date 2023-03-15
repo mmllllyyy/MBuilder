@@ -2138,10 +2138,26 @@ export const resetHeader = (dataSource, e, freeze) => {
 export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, ignoreProps) => {
   // 合并项目
   // 合并数据类型/代码模板/数据类型匹配
+  // 计算新增和更新的数据
   const dataTypeSupports = oldDataSource.profile?.dataTypeSupports || [];
-  const newDataTypeSupports = (newDataSource.profile?.dataTypeSupports || [])
-      .filter(d => dataTypeSupports.findIndex(s => s.defKey === d.defKey));
+  const newDataTypeSupports = (newDataSource.profile?.dataTypeSupports || []);
   const tempDataTypeSupports = mergeData(dataTypeSupports, newDataTypeSupports, true, false);
+  // 合并代码模板
+  const codeTemplates =  oldDataSource.profile?.codeTemplates || [];
+  const newCodeTemplates = (newDataSource.profile?.codeTemplates || []);
+  const tempCodeTemplates = mergeData(
+      codeTemplates.map(c => ({...c, defKey: c.applyFor, id: c.applyFor})),
+      newCodeTemplates.map(c => ({...c, defKey: c.applyFor, id: c.applyFor})), false, true)
+      .map(t => {
+        const newApplyFor = tempDataTypeSupports.filter(s => s.old === t.applyFor)[0];
+        if (newApplyFor) {
+          return _.omit({
+            ...t,
+            apply: newApplyFor.id,
+          }, ['defKey', 'id']);
+        }
+        return _.omit(t, ['defKey', 'id']);
+      });
   // 合并UI建议
   const uiHint = oldDataSource.profile?.uiHint || [];
   const newUiHint = newDataSource.profile?.uiHint || [];
@@ -2220,9 +2236,8 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
   };
   // 合并关系图(直接追加，不合并)
   const diagrams = oldDataSource.diagrams || [];
-  const newDiagrams = newDataSource.diagrams || [];
   const diagramsKeys = diagrams.map(d => d.defKey);
-  const tempDiagrams = diagrams.concat(newDiagrams.map(d => {
+  const newDiagrams = (newDataSource.diagrams || []).map(d => {
     let defKey = d.defKey;
     if (diagramsKeys.includes(defKey)) {
       defKey = `${defKey}_1`;
@@ -2230,8 +2245,8 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
     }
     return {
       ...d,
-      defKey,
       id: Math.uuid(),
+      defKey,
       canvasData: {
         ...d.canvasData,
         cells: (d.canvasData?.cells || []).map(c => {
@@ -2263,18 +2278,19 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
         })
       }
     }
-  }));
+  });
+  const tempDiagrams = diagrams.concat(newDiagrams);
   // 合并分组
   const removeGroupEntities = tempEntities.filter(e => e.old).map(e => e.id);
   const viewGroups = (oldDataSource.viewGroups || []).map(g => {
     const currentGroupEntities = newEntities.filter(e => e.group === g.id)
         .map((newE) => {
-      const data = tempEntities.filter(e => e.old === newE.id)[0]
-      if (data) {
-        return data.id;
-      }
-      return newE.id;
-    });
+          const data = tempEntities.filter(e => e.old === newE.id)[0]
+          if (data) {
+            return data.id;
+          }
+          return newE.id;
+        });
     const refEntities = (g.refEntities || [])
         .filter(id => !removeGroupEntities.includes(id));
     if (currentGroupEntities.length > 0) {
@@ -2342,7 +2358,7 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
       const fieldDef = (newData.filter(e => e.id === d.old)[0]?.fields || [])
           .filter(field => field.id === fId)[0]?.defKey;
       if (fieldDef) {
-       return ((type === 'entity' ? tempEntities : [])
+        return ((type === 'entity' ? tempEntities : [])
             .filter(e => e.id === d.id)[0]?.fields || [])
             .filter(field => field.defKey === fieldDef)[0]?.id;
       }
@@ -2385,13 +2401,12 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
           showInGraphCount += 1;
         }
         return {
-          ...calcField(f, ['uiHint', 'refDict'], [tempUiHint, tempUiHint]),
+          ...calcField(f, ['uiHint', 'refDict', 'domain'], [tempUiHint, tempUiHint, tempDomains]),
           hideInGraph: maxCount > showInGraphCount ? f.hideInGraph : true
         }
       })
     }
   }
-  //console.log(tempViewGroups);
   return {
     ...oldDataSource,
     domains: tempDomains.map(t => _.omit(t, 'old')).map(d => {
@@ -2408,12 +2423,12 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
       ...oldDataSource.dataTypeMapping,
       mappings: tempMappings.map(t => _.omit(t, 'old')).map(m => {
         return Object.keys(m).reduce((p, n) => {
-          const mIndex = tempDataTypeSupports.findIndex(t => (t.old === n || t.id === n));
+          const mIndex = tempDataTypeSupports.findIndex(t => t.old === n);
           if (mIndex > -1) {
             return {
               ...p,
               [tempDataTypeSupports[mIndex].id]: m[n],
-            }
+            };
           }
           return p;
         }, _.pick(m, ['defKey', 'id', 'defName']));
@@ -2422,6 +2437,8 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
     dicts: tempDicts.map(t => _.omit(t, 'old')),
     profile: {
       ...oldDataSource.profile,
+      codeTemplates: tempCodeTemplates,
+      dataTypeSupports: tempDataTypeSupports,
       uiHint: tempUiHint.map(t => _.omit(t, 'old')),
     },
     entities: tempEntities.map(e => refactor(e, 'entity'))
@@ -2431,80 +2448,49 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
     viewGroups: tempViewGroups.map(v => {
       return {
         ...v,
-        refDiagrams: mergeGroupData(v, 'refDiagrams', []),
+        refDiagrams: mergeGroupData(v, 'refDiagrams', tempDiagrams),
         refDicts: mergeGroupData(v, 'refDicts', tempDicts),
         refEntities: mergeGroupData(v, 'refEntities', tempEntities),
       }
     }),
-  }
-
+  };
 };
-
 
 export const mergeDomains = (oldDataSource, newDataSource, updateAllVersion, type) => {
   // 合并项目
-  // 合并类型匹配
-  const mappings = oldDataSource.dataTypeMapping?.mappings || [];
-  const newMappings = newDataSource.dataTypeMapping?.mappings || [];
-  const tempMappings = mergeData(mappings, newMappings, true, true);
-  // 合并数据域
-  const domains = oldDataSource.domains || [];
-  const newDomains = newDataSource.domains || [];
-  const tempDomains = mergeData(domains, newDomains, true, true);
-  // 代码模板
-  const codeTemplates = (oldDataSource.profile?.codeTemplates || [])
-      .map(c => ({...c, defKey: c.applyFor, id: c.applyFor}));
-  const newCodeTemplates = (newDataSource?.codeTemplates || [])
-      .filter(c => c.type === type && c.applyFor !== 'dictSQLTemplate')
-      .map(c => ({...c, defKey: c.applyFor, id: c.applyFor}));
-  // 合并数据类型/代码模板/数据类型匹配
-  const dataTypeSupports = oldDataSource.profile?.dataTypeSupports || [];
-  const newDataTypeSupports = (newDataSource?.dataTypeSupports || []);
-  const tempDataTypeSupports = mergeData(dataTypeSupports, newDataTypeSupports, true, true);
-
-  const tempCodeTemplates = mergeData(codeTemplates, newCodeTemplates.map(c => {
-    const dIndex = tempDataTypeSupports.findIndex(t => t.old === c.id);
-    const key = tempDataTypeSupports[dIndex]?.id || c.id;
+  const pickNames = ['profile.codeTemplates', 'domains', 'dataTypeMapping.mappings', 'profile.dataTypeSupports'];
+  const filterType = (dataSource) => {
+    const leaveId = (dataSource.profile.codeTemplates || [])
+        .filter(c => c.applyFor !== 'dictSQLTemplate' && c.type === type).map(c => c.applyFor);
     return {
-      ...c,
-      defKey: key,
-      applyFor: key,
-    };
-  }), false, true).map(t => _.omit(t, ['defKey', 'id']));
+      ...dataSource,
+      profile: {
+        ...dataSource.profile,
+        codeTemplates: dataSource.profile.codeTemplates.filter(c => leaveId.includes(c.applyFor)),
+        dataTypeSupports: dataSource.profile.dataTypeSupports.filter(c => leaveId.includes(c.id)),
+      }
+    }
+  }
+  const currentDataSource = mergeDataSource(filterType(_.pick(oldDataSource, pickNames)),
+      filterType({
+        ...newDataSource,
+        profile: {
+          codeTemplates: newDataSource.codeTemplates,
+          dataTypeSupports: newDataSource.dataTypeSupports,
+        }
+      }), [], false)
 
   const tempDataSource = {
     ...oldDataSource,
-    domains: tempDomains.map(t => _.omit(t, 'old')).map(d => {
-      const mIndex = tempMappings.findIndex(t => t.old === d.applyFor);
-      if (mIndex > -1) {
-        return {
-          ...d,
-          applyFor: tempMappings[mIndex].id,
-        };
-      }
-      return d;
-    }),
+    domains: currentDataSource.domains,
     dataTypeMapping: {
       ...oldDataSource.dataTypeMapping,
-      mappings: tempMappings.map(t => _.omit(t, 'old')).map(m => {
-        return Object.keys(m).reduce((p, n) => {
-          const mIndex = tempDataTypeSupports.findIndex(t => (t.old === n || t.id === n));
-          if (mIndex > -1 && tempCodeTemplates.findIndex(c => c.applyFor === tempDataTypeSupports[mIndex].id) > -1) {
-            return {
-              ...p,
-              [tempDataTypeSupports[mIndex].id]: m[n],
-            }
-          }
-          return p;
-        }, _.pick(m, ['defKey', 'id', 'defName']));
-      })
+      mappings: currentDataSource.dataTypeMapping.mappings
     },
     profile: {
       ...oldDataSource?.profile,
-      dataTypeSupports: tempDataTypeSupports
-          .filter(d => tempCodeTemplates.findIndex(c => c.applyFor === d.id) > -1)
-          .map(t => _.omit(t, 'old')),
-      codeTemplates: tempCodeTemplates,
+      dataTypeSupports: currentDataSource.profile.dataTypeSupports,
+      codeTemplates: currentDataSource.profile.codeTemplates,
     }
   }
   // 更新所有的版本数据
