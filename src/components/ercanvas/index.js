@@ -252,6 +252,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       dataChange,
       updateDataSource,
       getDataSource,
+      openDict,
       historyChange:() => {
               toolBarRef.current.historyChange(graph.history);
       }});
@@ -419,6 +420,9 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       graph.bindKey(['backspace', 'delete'], () => {
         eR.delete();
         mind.delete();
+      });
+      graph.bindKey(['enter'], () => {
+        mind.enter();
       });
       graph.on('node:added', ({cell, options}) => {
         eR.nodeAdded(cell, options, dataSourceRef.current);

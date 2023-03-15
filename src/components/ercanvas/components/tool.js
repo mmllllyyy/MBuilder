@@ -386,11 +386,17 @@ const EdgeTooltipContent = ({onUpdate, edge, movePosition, getDataSource, positi
 
 const Layout = ({onUpdate, layout}) => {
   return <div className={`${prefix}-node-tooltip-content-layout`}>
-    <div>
-      <Svg onClick={() => onUpdate('layout', 'horizontal')} style={{cursor: 'pointer', width: '27px'}} type={`#icon-mind-map-horizontal${layout === 'horizontal' ? '-checked' : ''}`}/>
+    <div className={`${prefix}-node-tooltip-content-layout-${layout === 'horizontal' ? 'checked' : 'normal'}`}>
+      <Svg onClick={() => onUpdate('layout', 'horizontal')} type='#icon-horizontal'/>
     </div>
-    <div>
-      <Svg onClick={() => onUpdate('layout', 'vertical')} style={{cursor: 'pointer', width: '27px'}} type={`#icon-mind-map-vertical${layout === 'vertical' ? '-checked' : ''}`}/>
+    <div className={`${prefix}-node-tooltip-content-layout-${layout === 'vertical' ? 'checked' : 'normal'}`}>
+      <Svg rotate={90} onClick={() => onUpdate('layout', 'vertical')} type='#icon-horizontal'/>
+    </div>
+    <div className={`${prefix}-node-tooltip-content-layout-${layout === 'left' ? 'checked' : 'normal'}`}>
+      <Svg onClick={() => onUpdate('layout', 'left')} type='#icon-left'/>
+    </div>
+    <div className={`${prefix}-node-tooltip-content-layout-${layout === 'right' ? 'checked' : 'normal'}`}>
+      <Svg onClick={() => onUpdate('layout', 'right')} type='#icon-right'/>
     </div>
   </div>;
 };
@@ -527,9 +533,12 @@ const NodeTooltipContent = ({onUpdate, node, id, position, getDataSource, movePo
       offset={20}
       over={<Layout onUpdate={_onUpdate} layout={layout}/>}
       key='fontColor'>
-      <div>
+      <div className={`${prefix}-node-tooltip-content-layout`}>
         <Tooltip propagation offsetTop={10} placement='top' force title={FormatMessage.string({id: 'toolbar.layout'})}>
-          <Svg style={{cursor: 'pointer', width: '27px'}} type={`#icon-mind-map-${layout}`}/>
+          <Svg
+            rotate={layout === 'vertical' ? '90' : '0'}
+            style={{cursor: 'pointer', width: '27px'}}
+            type={`#icon-${layout === 'vertical' ? 'horizontal' : layout}`}/>
         </Tooltip>
       </div></OverDown>}
     {

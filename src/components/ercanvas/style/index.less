@@ -173,7 +173,22 @@
       height: 20px;
     }
     &-layout {
-      ;
+      width: 32px;
+      & > div {
+        height: 32px;
+        padding: 5px 0;
+      }
+      div + div {
+        margin-top: 8px;
+      }
+      svg {
+        cursor: pointer;
+        width: 22px !important;
+        height: 22px !important;
+      }
+      &-checked {
+        background-color: #DDE5FF;
+      }
     }
     &-color-edit {
       width: 165px;

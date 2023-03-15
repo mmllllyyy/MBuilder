@@ -1,11 +1,13 @@
 import Hierarchy from '@antv/hierarchy';
-import {FormatMessage} from 'components';
+import {FormatMessage, Message} from 'components';
 import {edgeNodeAddTool} from 'components/ercanvas/components/tool';
 import { tree2array } from '../../../lib/tree';
 import {getChildrenCell } from '../components/util';
+import {openUrl} from '../../../lib/json2code_util';
 
 export default class Mind {
-    constructor({graph, dnd, isView, dataChange, updateDataSource, getDataSource, historyChange}) {
+    constructor({graph, dnd, isView, dataChange, updateDataSource, getDataSource,
+                    historyChange, openDict}) {
         this.graph = graph;
         this.dnd = dnd;
         this.isView = isView;
@@ -13,6 +15,7 @@ export default class Mind {
         this.updateDataSource = updateDataSource;
         this.getDataSource = getDataSource;
         this.historyChange = historyChange;
+        this.openDict = openDict;
     }
     filterMindCell = (cells) => {
         // 分支主题 中心主题 连接线
@@ -76,10 +79,19 @@ export default class Mind {
         }
         // 生成新的节点树
         //console.log(node2Tree(root));
+        const getDirection = () => {
+            switch (v) {
+                case 'vertical': return 'V';
+                case 'horizontal': return 'H';
+                case 'left': return 'RL';
+                case 'right': return 'LR';
+                default: return 'H';
+            }
+        };
         return {data: Hierarchy.compactBox(
             node2Tree(root),
             {
-                direction: v === 'vertical' ? 'V' : 'H',
+                direction: getDirection(v),
                 getHeight(d) {
                     return d.height;
                 },
@@ -164,6 +176,37 @@ export default class Mind {
     id2Nodes = (ids) => {
         return this.graph.getNodes().filter(node => ids.includes(node.id));
     };
+    nodeTextClick = (node) => {
+        const link = JSON.parse(node.getProp('link') || '{}');
+        if (link.type) {
+            if (link.type === 'externally') {
+                openUrl(link.value);
+            } else {
+                const iconMap = {
+                    entities: 'fa-table',
+                    views: 'icon-shitu',
+                    diagrams: 'icon-guanxitu',
+                    dicts: 'icon-shujuzidian',
+                };
+                const keyMap = {
+                    entities: 'entity',
+                    views: 'view',
+                    diagrams: 'diagram',
+                    dicts: 'dict',
+                };
+                const dataSource = this.getDataSource();
+                const currenTab = Object.keys(iconMap).filter((i) => {
+                    return dataSource[i].some(d => d.id === link.value);
+                })[0];
+                if (currenTab) {
+                    this.openDict(link.value, keyMap[currenTab], null, iconMap[currenTab]);
+                } else {
+                    Message.error({title: `${FormatMessage.string({id: 'canvas.node.invalidLink'})}`});
+                }
+            }
+        }
+        //console.log(node);
+    }
     addChildNode = (node) => {
         // 创建临时节点
         const newNode = {
@@ -183,6 +226,7 @@ export default class Mind {
                 fillColor: '#DDE5FF',
                 layout: node.prop('layout'),
                 expand: this.expand,
+                nodeClickText: this.nodeTextClick,
             });
             // 增加连接线
             this.graph.addEdge({
@@ -211,6 +255,7 @@ export default class Mind {
                 fillColor: '#DDE5FF',
                 layout: 'vertical',
                 expand: this.expand,
+                nodeClickText: this.nodeTextClick,
             });
             this.dnd.start(node, e.nativeEvent);
         } else {
@@ -259,6 +304,7 @@ export default class Mind {
             return {
                 ...cell,
                 expand: this.expand,
+                nodeClickText: this.nodeTextClick,
             };
         }));
     }
@@ -281,11 +327,48 @@ export default class Mind {
     resizingEnabled = (node) => {
         return this.isMindCell(node);
     }
+    findParentNode = (node) => {
+        return this.graph.getNodes().filter((n) => {
+            console.log(n);
+            return (n.prop('children') || []).includes(node.id);
+        })[0];
+    }
+    findNodeNext = (node) => {
+        const parentNode = this.findParentNode(node);
+        const allNodes = this.graph.getNodes();
+        if (parentNode) {
+            const childrenIds = parentNode.prop('children');
+            const siblingNodes = allNodes.filter(c => childrenIds.includes(c.id));
+            const index = siblingNodes.findIndex(c => c.id === node.id);
+            const pre = index - 1;
+            const next = index + 1;
+            return siblingNodes[pre] || siblingNodes[next] || parentNode;
+        }
+        return node;
+    }
+    enter = () => {
+        this.graph.batchUpdate('enter', () => {
+            const cells = this.graph.getSelectedCells();
+            const enterCell = cells.slice(-1)[0];
+            if (enterCell && this.isMindCell(enterCell) && enterCell.isNode()) {
+                const parentNode = this.findParentNode(enterCell);
+                if (parentNode) {
+                    this.addChildNode(parentNode);
+                }
+            }
+        });
+    }
     delete = () => {
         this.graph.batchUpdate('delete', () => {
             const cells = this.graph.getSelectedCells();
             if (this.filterMindCell(cells).length) {
                 const deleteCells = cells.filter(c => !c.getProp('isLock') && c.isNode() && !c.getProp('editable'));
+                if (deleteCells.length === 1) {
+                    const node = this.findNodeNext(deleteCells[0]);
+                    if (node !== deleteCells[0]) {
+                        this.graph.select(node);
+                    }
+                }
                 const roots = [];
                 const deleteNodes =  deleteCells.filter(c => c.isNode());
                 const allCells = this.graph.getNodes();
