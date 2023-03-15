@@ -138,7 +138,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     });
   };
   const updateGroupType = (t) => {
-    restProps.autoSave({
+    restProps.update({
       ...dataSourceRef.current,
       profile: {
         ...dataSourceRef.current.profile,

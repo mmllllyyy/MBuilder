@@ -4,6 +4,7 @@ import {edgeNodeAddTool} from 'components/ercanvas/components/tool';
 import { tree2array } from '../../../lib/tree';
 import {getChildrenCell } from '../components/util';
 import {openUrl} from '../../../lib/json2code_util';
+import {separator} from '../../../../profile';
 
 export default class Mind {
     constructor({graph, dnd, isView, dataChange, updateDataSource, getDataSource,
@@ -194,12 +195,22 @@ export default class Mind {
                     diagrams: 'diagram',
                     dicts: 'dict',
                 };
+                // openDict(data.id, 'dict', null, 'dict.svg');
                 const dataSource = this.getDataSource();
+                const ids = link.value?.split(separator);
+                let currentKey = '';
+                let parentKey = null;
+                if (ids.length > 1) {
+                    currentKey = ids[1];
+                    parentKey = ids[0];
+                } else {
+                    currentKey = link.value;
+                }
                 const currenTab = Object.keys(iconMap).filter((i) => {
-                    return dataSource[i].some(d => d.id === link.value);
+                    return dataSource[i].some(d => d.id === currentKey);
                 })[0];
                 if (currenTab) {
-                    this.openDict(link.value, keyMap[currenTab], null, iconMap[currenTab]);
+                    this.openDict(currentKey, keyMap[currenTab], parentKey, iconMap[currenTab]);
                 } else {
                     Message.error({title: `${FormatMessage.string({id: 'canvas.node.invalidLink'})}`});
                 }

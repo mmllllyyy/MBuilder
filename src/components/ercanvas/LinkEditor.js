@@ -1,6 +1,9 @@
 import React, { useState, useRef } from 'react';
 import {FormatMessage, Radio, Text, Tree} from 'components';
 import {getPrefix} from '../../lib/prefixUtil';
+import {calcUnGroupDefKey} from '../../lib/datasource_util';
+import {firstUp} from '../../lib/string';
+import {separator} from '../../../profile';
 
 export default React.memo(({prefix, data, onChange, getDataSource}) => {
   const dataRef = useRef({...data});
@@ -18,6 +21,67 @@ export default React.memo(({prefix, data, onChange, getDataSource}) => {
       }
       onChange && onChange(dataRef.current);
     };
+  const getTreeData = () => {
+    const refData = {
+      refDiagrams: calcUnGroupDefKey(dataSource.current, 'diagrams'),
+      refDicts: calcUnGroupDefKey(dataSource.current, 'dicts'),
+      refEntities: calcUnGroupDefKey(dataSource.current,'entities'),
+      refViews: calcUnGroupDefKey(dataSource.current,'views'),
+    };
+    return (dataSource.current.viewGroups || [])
+        .concat({
+          id: '__ungroup',
+          defKey: '__ungroup',
+          defName: FormatMessage.string({id: 'exportSql.defaultGroup'}),
+          ...refData,
+        })
+        .filter((g) => {
+          return ['refDiagrams', 'refDicts', 'refEntities', 'refViews'].some((d) => {
+            return g[d]?.length > 0;
+          });
+        })
+        .map((g) => {
+          const getData = dataName => (dataSource.current[dataName] || [])
+              .filter(e => (g[`ref${firstUp(dataName)}`] || []).includes(e.id));
+          const children = [{
+            key: `${g.id}${separator}entities`,
+            value: FormatMessage.string({id: 'project.entities'}),
+            children: getData('entities').map(d => ({
+              key: `${g.id}${separator}${d.id}`,
+              value: `${d.defName}(${d.defKey})`,
+            })),
+          }, {
+            key: `${g.id}${separator}views`,
+            value: FormatMessage.string({id: 'project.views'}),
+            children: getData('views').map(d => ({
+              key: `${g.id}${separator}${d.id}`,
+              value: `${d.defName}(${d.defKey})`,
+            })),
+          },
+            {
+              key: `${g.id}${separator}dicts`,
+              value: FormatMessage.string({id: 'project.dicts'}),
+              children: getData('dicts').map(d => ({
+                key: `${g.id}${separator}${d.id}`,
+                value: `${d.defName}(${d.defKey})`,
+              })),
+            },
+            {
+              key: `${g.id}${separator}diagrams`,
+              value: FormatMessage.string({id: 'project.diagram'}),
+              children: getData('diagrams').map(d => ({
+                key: `${g.id}${separator}${d.id}`,
+                value: `${d.defName}(${d.defKey})`,
+              })),
+            }].filter(c => c.children.length > 0);
+          return {
+            key: g.id,
+            value: g.defName || g.defKey,
+            children,
+          };
+        });
+  };
+  console.log(getTreeData());
     const currentPrefix = getPrefix(prefix);
     return <div className={`${currentPrefix}-relation-link`}>
       <div className={`${currentPrefix}-form-item`}>
@@ -85,16 +149,7 @@ export default React.memo(({prefix, data, onChange, getDataSource}) => {
                   defaultCheckeds={[dataRef.current.value]}
                   simpleChecked
                   placeholder={FormatMessage.string({id: 'canvas.node.linkSearch'})}
-                  dataSource={['entities', 'views', 'diagrams', 'dicts'].map((v) => {
-                      return {
-                        key: v,
-                        value: FormatMessage.string({id: `project.${v === 'diagrams' ? 'diagram' : v}`}),
-                        children: (dataSource.current?.[v] || []).map(e => ({
-                          key: e.id,
-                          value: `${e.defKey}-${e.defName}`,
-                        })),
-                      };
-                    })}
+                  dataSource={getTreeData()}
                   onChange={value => _onChange(value, 'value')}
                 />
               </div>
