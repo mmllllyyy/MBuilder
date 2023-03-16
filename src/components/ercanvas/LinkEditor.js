@@ -22,6 +22,20 @@ export default React.memo(({prefix, data, onChange, getDataSource}) => {
       onChange && onChange(dataRef.current);
     };
   const getTreeData = () => {
+    // "modalAll"
+    const modelType = dataSource.current?.profile?.modelType;
+    if (modelType === 'modalAll') {
+      return ['entities', 'views', 'diagrams', 'dicts'].map((v) => {
+        return {
+          key: v,
+          value: FormatMessage.string({id: `project.${v === 'diagrams' ? 'diagram' : v}`}),
+          children: (dataSource.current?.[v] || []).map(e => ({
+            key: e.id,
+            value: `${e.defKey}-${e.defName}`,
+          })),
+        };
+      });
+    }
     const refData = {
       refDiagrams: calcUnGroupDefKey(dataSource.current, 'diagrams'),
       refDicts: calcUnGroupDefKey(dataSource.current, 'dicts'),
