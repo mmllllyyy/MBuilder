@@ -9,7 +9,7 @@ import {getMemoryCache} from '../../lib/cache';
 import {CONFIG} from '../../lib/variable';
 
 export const Drawer = React.memo(({prefix, title, onClose, children, width,
-                                    bodyStyle, buttons, maskClosable}) => {
+                                    bodyStyle, buttons, maskClosable, placement}) => {
   const currentPrefix = getPrefix(prefix);
   const ref = useRef(null);
   const containerRef = useRef(null);
@@ -38,6 +38,14 @@ export const Drawer = React.memo(({prefix, title, onClose, children, width,
       updateStyle();
     }
   };
+  const style = {};
+  if (placement === 'left') {
+    style.left = 0;
+    style.transform = 'translateX(-100%)';
+  } else {
+    style.right = 0;
+    style.transform = 'translateX(100%)';
+  }
   return (
     <div
       className={`${currentPrefix}-drawer`}
@@ -47,7 +55,7 @@ export const Drawer = React.memo(({prefix, title, onClose, children, width,
       onClick={onClick}
       >
       <div
-        style={{width}}
+        style={{width, ...style}}
         ref={containerRef}
         className={`${currentPrefix}-drawer-container`}
         >
@@ -64,7 +72,7 @@ export const Drawer = React.memo(({prefix, title, onClose, children, width,
           {children}
         </div>
         {
-          buttons && <div className={`${currentPrefix}-drawer-button`}>{buttons}</div>
+          buttons && <div className={`${currentPrefix}-drawer-button-${placement}`}>{buttons}</div>
         }
       </div>
     </div>
@@ -96,7 +104,7 @@ export const openDrawer = (com, params) => {
     }
   };
   const DrawerCompose = () => {
-    const { title, width,bodyStyle, buttons,  maskClosable = true } = params;
+    const { title, width,bodyStyle, buttons,  maskClosable = true, placement = 'left' } = params;
     const _iconClose = () => {
       const { onClose } = params;
       onClose && onClose();
@@ -105,6 +113,7 @@ export const openDrawer = (com, params) => {
     return (
       <ConfigContent.Provider value={getMemoryCache(CONFIG)}>
         <Drawer
+          placement={placement}
           buttons={buttons}
           title={title}
           width={width}

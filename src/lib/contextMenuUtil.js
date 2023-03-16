@@ -259,7 +259,8 @@ const notesOpt = (dataSource, menu, updateDataSource) => {
       data={notes}
       dataChange={dataChange}
   />, {
-    width: '80%',
+    placement: 'right',
+    width: '55%',
     title: Component.FormatMessage.string({id: 'tableEdit.note'}),
     buttons: [<Component.Button type='primary' key='ok' onClick={onOk}>
       <Component.FormatMessage id='button.ok'/>
