@@ -1116,6 +1116,169 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
   const getConfig = () => {
     return configRef.current;
   };
+  const tempData = {};
+  const _openModal = (name, active) => {
+    let modal = null;
+    let Com = '';
+    let title = '';
+    const onOk = () => {
+      if (Object.keys(tempData).length !== 0) {
+        let tempDataSource = getDataSource();
+        const filterData = ['lang', 'javaHome', 'autoSave', 'jvm', 'autoBackup'];
+        if (name === 'dbreverse') {
+          const { value = [], realData : { entities = [], viewGroups = [] } = {} }
+              = tempData?.dbreverse || {};
+          // 此处有多处需要更新
+          // 先处理实体和分组信息
+          const entitiesKey = (tempDataSource?.entities || [])
+              .concat(tempDataSource?.views || [])
+              .map(e => e.defKey);
+          const newEntities = entities
+              .filter(e => value.includes(e.defKey))
+              .map((e) => {
+                const defKey = validateKey(e.defKey, entitiesKey);
+                entitiesKey.push(defKey);
+                return {
+                  ...e,
+                  defKey,
+                };
+              });
+          tempDataSource = {
+            ...tempDataSource,
+            entities: (tempDataSource?.entities || []).concat(newEntities),
+            viewGroups: (tempDataSource?.viewGroups || []).concat({
+              ...(viewGroups[0] || {}),
+              refEntities: newEntities.map(e => e.defKey),
+            }),
+          };
+          const valueNames = ['domains', 'dataTypeMapping.mappings'];
+          valueNames.forEach((n) => {
+            const oldKeys = _.get(tempDataSource, n, []).map(d => d.defKey);
+            const newData = _.get(tempData, `dbreverse.realData.${n}`, [])
+                .filter(d => !oldKeys.includes(d.defKey))
+                .map(d => _.omit(d, '__key'));
+            tempDataSource = _.set(tempDataSource, n, _.get(tempDataSource, n, []).concat(newData));
+          });
+        } else if (name === 'dbConnect') {
+          if (new Set((tempData.dbConn || [])
+              .filter(d => !!d.defName)
+              .map(d => d.defName)).size !== (tempData.dbConn || []).length) {
+            Modal.error({
+              title: FormatMessage.string({id: 'optFail'}),
+              message: FormatMessage.string({id: 'dbConnect.validateDb'}),
+            });
+            return;
+          }
+        } else if (name === 'config') {
+          if ('lang' in tempData && tempData.lang !== lang) {
+            // 需要更新一些默认的数据
+            const needUpdates = [
+              {
+                key: 'profile.default.entityInitFields',
+                langName: 'entityInitFields',
+              },
+            ];
+            needUpdates.forEach(({key, langName}) => {
+              tempDataSource = _.set(tempDataSource, key,
+                  _.get(tempDataSource, key).map((f) => {
+                    return {
+                      ...f,
+                      defName: FormatMessage.string({id: `projectTemplate.${langName}.${f.defKey}`})
+                          || f.defName,
+                    };
+                  }));
+            });
+          }
+          const userData = _.pick(tempData, filterData);
+          if (Object.keys(userData).length > 0) {
+            restProps?.saveUserData(userData);
+          }
+        }
+        if ('dictSQLTemplate' in tempData) {
+          const path = 'profile.codeTemplates';
+          const codeTemplates = _.get(tempDataSource, path, []);
+          if (codeTemplates.findIndex(c => c.applyFor === 'dictSQLTemplate') < 0) {
+            codeTemplates.push(emptyDictSQLTemplate);
+          }
+          tempDataSource = _.set(tempDataSource, path, codeTemplates
+              .map((c) => {
+                if (c.applyFor === 'dictSQLTemplate') {
+                  return {
+                    ...c,
+                    content: tempData.dictSQLTemplate || '',
+                  };
+                }
+                return c;
+              }));
+        }
+        const freeze = tempData.freeze;
+        filterData.splice(0, 0, 'dictSQLTemplate', 'freeze');
+        let needSave = false;
+        Object.keys(tempData).filter(f => !filterData.includes(f)).forEach((f) => {
+          needSave = true;
+          tempDataSource = _.set(tempDataSource, f, tempData[f]);
+        });
+        if ('profile.headers' in tempData) {
+          tempDataSource = {
+            ...tempDataSource,
+            entities: (tempDataSource.entities || []).map(e => ({
+              ...e,
+              headers: resetHeader(tempDataSource, e, freeze),
+            })),
+          };
+          const allTab = getAllTabData();
+          Object.keys(allTab).map(t => ({tabKey: t, tabData: allTab[t]})).forEach((t) => {
+            if (t.tabData.type === 'entity' || t.tabData.type === 'view') {
+              const data =  {
+                ...t.tabData.data,
+                headers: resetHeader(tempDataSource, t.tabData.data, freeze),
+              };
+              replaceDataByTabId(t.tabKey, {
+                ...t.tabData,
+                data,
+              });
+              notify('tabDataChange', {id: t.tabData.key, d: data});
+            }
+          });
+        }
+        needSave &&
+        restProps?.save(tempDataSource, FormatMessage.string({id: 'saveProject'}), !projectInfoRef.current); // 配置项内容在关闭弹窗后自动保存
+      }
+      modal && modal.close();
+    };
+    const onCancel = () => {
+      modal && modal.close();
+    };
+    if (name === 'config'){
+      Com = Config;
+      title = FormatMessage.string({id: 'config.title'});
+    } else {
+      Com = DbConnect;
+      title = FormatMessage.string({id: 'dbConnect.title'});
+    }
+    const dataChange = (value, fieldName) => {
+      tempData[fieldName] = value;
+    };
+    modal = openModal(<Com
+      active={active}
+      config={config}
+      lang={config.lang}
+      dataChange={dataChange}
+      prefix={prefix}
+      getDataSource={getDataSource}
+      dataSource={restProps?.dataSource}
+      updateDataSource={restProps.update}
+    />, {
+      bodyStyle: { width: '80%' },
+      title,
+      buttons: [<Button type='primary' key='ok' onClick={() => onOk(modal)}>
+        <FormatMessage id='button.ok'/>
+      </Button>,
+        <Button key='cancel' onClick={() => onCancel(modal)}>
+          <FormatMessage id='button.cancel'/>
+        </Button>],
+    });
+  };
   const getTabComponent = (t) => {
     const type = t.type;
     const key = t.menuKey;
@@ -1129,6 +1292,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
     if (type === 'entity') {
       return (
         <Entity
+          openConfig={() => _openModal('config', 'EntityInit.3')}
           updateAllVersion={restProps.updateAllVersion}
           saveUserData={restProps.saveUserData}
           getConfig={getConfig}
@@ -1202,168 +1366,6 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       />;
     }
     return '';
-  };
-  const tempData = {};
-  const _openModal = (name) => {
-    let modal = null;
-    let Com = '';
-    let title = '';
-    const onOk = () => {
-      if (Object.keys(tempData).length !== 0) {
-        let tempDataSource = getDataSource();
-        const filterData = ['lang', 'javaHome', 'autoSave', 'jvm', 'autoBackup'];
-        if (name === 'dbreverse') {
-          const { value = [], realData : { entities = [], viewGroups = [] } = {} }
-              = tempData?.dbreverse || {};
-          // 此处有多处需要更新
-          // 先处理实体和分组信息
-          const entitiesKey = (tempDataSource?.entities || [])
-              .concat(tempDataSource?.views || [])
-              .map(e => e.defKey);
-          const newEntities = entities
-              .filter(e => value.includes(e.defKey))
-              .map((e) => {
-                const defKey = validateKey(e.defKey, entitiesKey);
-                entitiesKey.push(defKey);
-                return {
-                  ...e,
-                  defKey,
-                };
-              });
-          tempDataSource = {
-            ...tempDataSource,
-            entities: (tempDataSource?.entities || []).concat(newEntities),
-            viewGroups: (tempDataSource?.viewGroups || []).concat({
-              ...(viewGroups[0] || {}),
-              refEntities: newEntities.map(e => e.defKey),
-            }),
-          };
-          const valueNames = ['domains', 'dataTypeMapping.mappings'];
-          valueNames.forEach((n) => {
-            const oldKeys = _.get(tempDataSource, n, []).map(d => d.defKey);
-            const newData = _.get(tempData, `dbreverse.realData.${n}`, [])
-                .filter(d => !oldKeys.includes(d.defKey))
-                .map(d => _.omit(d, '__key'));
-            tempDataSource = _.set(tempDataSource, n, _.get(tempDataSource, n, []).concat(newData));
-          });
-        } else if (name === 'dbConnect') {
-          if (new Set((tempData.dbConn || [])
-            .filter(d => !!d.defName)
-            .map(d => d.defName)).size !== (tempData.dbConn || []).length) {
-            Modal.error({
-              title: FormatMessage.string({id: 'optFail'}),
-              message: FormatMessage.string({id: 'dbConnect.validateDb'}),
-            });
-            return;
-          }
-        } else if (name === 'config') {
-          if ('lang' in tempData && tempData.lang !== lang) {
-            // 需要更新一些默认的数据
-            const needUpdates = [
-              {
-                key: 'profile.default.entityInitFields',
-                langName: 'entityInitFields',
-              },
-            ];
-            needUpdates.forEach(({key, langName}) => {
-              tempDataSource = _.set(tempDataSource, key,
-                _.get(tempDataSource, key).map((f) => {
-                  return {
-                    ...f,
-                    defName: FormatMessage.string({id: `projectTemplate.${langName}.${f.defKey}`})
-                      || f.defName,
-                  };
-                }));
-            });
-          }
-          const userData = _.pick(tempData, filterData);
-          if (Object.keys(userData).length > 0) {
-            restProps?.saveUserData(userData);
-          }
-        }
-        if ('dictSQLTemplate' in tempData) {
-          const path = 'profile.codeTemplates';
-          const codeTemplates = _.get(tempDataSource, path, []);
-          if (codeTemplates.findIndex(c => c.applyFor === 'dictSQLTemplate') < 0) {
-            codeTemplates.push(emptyDictSQLTemplate);
-          }
-          tempDataSource = _.set(tempDataSource, path, codeTemplates
-            .map((c) => {
-              if (c.applyFor === 'dictSQLTemplate') {
-                return {
-                  ...c,
-                  content: tempData.dictSQLTemplate || '',
-                };
-              }
-              return c;
-            }));
-        }
-        const freeze = tempData.freeze;
-        filterData.splice(0, 0, 'dictSQLTemplate', 'freeze');
-        let needSave = false;
-        Object.keys(tempData).filter(f => !filterData.includes(f)).forEach((f) => {
-          needSave = true;
-          tempDataSource = _.set(tempDataSource, f, tempData[f]);
-        });
-        if ('profile.headers' in tempData) {
-          tempDataSource = {
-            ...tempDataSource,
-            entities: (tempDataSource.entities || []).map(e => ({
-              ...e,
-              headers: resetHeader(tempDataSource, e, freeze),
-            })),
-          };
-          const allTab = getAllTabData();
-          Object.keys(allTab).map(t => ({tabKey: t, tabData: allTab[t]})).forEach((t) => {
-            if (t.tabData.type === 'entity' || t.tabData.type === 'view') {
-              const data =  {
-                ...t.tabData.data,
-                headers: resetHeader(tempDataSource, t.tabData.data, freeze),
-              };
-              replaceDataByTabId(t.tabKey, {
-                ...t.tabData,
-                data,
-              });
-              notify('tabDataChange', {id: t.tabData.key, d: data});
-            }
-          });
-        }
-        needSave &&
-        restProps?.save(tempDataSource, FormatMessage.string({id: 'saveProject'}), !projectInfoRef.current); // 配置项内容在关闭弹窗后自动保存
-      }
-      modal && modal.close();
-    };
-    const onCancel = () => {
-      modal && modal.close();
-    };
-    if (name === 'config'){
-      Com = Config;
-      title = FormatMessage.string({id: 'config.title'});
-    } else {
-      Com = DbConnect;
-      title = FormatMessage.string({id: 'dbConnect.title'});
-    }
-    const dataChange = (value, fieldName) => {
-      tempData[fieldName] = value;
-    };
-    modal = openModal(<Com
-      config={config}
-      lang={config.lang}
-      dataChange={dataChange}
-      prefix={prefix}
-      getDataSource={getDataSource}
-      dataSource={restProps?.dataSource}
-      updateDataSource={restProps.update}
-    />, {
-      bodyStyle: { width: '80%' },
-      title,
-      buttons: [<Button type='primary' key='ok' onClick={() => onOk(modal)}>
-        <FormatMessage id='button.ok'/>
-      </Button>,
-        <Button key='cancel' onClick={() => onCancel(modal)}>
-          <FormatMessage id='button.cancel'/>
-        </Button>],
-    });
   };
   const domainGetName = (m) => {
     const dataTypeSupports = _.get(restProps, 'dataSource.profile.dataTypeSupports', []);

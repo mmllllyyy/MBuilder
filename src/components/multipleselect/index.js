@@ -8,7 +8,7 @@ import './style/index.less';
 import {getPrefix} from '../../lib/prefixUtil';
 
 const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear = true,
-                                     defaultCheckValues, showNotMatch = false,
+                                     defaultCheckValues, showNotMatch = false, className,
                                      onChange, simple = false, disable,
                                      ...restProps}) => {
   const inputRef = useRef(null);
@@ -24,14 +24,7 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
     return defaultCheckValues || [];
   });
   const [searchValue, updateSearch] = useState('');
-  const searchValueRef = useRef(null);
-  searchValueRef.current = searchValue;
   const currentPrefix = getPrefix(prefix);
-  useEffect(() => {
-    if ('checkValue' in restProps && showNotMatch) {
-      updateSearch(restProps.checkValue[0]);
-    }
-  }, [restProps.checkValue]);
   useEffect(() => {
     const { current } = selectRef;
     addBodyClick(id, (e) => {
@@ -42,9 +35,7 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
         if (!simple) {
           inputRef.current.style.width = '4px';
         }
-        if (!showNotMatch) {
-          updateSearch('');
-        }
+        updateSearch('');
       }
     });
     return () => {
@@ -60,6 +51,9 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
       inputRef.current.style.width = `${width + 2}px`;
     }
     updateSearch(target.value);
+    if (showNotMatch) {
+      onChange && onChange([target.value]);
+    }
   };
   const valueChange = (value, e) => {
     let tempValues = [];
@@ -74,9 +68,7 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
     }
     updateCheckValues(tempValues);
     onChange && onChange(tempValues);
-    if (!showNotMatch) {
-      updateSearch('');
-    }
+    updateSearch('');
   };
   const closeClick = (value) => {
     const tempValues = checkValues.filter(v => v !== value);
@@ -90,13 +82,22 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
   const reg = new RegExp((searchValue || '').replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
   const options = [].concat(children)
       .filter(c => reg.test(c.props?.value || '') || reg.test(c.props?.children || ''));
+  const finalValue = showNotMatch ? finalCheckValues[0] : searchValue;
+  let needAdd = finalCheckValues[0] && showNotMatch
+      && !options.some(o => o.props?.value === finalCheckValues[0]);
   const getChildren = () => {
-    const menus = options.length > 0 ? options.map(c => React.cloneElement(c, {
+    const menus = (options.length > 0 || needAdd)
+        ? options.map(c => React.cloneElement(c, {
       checkValues: finalCheckValues,
       onChange: valueChange,
-    })) : <div className={`${currentPrefix}-multiple-select-empty`}>
-      <FormatMessage id='components.multipleselect.empty'/>
-    </div>;
+        })).concat(needAdd ? [<Option
+          key='__customer_match'
+          value={finalCheckValues[0]}
+          checkValues={finalCheckValues}
+          onChange={valueChange}
+        >{finalCheckValues[0]}</Option>] : []) : <div className={`${currentPrefix}-multiple-select-empty`}>
+          <FormatMessage id='components.multipleselect.empty'/>
+        </div>;
     return <div
       className={`${currentPrefix}-multiple-select-children`}
       ref={optionsRef}
@@ -153,11 +154,6 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
     updateCheckValues([]);
     onChange && onChange([]);
   };
-  const inputBlur = () => {
-    if (showNotMatch) {
-      onChange && onChange([searchValueRef.current]);
-    }
-  };
   const getEmptyChildren = () => {
     const firstChildren = [].concat(children)[0];
     if (firstChildren && firstChildren.props.value === '') {
@@ -165,7 +161,7 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
     }
     return '';
   };
-  return <div className={`${currentPrefix}-multiple-select`} onClick={selectClick} ref={selectRef}>
+  return <div className={`${currentPrefix}-multiple-select ${className}`} onClick={selectClick} ref={selectRef}>
     <div className={`${currentPrefix}-multiple-select-data ${currentPrefix}-multiple-select-data-${disable ? 'disable' : 'default'} ${currentPrefix}-multiple-select-data-${visible ? 'focus' : 'normal'}`}>
       {simple ? <span
         title={selected[0]?.props?.children || ''}
@@ -203,8 +199,7 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
         ref={inputRef}
         onFocus={onFocus}
         onChange={inputChange}
-        value={searchValue}
-        onBlur={inputBlur}
+        value={finalValue}
         className={`${currentPrefix}-multiple-select-data-${simple ? 'simple' : 'normal'}-input`}
       />
       <span

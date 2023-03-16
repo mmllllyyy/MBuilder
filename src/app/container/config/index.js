@@ -17,17 +17,18 @@ const Components = {
   //DbConnect,
 };
 export default React.memo(({prefix, dataSource, dataChange, updateDataSource,
-                             config, getDataSource}) => {
+                             config, getDataSource, active = ''}) => {
   const configTab = ['EntityInit', 'FieldConfig', 'SystemParameter', 'DictSQLTemplate']
   const currentPrefix = getPrefix(prefix);
   return <SimpleTab
+      defaultActive={active.split('.')[0] || 'EntityInit'}
     options={configTab
       .map((d) => {
         const Com = Components[d] || '';
         return {
           key: d,
           title: FormatMessage.string({id: `config.${d}`}) || d,
-          content: <Com config={config} getDataSource={getDataSource} updateDataSource={updateDataSource} dataSource={dataSource} prefix={currentPrefix} dataChange={dataChange}/>,
+          content: <Com active={active} config={config} getDataSource={getDataSource} updateDataSource={updateDataSource} dataSource={dataSource} prefix={currentPrefix} dataChange={dataChange}/>,
         };
       })}
   />;

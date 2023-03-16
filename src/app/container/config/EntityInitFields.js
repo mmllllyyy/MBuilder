@@ -5,7 +5,8 @@ import DefaultColumn from './DefaultColumn';
 import EntityBasePropertiesList from './EntityInitProperties';
 import {attNames} from '../../../lib/datasource_util';
 
-export default React.memo(({ prefix, dataSource, dataChange, updateDataSource, getDataSource }) => {
+export default React.memo(({ prefix, dataSource, dataChange,
+                               updateDataSource, getDataSource, active }) => {
   const data = dataSource?.profile?.default?.entityInitFields || [];
   const currentPrefix = getPrefix(prefix);
   const currentHeaders = useRef(dataSource?.profile?.headers || []);
@@ -42,6 +43,7 @@ export default React.memo(({ prefix, dataSource, dataChange, updateDataSource, g
   }
   return <div className={`${currentPrefix}-setting-entity-init-fields`}><SimpleTab
       className={`${currentPrefix}-database-container-tab`}
+      defaultActive={active.split('.')[1] || '1'}
       options={[
         {
           key: '1',

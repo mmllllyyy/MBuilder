@@ -656,6 +656,10 @@ const indexesTransform = (i) => {
 
 export const attNames = ['attr1', 'attr2', 'attr3', 'attr4', 'attr5', 'attr6', 'attr7', 'attr8', 'attr9'];
 
+export const getAttNamesValue = (name) => {
+  return FormatMessage.string({id: `config.column.${name}`})
+}
+
 export const getColumnWidth = () => {
   return {
     refEntity: 100,
@@ -2105,13 +2109,14 @@ export const mergeData = (pre, next, needOld, merge = true) => {
         otherData.old = next.id;
       }
     }
+    const allKeys = [...new Set(Object.keys(next).concat(Object.keys(pre)))];
     return {
       ...pre,
-      ...Object.keys(merge ? next : pre).reduce((a, b) => {
+      ...allKeys.reduce((a, b) => {
         return {
           ...a,
-          [b]: mergeData(pre[b] === undefined ?  '' : pre[b],
-              next[b] === undefined ? '' : next[b], false, merge),
+          [b]: pre[b] === undefined ? next[b] :
+              (next[b] === undefined ? pre[b] : mergeData(pre[b], next[b], false, merge)),
         };
       }, {}),
       ...otherData,
@@ -2432,7 +2437,10 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
               [tempDataTypeSupports[mIndex].id]: m[n],
             };
           }
-          return p;
+          return {
+            ...p,
+            [n]: m[n],
+          };
         }, _.pick(m, ['defKey', 'id', 'defName']));
       })
     },

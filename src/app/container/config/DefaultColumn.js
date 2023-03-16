@@ -2,7 +2,7 @@ import React, {useState, useRef} from 'react';
 import {FormatMessage, IconTitle, Icon, Checkbox, Input} from 'components';
 import { moveArrayPosition } from '../../../lib/array_util';
 import {getPrefix} from '../../../lib/prefixUtil';
-import {getFullColumns, attNames} from '../../../lib/datasource_util';
+import {getFullColumns, attNames, getAttNamesValue} from '../../../lib/datasource_util';
 
 
 export default React.memo(({prefix, dataSource, columnsChange, className}) => {
@@ -22,7 +22,7 @@ export default React.memo(({prefix, dataSource, columnsChange, className}) => {
             .filter(a => currentData.findIndex(c => c.refKey === a) < 0)
             .map(a => ({
                 refKey: a,
-                value: a,
+                value: getAttNamesValue(a),
                 hideInGraph: true,
                 enable: false
             })))
@@ -109,6 +109,7 @@ export default React.memo(({prefix, dataSource, columnsChange, className}) => {
                    <tr>
                        <th/>
                        <th style={{zIndex: 2}}><FormatMessage id='config.enable'/></th>
+                       <th style={{textAlign: 'right'}}><FormatMessage id='config.columnKey'/></th>
                        <th><FormatMessage id='config.columnName'/></th>
                        <th><FormatMessage id='config.hideInGraph'/></th>
                    </tr>
@@ -130,6 +131,7 @@ export default React.memo(({prefix, dataSource, columnsChange, className}) => {
                                     >
                                     </Checkbox>
                                 </td>
+                                <td className={`${currentPrefix}-setting-entity-init-fields-column`}>{p.refKey}</td>
                                 <td>{attNames.includes(p.refKey) ? <Input onChange={e => onValueChange(e, p)} defaultValue={p.value}/> : p.value}</td>
                                 <td><Icon onClick={() => onClick(p)} style={{cursor: 'pointer'}} type={`fa-eye${p.hideInGraph ? '-slash' : ''}`}/>{p.hideInGraph}</td>
                         </tr>

@@ -293,13 +293,13 @@ export default React.memo(({f, name, remarkChange, onKeyDown, currentPrefix,
     const currentDataSource = getDataSource();
     const db = currentDataSource.profile?.default?.db;
     const mapping = currentDataSource?.dataTypeMapping?.mappings || [];
-    return <Component.Select value={f[name]} onChange={onChange} showNotMatch>
+    return <Component.Select className={`${currentPrefix}-table-type-select`} value={f[name]} onChange={onChange} showNotMatch>
       {mapping.map((m) => {
         return (<Component.Select.Option
           key={m.id}
           value={m[db]}
         >
-          {`${m.defName}-${m[db]}`}
+          {`${m.defName || m.defKey}-${m[db] || ''}`}
         </Component.Select.Option>);
       })}
     </Component.Select>;
@@ -323,6 +323,9 @@ export default React.memo(({f, name, remarkChange, onKeyDown, currentPrefix,
       || (pre.f[pre.name] !== next.f[next.name]));
   } else if (pre.name === 'refEntity') {
     return pre?.entities === next?.entities;
+  } else if (pre.name === 'type') {
+    return !((pre?.mapping !== next?.mapping)
+        || (pre.f[pre.name] !== next.f[next.name]));
   }
   return pre.f[pre.name] === next.f[next.name];
 });

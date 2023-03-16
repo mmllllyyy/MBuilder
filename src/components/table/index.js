@@ -41,7 +41,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                                updateDataSource, disableAddStandard, ready, twinkle, getDataSource,
                                disableDragRow = true, freeze = false, reading = false,
                                fixHeader = true, openDict, defaultGroups, updateAllVersion,
-                                       isEntity},
+                               openConfig, isEntity},
                                      refInstance) => {
   const { lang } = useContext(ConfigContent);
   const { valueContext, valueSearch } = useContext(TableContent);
@@ -1028,6 +1028,9 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
         </Component.Button>],
     });
   };
+  const jumpEdit = () => {
+    openConfig && openConfig();
+  };
   const isView = finalTempHeaders.some(h => h.refKey === 'refEntity');
   return (
     <div className={`${currentPrefix}-table-container ${className || ''}`}>
@@ -1069,6 +1072,12 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
               onChange={importFields}
             />
             </span>}
+            {
+                updateAllVersion && <span className={`${currentPrefix}-table-opt-other`}>
+                  <Component.IconTitle title={Component.FormatMessage.string({id: 'tableEdit.database', data: {db: dbData.defKey}})} type='fa-database' onClick={jumpDb}/>
+                  { !isView && <Component.IconTitle title={Component.FormatMessage.string({id: 'tableEdit.columnSetting'})} type='icon-shezhi' onClick={jumpEdit}/>}
+                </span>
+            }
             <span className={`${currentPrefix}-table-opt-info`}>
               <Component.Tooltip title={<OptHelp/>} force placement='topLeft'>
                 <Component.Icon type='icon-xinxi'/>
@@ -1124,7 +1133,6 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                     {/*  type={type}*/}
                     {/*  style={{ marginLeft: 5,cursor: 'pointer' }}*/}
                     {/*/>}*/}
-                    {h?.newCode === 'type' && updateAllVersion && <a onClick={jumpDb} className={`${currentPrefix}-table-type-link`}>{dbData.defKey}</a>}
                     {freeze &&
                     ((i < freezeCount.left) ||
                         (i > (finalTempHeaders.length - freezeCount.right - 1)))
