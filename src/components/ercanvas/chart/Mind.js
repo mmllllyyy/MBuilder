@@ -86,6 +86,7 @@ export default class Mind {
                 case 'horizontal': return 'H';
                 case 'left': return 'RL';
                 case 'right': return 'LR';
+                case 'bottom': return 'TB';
                 default: return 'H';
             }
         };
@@ -129,7 +130,7 @@ export default class Mind {
             // 更新连线信息
             const source = e.getSourceCell();
             const target = e.getTargetCell();
-            if (node.prop('layout') === 'vertical') {
+            if (node.prop('layout') === 'vertical' || node.prop('layout') === 'bottom') {
                 const sY = source.position().y;
                 const tY = target.position().y;
                 if (sY > tY) {
@@ -218,7 +219,7 @@ export default class Mind {
         }
         //console.log(node);
     }
-    addChildNode = (node) => {
+    addChildNode = (node, autoSelected) => {
         // 创建临时节点
         const newNode = {
             id: Math.uuid(),
@@ -227,7 +228,7 @@ export default class Mind {
         };
         this.graph.batchUpdate('addChildNode', () => {
             // 增加子节点
-            this.graph.addNode({
+            const addNode = this.graph.addNode({
                 zIndex: 3,
                 id: newNode.id,
                 shape: 'mind-topic-branch',
@@ -239,6 +240,9 @@ export default class Mind {
                 expand: this.expand,
                 nodeClickText: this.nodeTextClick,
             });
+            if (autoSelected) {
+                this.graph.resetSelection(addNode);
+            }
             // 增加连接线
             this.graph.addEdge({
                 id: Math.uuid(),
@@ -364,7 +368,7 @@ export default class Mind {
             if (enterCell && this.isMindCell(enterCell) && enterCell.isNode()) {
                 const parentNode = this.findParentNode(enterCell);
                 if (parentNode) {
-                    this.addChildNode(parentNode);
+                    this.addChildNode(parentNode, true);
                 }
             }
         });

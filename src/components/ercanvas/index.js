@@ -2,7 +2,7 @@ import moment from 'moment';
 import html2canvas from 'html2canvas';
 import React, {useEffect, useRef, useMemo} from 'react';
 import { Graph, Addon, DataUri } from '@antv/x6';
-import { FormatMessage, Tooltip} from 'components';
+import { FormatMessage} from 'components';
 import './components';
 import {getPrefix} from '../../lib/prefixUtil';
 import { img } from '../../lib/generatefile/img';
@@ -191,7 +191,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       grid: false,
       resizing: isView ? false : {
         minWidth: 80,
-        minHeight: 60,
+        minHeight: 40,
         enabled:  (node) => {
           return !node.getProp('isLock') && (erRef.current.resizingEnabled(node) || mindRef.current.resizingEnabled(node));
         },

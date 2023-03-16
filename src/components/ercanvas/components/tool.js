@@ -398,6 +398,9 @@ const Layout = ({onUpdate, layout}) => {
     <div className={`${prefix}-node-tooltip-content-layout-${layout === 'right' ? 'checked' : 'normal'}`}>
       <Svg onClick={() => onUpdate('layout', 'right')} type='#icon-right'/>
     </div>
+    <div className={`${prefix}-node-tooltip-content-layout-${layout === 'bottom' ? 'checked' : 'normal'}`}>
+      <Svg rotate={90} onClick={() => onUpdate('layout', 'bottom')} type='#icon-right'/>
+    </div>
   </div>;
 };
 
@@ -527,6 +530,14 @@ const NodeTooltipContent = ({onUpdate, node, id, position, getDataSource, movePo
   const fillClose = () => {
     overDownFillRef.current.close();
   };
+  const getLayoutType = () => {
+    if (layout === 'vertical') {
+      return 'horizontal';
+    } else if (layout === 'bottom') {
+      return 'right';
+    }
+    return layout;
+  };
   return <div className={`${prefix}-node-tooltip-content`}>
     { !isLock && node.shape === 'mind-topic' && <OverDown
       ref={overDownFontRef}
@@ -536,9 +547,9 @@ const NodeTooltipContent = ({onUpdate, node, id, position, getDataSource, movePo
       <div className={`${prefix}-node-tooltip-content-layout`}>
         <Tooltip propagation offsetTop={10} placement='top' force title={FormatMessage.string({id: 'toolbar.layout'})}>
           <Svg
-            rotate={layout === 'vertical' ? '90' : '0'}
+            rotate={(layout === 'vertical' || layout === 'bottom') ? '90' : '0'}
             style={{cursor: 'pointer', width: '27px'}}
-            type={`#icon-${layout === 'vertical' ? 'horizontal' : layout}`}/>
+            type={`#icon-${getLayoutType()}`}/>
         </Tooltip>
       </div></OverDown>}
     {

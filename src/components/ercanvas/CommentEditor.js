@@ -23,7 +23,7 @@ const Edit = React.memo(({ prefix, data, onOK, onCancel }) => {
         {
               // eslint-disable-next-line no-nested-ternary
               edit ? <Text placeholder={FormatMessage.string({id: 'canvas.node.commentPlaceholder'})} defaultValue={valueRef.current} onChange={_onChange}/>
-                  // eslint-disable-next-line max-len
+                  // eslint-disable-next-line max-len,react/no-danger
                   : (valueRef.current ? <pre dangerouslySetInnerHTML={{__html: getHtml(valueRef.current)}} />
                       : <span><FormatMessage id='canvas.node.commentEmpty'/></span>)
           }

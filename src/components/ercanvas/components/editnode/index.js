@@ -64,7 +64,7 @@ const EditNode = forwardRef(({node}, ref) => {
   const getPosition = () => {
     const children1 = children[0];
     if (children1 && children1.isNode()) {
-      if (node.prop('layout') === 'vertical') {
+      if (node.prop('layout') === 'vertical' || node.prop('layout') === 'bottom') {
         const cY = children1.position().y;
         const nY = node.position().y;
         return {

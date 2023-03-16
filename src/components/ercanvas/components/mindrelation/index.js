@@ -6,7 +6,7 @@ Graph.registerConnector(
     (sourcePoint, targetPoint, routerPoints, options, edgeView) => {
         let e, s;
         const layout = edgeView.sourceView.cell.prop('layout');
-        if (layout === 'vertical') {
+        if (layout === 'vertical' || layout === 'bottom') {
             if (sourcePoint.y < targetPoint.y) {
                 e = targetPoint;
                 s = sourcePoint;
