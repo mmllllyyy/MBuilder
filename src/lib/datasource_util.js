@@ -20,6 +20,16 @@ export const allType = [
   { type: 'mapping', name: 'dataTypeMapping.mappings', defKey: 'defKey' },
 ];
 
+export const getHomeCover = () => ({
+  defKey: 'home-cover',
+  defName: FormatMessage.string({id: 'project.homeCover'}),
+  relationType: 'entity',
+  canvasData: {
+    cells: [],
+  },
+  id: 'home-cover',
+})
+
 export const filterEdge = (allNodes, c) => {
   return allNodes.filter((n) => {
     if (n.id === c.source?.cell) {
@@ -143,6 +153,68 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
     };
     const tabsAllData = getData();
     let viewGroups = dataSource?.viewGroups;
+    const pickCell = (d, data) => {
+      const allNodes = data?.cells || [];
+      return {
+        ...d,
+        comment: data?.comment || '',
+        canvasData: {
+          cells: allNodes.map(c => {
+            if (c.shape === 'erdRelation') {
+              if (filterEdge(allNodes, c)) {
+                return c;
+              }
+              return null;
+            }
+            return c;
+          }).filter(c => !!c).map(c => {
+            const otherData = {};
+            const pickFields = [
+              'id',
+              'link',
+              'shape',
+              'source',
+              'target',
+              'position',
+              'count',
+              'originKey',
+              'relation',
+              'vertices',
+              'label',
+              'labels',
+              'fontColor',
+              'fillColor',
+              'parent',
+              'router',
+              'connector',
+              'attrs.line.strokeDasharray',
+              'isLock',
+              'note',
+              'layout'
+            ];
+            if (c.shape === 'edit-node' || c.shape === 'edit-node-circle'
+                || c.shape === 'edit-node-polygon'
+                || c.shape === 'edit-node-circle-svg') {
+              pickFields.push('size');
+              pickFields.push('ports');
+            } else if (c.shape === 'group' || c.shape === 'mind-topic' || c.shape === 'mind-topic-branch') {
+              pickFields.push('size');
+              pickFields.push('children');
+            }
+            if (d.relationType === 'entity') {
+              pickFields.push('ports');
+            }
+            if (c.shape === 'edit-node-polygon' || c.shape === 'edit-node-circle-svg') {
+              otherData.label = c.label || c?.attrs?.text?.text || '';
+            }
+            return {
+              ..._.pick(c, pickFields),
+              ...otherData,
+            };
+          }),
+        },
+      };
+    };
     allType.forEach((type) => {
       if (tabsAllData[type.type] && tabsAllData[type.type].length > 0) {
         flag = true;
@@ -152,66 +224,7 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
             const currentData = tabsAllData[type.type].filter(t => t.id === d.id)[0];
             if (currentData) {
               if (type.type === 'diagram') {
-                const allNodes = currentData?.cells || [];
-                return {
-                  ...d,
-                  comment: currentData?.comment || '',
-                  canvasData: {
-                    cells: allNodes.map(c => {
-                      if (c.shape === 'erdRelation') {
-                        if (filterEdge(allNodes, c)) {
-                          return c;
-                        }
-                        return null;
-                      }
-                      return c;
-                    }).filter(c => !!c).map(c => {
-                      const otherData = {};
-                      const pickFields = [
-                        'id',
-                        'link',
-                        'shape',
-                        'source',
-                        'target',
-                        'position',
-                        'count',
-                        'originKey',
-                        'relation',
-                        'vertices',
-                        'label',
-                        'labels',
-                        'fontColor',
-                        'fillColor',
-                        'parent',
-                        'router',
-                        'connector',
-                        'attrs.line.strokeDasharray',
-                        'isLock',
-                        'note',
-                        'layout'
-                      ];
-                      if (c.shape === 'edit-node' || c.shape === 'edit-node-circle'
-                        || c.shape === 'edit-node-polygon'
-                        || c.shape === 'edit-node-circle-svg') {
-                        pickFields.push('size');
-                        pickFields.push('ports');
-                      } else if (c.shape === 'group' || c.shape === 'mind-topic' || c.shape === 'mind-topic-branch') {
-                        pickFields.push('size');
-                        pickFields.push('children');
-                      }
-                      if (d.relationType === 'entity') {
-                        pickFields.push('ports');
-                      }
-                      if (c.shape === 'edit-node-polygon' || c.shape === 'edit-node-circle-svg') {
-                        otherData.label = c.label || c?.attrs?.text?.text || '';
-                      }
-                      return {
-                        ..._.pick(c, pickFields),
-                        ...otherData,
-                      };
-                    }),
-                  },
-                };
+                return pickCell(d, currentData);
               }
               if (currentData.group) {
                 // 如果包含分组的修改
@@ -237,6 +250,13 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
         }
       }
     });
+    const homeCover = (tabsAllData.diagram || []).filter(d => d.id === 'home-cover')[0];
+    if(homeCover) {
+      tempData = {
+        ...tempData,
+        homeCoverDiagram: pickCell(tempData.homeCoverDiagram || getHomeCover(), homeCover)
+      }
+    }
     if (flag) {
       return {
         dataSource: updateAllEntity({

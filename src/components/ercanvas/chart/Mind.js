@@ -601,7 +601,7 @@ export default class Mind {
                     }
                     return p;
                 });
-        } else {
+        } else if(nodes.length > 0) {
             this.graph.history.undoStack.splice(-2, 2);
             this.historyChange();
         }

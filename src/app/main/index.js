@@ -52,7 +52,7 @@ import {
   resetHeader,
   validateNeedSave,
   toggleCaseDataSource,
-  toggleCaseEntityOrView,
+  toggleCaseEntityOrView, calcUnGroupDefKey,
 } from '../../lib/datasource_util';
 import {
   clearAllTabData,
@@ -1069,7 +1069,19 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
             }
             return null;
           }).filter(d => !!d), [restProps.dataSource, config]);
-  const groupMenu = useMemo(() => restProps.dataSource?.viewGroups?.map(v => ({
+  const defaultGroupMenu = {
+    refDiagrams: calcUnGroupDefKey(restProps.dataSource || {}, 'diagrams'),
+    refDicts: calcUnGroupDefKey(restProps.dataSource || {}, 'dicts'),
+    refEntities: calcUnGroupDefKey(restProps.dataSource || {},'entities'),
+    refViews: calcUnGroupDefKey(restProps.dataSource || {},'views'),
+    id: '__ungroup',
+    defKey: FormatMessage.string({id: 'exportSql.defaultGroup'}),
+    defName: '',
+  };
+  const useDefaultGroupMenu = ['refDiagrams', 'refDicts', 'refEntities', 'refViews']
+      .some(key => defaultGroupMenu[key].length > 0);
+  const groupMenu = useMemo(() => restProps.dataSource?.viewGroups
+      ?.concat(useDefaultGroupMenu ? defaultGroupMenu : [])?.map(v => ({
     ...v,
     type: 'groups',
     icon: 'fa-th-large',
@@ -1444,6 +1456,12 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
   const tempMenu = menus[groupType];
   const currentPrefix = getPrefix(prefix);
   const getTabTitle = (t) => {
+    if (t.menuKey === 'home-cover') {
+      return {
+        title: FormatMessage.string({id: 'project.homeCover'}),
+        tooltip: FormatMessage.string({id: 'project.homeCover'}),
+      };
+    }
     const currentType = allType.filter(a => a.type === t.type)[0];
     const currentData = restProps?.dataSource[currentType.name]?.
     filter(d => d.id === t.menuKey)[0];
@@ -1606,6 +1624,9 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
           true));
     }
   };
+  const openHome = () => {
+    _onMenuClick('home-cover', 'diagram', null, 'icon-guanxitu');
+  };
   const renderOperatingFloor = () => {
     return (
       <>
@@ -1615,7 +1636,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
             versionsData={restProps.versionsData}
             dataSource={restProps.dataSource}
             ref={currentVersionRef}
-            empty={<MessageHelp prefix={currentPrefix}/>}
+            empty={<MessageHelp openHome={openHome} prefix={currentPrefix}/>}
             />
         }
         {
@@ -1630,7 +1651,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
         }
         <AppCodeEdit
           updateDataSource={restProps.update}
-          empty={<MessageHelp prefix={currentPrefix}/>}
+          empty={<MessageHelp openHome={openHome} prefix={currentPrefix}/>}
           dataSource={restProps.dataSource}
           ref={appCodeRef}
           style={{display: menuType === '3' ? 'block' : 'none'}}
@@ -1645,7 +1666,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
           closeTab={_tabClose}
           onChange={_tabChange}
           excess={standardFieldMemo}
-          empty={<MessageHelp prefix={currentPrefix}/>}
+          empty={<MessageHelp openHome={openHome} prefix={currentPrefix}/>}
           >
           {tabs.map((t) => {
               const title = getTabTitle(t);
@@ -1759,6 +1780,14 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
                 getName={getName}
                 dragTable={createEmptyTable}
                 groupType={groupType}
+                header={<span
+                  onContextMenu={e => e.stopPropagation()}
+                  onClick={openHome}
+                  className={`${currentPrefix}-home-cover`}
+                >
+                  <Icon type='fa-home'/>
+                  <span>{FormatMessage.string({id: 'project.homeCover'})}</span>
+                </span>}
                 emptyData={<div
                   className={`${currentPrefix}-home-menu-empty`}
                   >

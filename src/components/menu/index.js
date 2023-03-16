@@ -14,7 +14,7 @@ import {tree2array} from '../../lib/tree';
 
 const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldNames,
                            contextMenuClick, prefix, menus = [], doubleMenuClick, getName,
-                           emptyData, defaultExpands, dragTable, groupType,
+                           emptyData, defaultExpands, dragTable, groupType, header,
                            update, dataSource, sortEnable = true, draggable}, ref) => {
   const currentPrefix = getPrefix(prefix);
   const menuRef = useRef(null);
@@ -140,7 +140,7 @@ const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldName
         (startRef.current.index > -1) && (startRef.current.index !== i)) {
       const name = allType.concat({ type: 'dataType', name: 'profile.dataTypeSupports', defKey: 'defKey' }).filter(t => t.type === startRef.current.type)[0];
       if (name) {
-        if (group) {
+        if (group && group !== '__ungroup') {
           update && update({
             ...dataSource,
             viewGroups: (dataSource.viewGroups || []).map((g) => {
@@ -190,14 +190,14 @@ const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldName
   };
   const getDraggable = (m) => {
     if (sortEnable) {
-      return m.type === 'entity' ||
+      return (m.type === 'entity' ||
           m.type === 'view' ||
           m.type === 'dict' ||
           m.type === 'mapping' ||
           m.type === 'domain' ||
           m.type === 'diagram' ||
           m.type === 'groups' ||
-          m.type === 'dataType';
+          m.type === 'dataType') && m.id !== '__ungroup';
     } else if (draggable){
       return m.type === 'entity';
     }
@@ -440,6 +440,7 @@ const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldName
       className={`${currentPrefix}-menu-container-fold`}
       onContextMenu={_createGroup}
     >
+      {header}
       {
         menus.length === 0 ? emptyData : <ul>{menus
           .map((menu, i) => getMenuItem(menu, menu, 0, i))}</ul>

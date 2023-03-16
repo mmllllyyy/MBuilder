@@ -107,6 +107,7 @@ export default {
     saveFail: 'save fail',
     emptyDefaultTemplate: 'No default template settings',
     project: {
+        homeCover: 'HOME_COVER',
         entities: 'ENTITIES',
         views: 'VIEWS',
         diagram: 'DIAGRAM',
@@ -133,6 +134,7 @@ export default {
         appCode: 'appCode',
     },
     quick: {
+        home: 'Open the front cover',
         save: 'save project',
         toggleCase: 'toggle case',
         drag: 'In the diagram interface, hold down Ctrl + and drag the mouse to drag the canvas',

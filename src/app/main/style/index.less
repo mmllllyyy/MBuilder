@@ -203,6 +203,20 @@
   display: flex;
   flex-direction: row;
   height: calc(100% - (@toolbar-height + @toolbar-opt-height));
+  &-cover {
+    width: 100%;
+    display: inline-block;
+    padding: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    color: @primary-color;
+    cursor: pointer;
+    & > i {
+      font-size: 18px;
+      margin-left: 1px;
+      margin-right: 10px;
+    }
+  }
   &-fold {
     position: absolute;
     right: 20px;
@@ -344,5 +358,13 @@
     & > span + span {
       margin-left: 5px;
     }
+  }
+  &-home {
+    width: 50%;
+    color: @primary-color;
+    text-decoration: underline;
+    cursor: pointer;
+    padding-bottom: 15px;
+    border-bottom: 1px solid @primary-border-color;
   }
 }

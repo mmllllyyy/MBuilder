@@ -107,6 +107,7 @@ export default {
     saveFail: '保存失败',
     emptyDefaultTemplate: '没有默认模板设置',
     project: {
+        homeCover: '首页封面',
         entities: '数据表',
         views: '多表透视',
         diagram: '关系图',
@@ -133,6 +134,7 @@ export default {
         appCode: '程序代码',
     },
     quick: {
+        home: '打开首页封面',
         save: '保存项目',
         toggleCase: '大小写转换',
         drag: '关系图界面，按住Ctrl/Command + 拖动鼠标，可拖动画布',

@@ -145,7 +145,7 @@ export const getMenu = (m, key, type, selectedMenu, groupType, parentKey, tempTy
 
 export const getMenus = (key, type, selectedMenu, parentKey, groupType) => {
   return menusType[type].filter(m => {
-    if (type === 'groups' && !key) {
+    if (type === 'groups' && (!key || key === '__ungroup')) {
       return m === 'add';
     }
     return m;
@@ -158,7 +158,9 @@ export const getMenus = (key, type, selectedMenu, parentKey, groupType) => {
         tempType = tempType.substring(0, tempType.length - 1);
       }
     }
-    return getMenu(m, key, type, selectedMenu, groupType, parentKey, tempType);
+    return getMenu(m, key, type, selectedMenu,
+        parentKey === '__ungroup' ? 'modalAll' : groupType,
+        parentKey === '__ungroup' ? '' : parentKey, tempType);
   });
 };
 

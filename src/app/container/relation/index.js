@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ErCanvas } from 'components';
 import { addDomResize, removeDomResize } from '../../../lib/listener';
 import { removeDataByTabId } from '../../../lib/cache';
+import {getHomeCover} from '../../../lib/datasource_util';
 
 const Relation = React.memo(({dataSource, renderReady, diagramKey, validateTableStatus,
                                tabDataChange, tabKey, activeKey, updateDataSource, openEntity,
@@ -13,7 +14,12 @@ const Relation = React.memo(({dataSource, renderReady, diagramKey, validateTable
   const offsetWidth = 305;
   const offsetHeight = 148;
   const [id] = useState(Math.uuid());
-  const data = useMemo(() => (dataSource?.diagrams || []).filter(d => d.id === diagramKey)[0], []);
+  const data = useMemo(() => {
+    if (diagramKey === 'home-cover') {
+      return dataSource.homeCoverDiagram || getHomeCover();
+    }
+    return (dataSource?.diagrams || []).filter(d => d.id === diagramKey)[0];
+  }, []);
   const getCurrentSize = () => {
     const rect = relationRef.current?.getBoundingClientRect() || {};
     return {
