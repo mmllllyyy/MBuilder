@@ -988,7 +988,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                db: changeValue,
              },
            },
-         }, changeValue, updateAllVersion),
+         }, dataSource.profile?.default?.db, updateAllVersion),
        });
       }
       Component.Message.success({title: FormatMessage.string({id: 'optSuccess'})});
@@ -1084,8 +1084,11 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
             }
             {
                 updateAllVersion && <div className={`${currentPrefix}-table-opt-config`}>
-                  <div onClick={jumpDb}>
-                    {Component.FormatMessage.string({id: 'tableEdit.database', data: {db: dbData.defKey}})}
+                  <div>
+                    <span>
+                      {Component.FormatMessage.string({id: 'tableEdit.database'})}
+                    </span>
+                    <span onClick={jumpDb}>{dbData.defKey}</span>
                   </div>
                 </div>
             }

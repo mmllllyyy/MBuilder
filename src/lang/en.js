@@ -393,7 +393,7 @@ export default {
         preview: '预览',
     },
     tableEdit: {
-        database: 'database:{db}',
+        database: 'database',
         columnSetting: 'columnSetting',
         changeDb: 'change default db',
         data: 'table',

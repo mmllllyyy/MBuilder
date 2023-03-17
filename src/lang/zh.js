@@ -393,7 +393,7 @@ export default {
         preview: '预览',
     },
     tableEdit: {
-        database: '数据库方言:{db}',
+        database: '数据库方言:',
         columnSetting: '列设置',
         changeDb: '切换数据库方言',
         data: '数据表',

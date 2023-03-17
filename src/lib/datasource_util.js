@@ -1205,7 +1205,7 @@ export const transformFieldType = (dataSource, old, updateAllVersion) => {
   const mappings = dataSource?.dataTypeMapping?.mappings || [];
   Object.keys(allTab).map(t => ({tabKey: t, tabData: allTab[t]})).forEach(t => {
     if (t.tabData.type === 'entity' || t.tabData.type === 'view') {
-      const d = updateFieldType(t.tabData.data, mappings);
+      const d = updateFieldType(t.tabData.data, mappings, dataSource?.profile?.default?.db, old);
       replaceDataByTabId(t.tabKey, {
         ...t.tabData,
         data: d,
