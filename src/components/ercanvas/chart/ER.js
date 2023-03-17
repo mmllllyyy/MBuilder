@@ -580,6 +580,11 @@ export default class ER {
                     if (c.shape === 'table') {
                         c.setProp('updateFields', this.updateFields, { ignoreHistory : true});
                     }
+                    if (c.shape === 'group') {
+                        const children = c.getChildren();
+                        c.setChildren([], { ignoreHistory : true});
+                        c.setChildren(children);
+                    }
                     if (c.isNode()) {
                         const currentPosition = c.position();
                         c.position(currentPosition.x + 20, currentPosition.y + 20);
