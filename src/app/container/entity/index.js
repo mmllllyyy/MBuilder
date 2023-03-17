@@ -66,7 +66,10 @@ const Entity = React.memo(({prefix, dataSource, entity, tabDataChange, tabKey,
       tabDataChange && tabDataChange({
         type: 'entity',
         key: entity,
-        data: {...tempData},
+        data: {
+          ...tempData,
+          notes: (getEntityOrViewByName(dataSource, entity) || {}).notes || {},
+        },
         isInit: false,
       });
       return tempData;
