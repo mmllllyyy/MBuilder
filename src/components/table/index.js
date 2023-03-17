@@ -1035,7 +1035,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
   return (
     <div className={`${currentPrefix}-table-container ${className || ''}`}>
       {
-          !reading && <span className={`${currentPrefix}-table-opt`} ref={optRef}>
+          !reading && <span className={`${currentPrefix}-table-opt-container`}><span className={`${currentPrefix}-table-opt`} ref={optRef}>
             <span className={`${currentPrefix}-table-opt-normal`}>
               <Component.IconTitle disable={selectedFields.length === 0} title={Component.FormatMessage.string({id: 'tableEdit.moveStart'})} type='icon-zhiding' onClick={() => moveFields('up', 'start')}/>
               <Component.IconTitle disable={selectedFields.length === 0} title={Component.FormatMessage.string({id: 'tableEdit.moveUp'})} type='icon-shangyi' onClick={() => moveFields('up')}/>
@@ -1072,12 +1072,6 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
               onChange={importFields}
             />
             </span>}
-            {
-                updateAllVersion && <span className={`${currentPrefix}-table-opt-other`}>
-                  <Component.IconTitle title={Component.FormatMessage.string({id: 'tableEdit.database', data: {db: dbData.defKey}})} type='fa-database' onClick={jumpDb}/>
-                  { !isView && <Component.IconTitle title={Component.FormatMessage.string({id: 'tableEdit.columnSetting'})} type='icon-shezhi' onClick={jumpEdit}/>}
-                </span>
-            }
             <span className={`${currentPrefix}-table-opt-info`}>
               <Component.Tooltip title={<OptHelp/>} force placement='topLeft'>
                 <Component.Icon type='icon-xinxi'/>
@@ -1088,6 +1082,15 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                 <Component.SearchInput onChange={onFilterChange}/>
               </div>
             }
+            {
+                updateAllVersion && <div className={`${currentPrefix}-table-opt-config`}>
+                  <div onClick={jumpDb}>
+                    {Component.FormatMessage.string({id: 'tableEdit.database', data: {db: dbData.defKey}})}
+                  </div>
+                </div>
+            }
+          </span>
+            {!isView && updateAllVersion && <span className={`${currentPrefix}-table-opt-setting`} onClick={jumpEdit}>{Component.FormatMessage.string({id: 'tableEdit.columnSetting'})}</span>}
           </span>
         }
       <div className={`${currentPrefix}-table-content`}>

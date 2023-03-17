@@ -161,6 +161,29 @@
     align-items: center;
     overflow: auto;
     flex-wrap: nowrap;
+    &-container {
+      overflow: auto;
+      min-height: 45px;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+    &-config {
+      display: inline-block;
+      font-size: 12px;
+      margin-left: 10px;
+      color: @primary-color;
+      cursor: pointer;
+    }
+    &-setting {
+      font-size: 12px;
+      margin-bottom: 3px;
+      margin-right: 3px;
+      margin-left: 10px;
+      color: @primary-color;
+      cursor: pointer;
+    }
     & > span {
       display: flex !important;
       flex-direction: row;

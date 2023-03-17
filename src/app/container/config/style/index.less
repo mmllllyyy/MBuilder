@@ -35,9 +35,16 @@
   & > div > div:first-child {
     margin-bottom: 3px;
   }
+  &-check {
+    width: 50px;
+    text-align: center !important;
+    & > span , input {
+      width: auto !important;
+    }
+  }
   &-column {
-    text-align: right !important;
-    color: @primary-border-color;
+    width: 150px;
+    text-align: center !important;
   }
 }
 .@{prefix}-setting-entity-init-columns {

@@ -212,8 +212,8 @@ export default forwardRef(({prefix, dataSource, updateDataSource, activeKey}, re
           <Icon type='lib.svg'/>
           <span>{
             FormatMessage.string({id: 'standardFields.fieldsLib'})
-                .split('').map((m) => {
-              return <span key={m}>{m}</span>;
+                .split('').map((m, i) => {
+              return <span key={i}>{m}</span>;
             })
           }</span>
         </div> : <Icon type='fa-times'/>

@@ -187,7 +187,7 @@ export default {
     defKeyValidateMessage: '{name} code cannot be empty',
     defKeyValidateUniquenessMessage: 'Code cannot be empty and cannot be repeated',
     entityAndViewUniquenessCheck: 'required cannot be duplicate!',
-    showGroup: 'TopicDomainMode',
+    showGroup: 'TopicMode',
     click: 'click',
     createGroup: 'create a new topic domain',
     emptyGroup: 'There is no topic domain data',

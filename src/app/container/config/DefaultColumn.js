@@ -108,8 +108,8 @@ export default React.memo(({prefix, dataSource, columnsChange, className}) => {
                 <thead>
                    <tr>
                        <th/>
-                       <th style={{zIndex: 2}}><FormatMessage id='config.enable'/></th>
-                       <th style={{textAlign: 'right'}}><FormatMessage id='config.columnKey'/></th>
+                       <th style={{zIndex: 2, textAlign: 'center'}}><FormatMessage id='config.enable'/></th>
+                       <th style={{textAlign: 'center'}}><FormatMessage id='config.columnKey'/></th>
                        <th><FormatMessage id='config.columnName'/></th>
                        <th><FormatMessage id='config.hideInGraph'/></th>
                    </tr>
@@ -122,7 +122,7 @@ export default React.memo(({prefix, dataSource, columnsChange, className}) => {
                             className={`${selected === p.refKey ? `${currentPrefix}-entity-base-properties-list-selected` : ''}`}
                         >
                                 <td style={{width: '30px'}}>{index + 1}</td>
-                                <td>
+                                <td className={`${currentPrefix}-setting-entity-init-fields-check`}>
                                     <Checkbox
                                         disable={!attNames.concat(useEnable).includes(p.refKey)}
                                         style={{width: '100%'}}
