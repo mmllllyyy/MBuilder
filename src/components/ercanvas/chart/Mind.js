@@ -2,7 +2,7 @@ import Hierarchy from '@antv/hierarchy';
 import {FormatMessage, Message} from 'components';
 import {edgeNodeAddTool} from 'components/ercanvas/components/tool';
 import { tree2array } from '../../../lib/tree';
-import {getChildrenCell } from '../components/util';
+import {getChildrenCell, refactorCopyData} from '../components/util';
 import {openUrl} from '../../../lib/json2code_util';
 import {separator} from '../../../../profile';
 
@@ -305,6 +305,22 @@ export default class Mind {
                 c.attr('line/stroke', c.getProp('fillColor')
                     || '#ACDAFC', { ignoreHistory : true});
                 c.attr('line/strokeWidth', 1, { ignoreHistory : true});
+            }
+        });
+        // 分组和子节点需要互斥选中(脑图和关系图都需要)
+        const addChildren = this.filterMindCell(added)
+            .reduce((p, n) => p.concat(getChildrenCell(n, this.graph.getCells())), [])
+            .map(n => n.id);
+        this.filterMindCell(added).filter(n => !addChildren.includes(n.id)).forEach((node) => {
+            const childrenIds = getChildrenCell(node, this.graph.getCells()).map(n => n.id);
+            const children = this.graph.getSelectedCells()
+                .filter(c => childrenIds.includes(c.id));
+            const parent = this.graph.getSelectedCells()
+                .filter(c => getChildrenCell(c, this.graph.getCells()).map(n => n.id)
+                    .includes(node.id));
+            const unselectCells = children.concat(parent);
+            if (unselectCells.length > 0) {
+                this.graph.unselect(unselectCells);
             }
         });
     }
@@ -621,5 +637,114 @@ export default class Mind {
             });
         }
         return false;
+    }
+    calcChildren = (cells) => {
+        const nodes = cells.filter(c => c.isNode());
+        const edges = cells.filter(c => c.isEdge());
+        nodes.forEach((n) => {
+            const currentEdge = edges.filter(e => e.source.cell === n.id);
+            const ids = currentEdge.map(e => e.target.cell);
+            n.setChildren(nodes.filter(node => ids.includes(node.id)));
+        });
+    };
+    paste = () => {
+        const copyCells = this.filterMindCell(this.graph.getCellsInClipboard());
+        if (copyCells.length > 0) {
+            this.graph.batchUpdate('paste', () => {
+                const cells = refactorCopyData(copyCells, this.graph);
+                this.calcChildren(cells);
+                let tempCells = cells;
+                const topic = cells.filter(c => c.shape === 'mind-topic');
+                const addCells = () => {
+                    this.graph.addNodes(tempCells.filter(c => c.isNode()));
+                    this.graph.addEdges(tempCells.filter((c) => {
+                        if (c.isEdge()) {
+                            const source = tempCells.filter(cell => cell.id === c.source.cell)[0];
+                            const target = tempCells.filter(cell => cell.id === c.target.cell)[0];
+                            return source && target;
+                        }
+                        return false;
+                    }));
+                };
+                const resetCell = (c) => {
+                    c.setProp('nodeClickText', this.nodeTextClick);
+                    c.setProp('expand', this.expand);
+                    c.attr('body', {
+                        stroke: '#DFE3EB',
+                        strokeWidth: 1,
+                    }, { ignoreHistory : true});
+                    c.setProp('editable', false);
+                    const children = c.getChildren();
+                    c.setChildren([]);
+                    c.setChildren(children, {needUndo: true});
+                };
+                if(topic.length > 0) {
+                    const allChildren = topic.reduce((p, n) => {
+                        return p.concat(this.getChildrenId(n, cells));
+                    }, topic.map(t => t.id));
+                    tempCells = cells.filter((c) => {
+                        if (c.isNode()) {
+                            return allChildren.includes(c.id);
+                        }
+                        return c;
+                    });
+                    addCells();
+                    tempCells.forEach((c) => {
+                        c.removeTools();
+                        if (c.isNode()) {
+                            const currentPosition = c.position();
+                            c.position(currentPosition.x + 20, currentPosition.y + 20);
+                            resetCell(c);
+                        }
+                    });
+                    setTimeout(() => {
+                        tempCells.forEach((n) => {
+                            n.toFront();
+                        });
+                    });
+                } else {
+                    const selectedCells = this.filterMindCell(this.graph.getSelectedCells())
+                        .filter(c => c.isNode());
+                    if (selectedCells.length > 0) {
+                        const lastSelected = selectedCells.slice(-1)[0];
+                        const layout = lastSelected.prop('layout');
+                        const checkIsRoot = (node) => {
+                            return !tempCells.filter(c => c.isNode()).some(c => (c.prop('children') || []).includes(node.id));
+                        };
+                        const newChildren = tempCells.filter((c) => {
+                            if (c.isNode()) {
+                                return checkIsRoot(c);
+                            }
+                            return false;
+                        });
+                        addCells();
+                        const preChildren = this.id2Nodes(lastSelected.prop('children') || []);
+                        lastSelected.setChildren(preChildren.concat(newChildren), {needUndo: true});
+                        newChildren.forEach((c) => {
+                            this.graph.addEdge({
+                                id: Math.uuid(),
+                                shape: 'mind-edge',
+                                source: {
+                                    cell: lastSelected.id,
+                                },
+                                target: {
+                                    cell: c.id,
+                                },
+                            });
+                        });
+                        tempCells.forEach((c) => {
+                            c.removeTools();
+                            if (c.isNode()) {
+                                c.prop('layout', layout);
+                                resetCell(c);
+                            }
+                        });
+                        this.updateLayout(lastSelected, layout);
+                    } else {
+                        Message.warring({title: FormatMessage.string({id: 'canvas.node.pasteWarring'})});
+                    }
+                }
+            });
+        }
     }
 }

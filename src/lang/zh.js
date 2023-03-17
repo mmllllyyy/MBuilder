@@ -342,6 +342,7 @@ export default {
             comment: '画布批注',
             commentEmpty: '暂无批注',
             commentPlaceholder: '请输入画布批注，支持markdown',
+            pasteWarring: '请先选中需要粘贴的主题',
         },
         title: '从左侧数据表中拖拽数据表至关系图中',
         isMin: '已经是最小倍数，不可缩小',

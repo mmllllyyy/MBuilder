@@ -75,3 +75,10 @@ export const getChildrenCell = (n, cells) => {
     }
     return [];
 };
+
+export const refactorCopyData = (cells, graph) => {
+    const cloneData = graph.cloneCells(cells);
+    return Object.keys(cloneData).reduce((p, n) => {
+        return p.concat(cloneData[n]);
+    }, []);
+};

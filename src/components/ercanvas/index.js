@@ -263,13 +263,14 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       graph.bindKey(['ctrl+c','command+c'], (e) => {
         const cells = graph.getSelectedCells();
         if (e.target.tagName !== 'TEXTAREA' && cells && cells.length) {
-          graph.copy(cells);
+          graph.copy(cells, {deep: true});
         } else {
           graph.cleanClipboard();
         }
       });
       graph.bindKey(['ctrl+v','command+v'], (e) => {
         eR.paste(e, dataSourceRef.current);
+        mind.paste();
       });
       graph.bindKey(['ctrl+z','command+z'], () => {
         undo();

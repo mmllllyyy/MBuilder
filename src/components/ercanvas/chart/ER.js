@@ -3,7 +3,7 @@ import React from 'react';
 import _ from 'lodash/object';
 import {Shape} from '@antv/x6';
 import ReactDOM from 'react-dom';
-import {getChildrenCell, renderer } from 'components/ercanvas/components/util';
+import {getChildrenCell, refactorCopyData, renderer} from 'components/ercanvas/components/util';
 import marked from 'marked';
 import {
     calcCellData,
@@ -568,36 +568,48 @@ export default class ER {
         };
     };
     paste = (e, dataSource) => {
-        const cells = this.graph.paste();
-        const keys = [];
-        cells.forEach((c) => {
-            c.removeTools();
-            if (c.shape === 'table') {
-                c.setProp('updateFields', this.updateFields, { ignoreHistory : true});
-            }
-            c.setProp('nodeClickText', this.nodeTextClick, { ignoreHistory : true});
-            c.attr('body', {
-                stroke: c.shape === 'group' ? '#000000' : this.currentColor.border,
-                strokeWidth: 1,
-            }, { ignoreHistory : true});
-        });
-        const copyEntities = cells
-            .filter(c => c.shape === 'table').map((c) => {
-                const copyDefKey = c.getData().defKey || '';
-                const tempKey = /_(\d)+$/.test(copyDefKey) ? copyDefKey : `${copyDefKey}_1`;
-                const newKey = generatorTableKey(tempKey, {
-                    entities: (dataSource.entities || []).concat(keys),
+        const copyCells = this.filterErCell(this.graph.getCellsInClipboard());
+        if (copyCells.length > 0) {
+            this.graph.batchUpdate('paste', () => {
+                const cells = refactorCopyData(copyCells, this.graph);
+                this.graph.addNodes(cells.filter(c => c.isNode()));
+                this.graph.addEdges(cells.filter(c => c.isEdge()));
+                const keys = [];
+                cells.forEach((c) => {
+                    c.removeTools();
+                    if (c.shape === 'table') {
+                        c.setProp('updateFields', this.updateFields, { ignoreHistory : true});
+                    }
+                    if (c.isNode()) {
+                        const currentPosition = c.position();
+                        c.position(currentPosition.x + 20, currentPosition.y + 20);
+                        c.setProp('nodeClickText', this.nodeTextClick, { ignoreHistory : true});
+                        c.attr('body', {
+                            stroke: c.shape === 'group' ? '#000000' : this.currentColor.border,
+                            strokeWidth: 1,
+                        }, { ignoreHistory : true});
+                    }
                 });
-                const entityId = Math.uuid();
-                keys.push({defKey: newKey});
-                c.setProp('originKey', entityId, {ignoreHistory : true});
-                c.setData({defKey: newKey, copyDefKey}, {ignoreHistory : true, relation: true});
-                c.setData({id: entityId}, {ignoreHistory : true, relation: true});
-                return {
-                    data: c.data,
-                };
+                const copyEntities = cells
+                    .filter(c => c.shape === 'table').map((c) => {
+                        const copyDefKey = c.getData().defKey || '';
+                        const tempKey = /_(\d)+$/.test(copyDefKey) ? copyDefKey : `${copyDefKey}_1`;
+                        const newKey = generatorTableKey(tempKey, {
+                            entities: (dataSource.entities || []).concat(keys),
+                        });
+                        const entityId = Math.uuid();
+                        keys.push({defKey: newKey});
+                        c.setProp('originKey', entityId, {ignoreHistory : true});
+                        // eslint-disable-next-line max-len
+                        c.setData({defKey: newKey, copyDefKey}, {ignoreHistory : true, relation: true});
+                        c.setData({id: entityId}, {ignoreHistory : true, relation: true});
+                        return {
+                            data: c.data,
+                        };
+                    });
+                this.updateDataSource && this.updateDataSource(this.addEntityData(copyEntities, 'copy', dataSource));
             });
-        this.updateDataSource && this.updateDataSource(this.addEntityData(copyEntities, 'copy', dataSource));
+        }
     }
     nodeDbClick = (e, cell, dataSource) => {
         if (this.isErCell(cell)) {
@@ -840,11 +852,11 @@ export default class ER {
             }
         });
 
-        // 分组和子节点需要互斥选中
-        const addChildren = added
+        // 分组和子节点需要互斥选中(脑图和关系图都需要)
+        const addChildren = this.filterErCell(added)
             .reduce((p, n) => p.concat(getChildrenCell(n, this.graph.getCells())), [])
             .map(n => n.id);
-        added.filter(n => !addChildren.includes(n.id)).forEach((node) => {
+        this.filterErCell(added).filter(n => !addChildren.includes(n.id)).forEach((node) => {
             const childrenIds = getChildrenCell(node, this.graph.getCells()).map(n => n.id);
             const children = this.graph.getSelectedCells()
                 .filter(c => childrenIds.includes(c.id));
