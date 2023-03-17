@@ -153,7 +153,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       updateTabs((pre) => {
         return pre.filter((p) => {
           const { name } = allType.filter(t => t.type === p.type)[0];
-          return restProps.dataSource[name].findIndex(d => d.id === p.menuKey) > -1;
+          return restProps.dataSource[name].findIndex(d => d.id === p.menuKey) > -1 || p.menuKey === 'home-cover';
         });
       });
       setMainId(Math.uuid());
