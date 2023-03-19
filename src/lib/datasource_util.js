@@ -2506,7 +2506,7 @@ export const mergeDomains = (oldDataSource, newDataSource, updateAllVersion, typ
       }
     }
   }
-  const currentDataSource = mergeDataSource(filterType(_.pick(oldDataSource, pickNames)),
+  const currentDataSource = mergeDataSource(_.pick(oldDataSource, pickNames),
       filterType({
         ...newDataSource,
         profile: {

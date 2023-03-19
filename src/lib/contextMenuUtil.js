@@ -1333,14 +1333,16 @@ const clearOpt = (dataSource, menu, updateDataSource) => {
             domains: [],
           });
         } else if (dataType === 'dataTypeSupport') {
+          const newCodeTemplate = (dataSource?.profile?.codeTemplates || []).filter(c => {
+            return c.applyFor === 'dictSQLTemplate' || c.type === 'appCode';
+          });
           updateDataSource && updateDataSource({
             ...dataSource,
             profile: {
               ...dataSource.profile,
-              dataTypeSupports: [],
-              codeTemplates: (dataSource?.profile?.codeTemplates || []).filter(c => {
-                return c.applyFor === 'dictSQLTemplate';
-              }),
+              dataTypeSupports: (dataSource?.profile?.dataTypeSupports || [])
+                  .filter(d => newCodeTemplate.findIndex(c => c.applyFor === d.id) > -1),
+              codeTemplates: newCodeTemplate,
             },
           });
         }
