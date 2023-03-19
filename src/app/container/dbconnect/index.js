@@ -162,7 +162,7 @@ export default React.memo(({prefix, dataSource, config, dataChange, lang}) => {
         return (
           <div key={o} className={`${currentPrefix}-dbconnect-example-config-item`}>
             <div className={`${currentPrefix}-dbconnect-example-config-item-header`}>
-              {`${url[o].defKey} ${o !== 'Doris' ? `${FormatMessage.string({id: 'dbConnect.configExample'})}↓}` : ''}`}
+              {`${url[o].defKey} ${o !== 'Doris' ? `${FormatMessage.string({id: 'dbConnect.configExample'})}↓` : ''}`}
             </div>
             {o !== 'Doris' && <div className={`${currentPrefix}-dbconnect-example-config-item-content-label`}>
               driver_class:

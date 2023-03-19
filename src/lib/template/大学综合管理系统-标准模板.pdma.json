@@ -1,10 +1,10 @@
 {
-  "name": "大学综合管理系统-标准模板",
-  "describe": "大学综合管理系统-标准模板案例",
+  "name": "大学综合管理系统",
+  "describe": "标准模板案例（分组主题模式）",
   "avatar": "",
   "version": "4.4.0",
   "createdTime": "2023-3-14 19:20:56",
-  "updatedTime": "2023-3-19 14:15:47",
+  "updatedTime": "2023-3-19 15:27:07",
   "dbConns": [],
   "profile": {
     "default": {
@@ -32,9 +32,9 @@
           "defKey": "REVISION",
           "defName": "乐观锁",
           "comment": "",
-          "domain": "16120F75-6AA7-4483-868D-F07F511BB081",
+          "domain": "6BC8F04B-6CFA-4995-98D3-318F5CDD774E",
           "type": "",
-          "len": 32,
+          "len": "",
           "scale": "",
           "primaryKey": false,
           "notNull": false,
@@ -521,14 +521,14 @@
         "refKey": "uiHint",
         "hideInGraph": true,
         "value": "UI建议",
-        "enable": false,
+        "enable": true,
         "freeze": false
       },
       {
         "refKey": "extProps",
         "hideInGraph": true,
         "value": "拓展属性",
-        "enable": false,
+        "enable": true,
         "freeze": false
       },
       {
@@ -542,56 +542,56 @@
         "refKey": "attr2",
         "value": "属性2",
         "hideInGraph": true,
-        "enable": true,
+        "enable": false,
         "freeze": false
       },
       {
         "refKey": "attr3",
         "value": "属性3",
         "hideInGraph": true,
-        "enable": true,
+        "enable": false,
         "freeze": false
       },
       {
         "refKey": "attr4",
         "value": "属性4",
         "hideInGraph": true,
-        "enable": true,
+        "enable": false,
         "freeze": false
       },
       {
         "refKey": "attr5",
         "value": "属性5",
         "hideInGraph": true,
-        "enable": true,
+        "enable": false,
         "freeze": false
       },
       {
         "refKey": "attr6",
         "value": "属性6",
         "hideInGraph": true,
-        "enable": true,
+        "enable": false,
         "freeze": false
       },
       {
         "refKey": "attr7",
         "value": "属性7",
         "hideInGraph": true,
-        "enable": true,
+        "enable": false,
         "freeze": false
       },
       {
         "refKey": "attr8",
         "value": "属性8",
         "hideInGraph": true,
-        "enable": true,
+        "enable": false,
         "freeze": false
       },
       {
         "refKey": "attr9",
         "value": "属性9",
         "hideInGraph": true,
-        "enable": true,
+        "enable": false,
         "freeze": false
       }
     ],
