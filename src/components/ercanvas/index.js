@@ -269,8 +269,10 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
         }
       });
       graph.bindKey(['ctrl+v','command+v'], (e) => {
-        eR.paste(e, dataSourceRef.current);
-        mind.paste();
+        if(e.target.tagName !== 'TEXTAREA') {
+          eR.paste(e, dataSourceRef.current);
+          mind.paste(e);
+        }
       });
       graph.bindKey(['ctrl+z','command+z'], () => {
         undo();

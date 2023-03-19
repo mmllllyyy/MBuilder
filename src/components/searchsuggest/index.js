@@ -73,7 +73,7 @@ export default React.memo(({placeholder, prefix, dataSource,
       {
         key: 'fields',
         data: entityData.reduce((a, b) => {
-          return a.concat(b.fields.map((f) => {
+          return a.concat((b.fields || []).map((f) => {
             // 模块名（没有则省略）/表(视图）代码[表显示名] /字段代码[字段显示名]
             const groups = b.groups.map(g => g.name).join('|');
             return {

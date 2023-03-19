@@ -14,7 +14,7 @@ import {
     resetHeader,
 } from '../../../lib/datasource_util';
 import {separator} from '../../../../profile';
-import {getDataByTabId} from '../../../lib/cache';
+import {getCache, getDataByTabId} from '../../../lib/cache';
 import Entity from '../../../app/container/entity';
 import { edgeNodeAddTool} from '../components/tool';
 import {openUrl} from '../../../lib/json2code_util';
@@ -497,7 +497,9 @@ export default class ER {
                     return dataSource[i].some(d => d.id === currentKey);
                 })[0];
                 if (currenTab) {
-                    this.openDict(currentKey, keyMap[currenTab], parentKey, iconMap[currenTab]);
+                    setTimeout(() => {
+                        this.openDict(currentKey, keyMap[currenTab], parentKey, iconMap[currenTab]);
+                    });
                 } else {
                     Message.error({title: `${FormatMessage.string({id: 'canvas.node.invalidLink'})}`});
                 }
@@ -568,7 +570,13 @@ export default class ER {
         };
     };
     paste = (e, dataSource) => {
-        const copyCells = this.filterErCell(this.graph.getCellsInClipboard());
+        const jsonCells = getCache('x6.clipboard.cells', true);
+        const copyCells = this.filterErCell(jsonCells.map((c) => {
+            if (c.position) {
+                return this.graph.createNode(c);
+            }
+            return this.graph.createEdge(c);
+        }));
         if (copyCells.length > 0) {
             this.graph.batchUpdate('paste', () => {
                 const cells = refactorCopyData(copyCells, this.graph);

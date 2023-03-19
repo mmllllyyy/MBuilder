@@ -5,6 +5,7 @@ import { tree2array } from '../../../lib/tree';
 import {getChildrenCell, refactorCopyData} from '../components/util';
 import {openUrl} from '../../../lib/json2code_util';
 import {separator} from '../../../../profile';
+import {getCache} from '../../../lib/cache';
 
 export default class Mind {
     constructor({graph, dnd, isView, dataChange, updateDataSource, getDataSource,
@@ -211,7 +212,9 @@ export default class Mind {
                     return dataSource[i].some(d => d.id === currentKey);
                 })[0];
                 if (currenTab) {
-                    this.openDict(currentKey, keyMap[currenTab], parentKey, iconMap[currenTab]);
+                    setTimeout(() => {
+                        this.openDict(currentKey, keyMap[currenTab], parentKey, iconMap[currenTab]);
+                    });
                 } else {
                     Message.error({title: `${FormatMessage.string({id: 'canvas.node.invalidLink'})}`});
                 }
@@ -648,7 +651,13 @@ export default class Mind {
         });
     };
     paste = () => {
-        const copyCells = this.filterMindCell(this.graph.getCellsInClipboard());
+        const jsonCells = getCache('x6.clipboard.cells', true);
+        const copyCells = this.filterMindCell(jsonCells.map((c) => {
+            if (c.position) {
+                return this.graph.createNode(c);
+            }
+            return this.graph.createEdge(c);
+        }));
         if (copyCells.length > 0) {
             this.graph.batchUpdate('paste', () => {
                 const cells = refactorCopyData(copyCells, this.graph);

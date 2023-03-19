@@ -303,7 +303,7 @@ const EdgeTooltipContent = ({onUpdate, edge, movePosition, getDataSource, positi
             <Svg
               style={{cursor: 'pointer', width: '27px'}}
               onClick={() => _onUpdate('label', !isLock)}
-              type='#icon-part-A'
+              type='#icon-sticky-note-square'
             />
           </Tooltip>
         </div>
@@ -543,7 +543,7 @@ const NodeTooltipContent = ({onUpdate, node, id, position, getDataSource, movePo
       ref={overDownFontRef}
       offset={20}
       over={<Layout onUpdate={_onUpdate} layout={layout}/>}
-      key='fontColor'>
+      key='layout'>
       <div className={`${prefix}-node-tooltip-content-layout`}>
         <Tooltip propagation offsetTop={10} placement='top' force title={FormatMessage.string({id: 'toolbar.layout'})}>
           <Svg
@@ -554,7 +554,7 @@ const NodeTooltipContent = ({onUpdate, node, id, position, getDataSource, movePo
       </div></OverDown>}
     {
       !isLock && node.shape !== 'table' && <Tooltip offsetTop={1} placement='top' force title={FormatMessage.string({id: 'canvas.node.note'})}>
-        <Svg onClick={() => onUpdate('note')} style={{cursor: 'pointer', width: '27px'}} type='#icon-part-A'/>
+        <Svg onClick={() => onUpdate('note')} style={{cursor: 'pointer', width: '27px'}} type='#icon-sticky-note-square'/>
       </Tooltip>
     }
     {!isLock && [<OverDown
@@ -594,16 +594,18 @@ const NodeTooltipContent = ({onUpdate, node, id, position, getDataSource, movePo
               className={`${prefix}-node-tooltip-content-font-circle`}
               style={{background: fillColor}} />
           </Tooltip>
-        </div></OverDown>, <div key='line' className={`${prefix}-edge-tooltip-content-line`}/>]}
-    {!isLock && node.shape !== 'table' && <div onClick={() => _onUpdate('link')}>
-      <Tooltip offsetTop={10} placement='top' force title={FormatMessage.string({id: 'canvas.node.link'})}>
-        <Icon type='fa-link'/>
-      </Tooltip>
-    </div>}
+        </div></OverDown>]}
+    {!isLock && node.shape !== 'table' && [<div key='line' className={`${prefix}-edge-tooltip-content-line`}/>,
+      <div key='link' onClick={() => _onUpdate('link')}>
+        <Tooltip offsetTop={10} placement='top' force title={FormatMessage.string({id: 'canvas.node.link'})}>
+          <Icon type='fa-link'/>
+        </Tooltip>
+      </div>]}
     { !parent &&
-    <Tooltip clickClose offsetTop={1} placement='top' force title={FormatMessage.string({id: `canvas.${isLock ? 'unLock' : 'lock'}`})}>
-      <div onClick={() => _onUpdate('lock', !isLock)}><Icon type={`fa-${isLock ? 'lock' : 'unlock'}`}/></div>
-    </Tooltip>
+        [node.shape === 'table' && <div key='line' className={`${prefix}-edge-tooltip-content-line`}/>,
+          <Tooltip key='lock' clickClose offsetTop={1} placement='top' force title={FormatMessage.string({id: `canvas.${isLock ? 'unLock' : 'lock'}`})}>
+            <div onClick={() => _onUpdate('lock', !isLock)}><Icon type={`fa-${isLock ? 'lock' : 'unlock'}`}/></div>
+          </Tooltip>]
         }
   </div>;
 };

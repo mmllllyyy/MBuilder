@@ -35,12 +35,17 @@ const EditNode = forwardRef(({node}, ref) => {
     store?.data?.nodeClickText(node);
   };
   useEffect(() => {
-    if (preRef.current && linkData.type) {
+    if (preRef.current) {
       // 寻找第一行文本
       const firstChildren = preRef.current.children[0];
       if (firstChildren){
-        firstChildren.onclick = nodeClickText;
-        firstChildren.setAttribute('class', 'chiner-er-editnode-link');
+        if (linkData.type) {
+          firstChildren.onclick = nodeClickText;
+          firstChildren.setAttribute('class', 'chiner-er-editnode-link');
+        } else {
+          firstChildren.onclick = () => {};
+          firstChildren.setAttribute('class', '');
+        }
       }
     }
   });
