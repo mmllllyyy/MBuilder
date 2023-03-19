@@ -808,7 +808,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
         domains: _.get(dataSourceRef.current, 'domains', []),
       }, null, 2)],
       'application/json',
-      `${dataSourceRef.current.name}-${FormatMessage.string({id: `project.${type === 'dbDDL' ? 'domains' : type}`})}-${moment().format('YYYYMDHHmmss')}.json`);
+      `${dataSourceRef.current.name}-${FormatMessage.string({id: `${type === 'dbDDL' ? 'domainTab' : `project.${type}`}`})}-${moment().format('YYYYMDHHmmss')}.json`);
   };
   const importDomains = (type) => {
     Upload('application/json', (d) => {

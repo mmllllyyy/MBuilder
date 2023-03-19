@@ -450,6 +450,11 @@ export const getDemoDbConnect = () => {
       driverClass: 'com.gbasedbt.jdbc.Driver',
       url: FormatMessage.string({id: 'dbConnect.demoDbConnect.GBase'})
     },
+    'Doris': {
+      defKey: FormatMessage.string({id: 'dbConnect.demoDbConnect.doris_defKey'}),
+      url: FormatMessage.string({id: 'dbConnect.demoDbConnect.mysql'}),
+      driverClass: 'com.mysql.cj.jdbc.Driver',
+    }
   }
 };
 

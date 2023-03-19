@@ -11,7 +11,7 @@ import {getPrefix} from '../../lib/prefixUtil';
 import { version } from '../../../package';
 import { openUrl } from '../../lib/json2code_util';
 
-import * as template from '../../lib/template';
+import template from '../../lib/template';
 
 const CodeImg = ({currentPrefix}) => {
   return <div className={`${currentPrefix}-home-container-codeimg`}>

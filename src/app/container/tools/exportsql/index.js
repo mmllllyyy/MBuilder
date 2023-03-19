@@ -120,7 +120,10 @@ export default React.memo(({prefix, dataSource, templateType}) => {
               onChange={onChange}
           >
               {dataTypeSupports
-              .map(type => (<Option
+              .filter((t) => {
+               return codeTemplates
+                    .filter(c => c.applyFor === t.id && c.type === 'dbDDL')[0];
+              }).map(type => (<Option
                 key={type.id}
                 value={type.id}
               >

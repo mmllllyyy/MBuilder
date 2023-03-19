@@ -1,14 +1,14 @@
 {
-  "name": "教学管理系统-标准模板",
-  "describe": "教学管理系统参考案例",
+  "name": "empty",
+  "describe": "empty",
   "avatar": "",
-  "version": "4.3.0",
-  "createdTime": "2023-1-2 14:47:34",
-  "updatedTime": "2023-1-8 23:17:12",
+  "version": "4.4.0",
+  "createdTime": "2023-3-14 19:20:56",
+  "updatedTime": "2023-3-19 14:15:47",
   "dbConns": [],
   "profile": {
     "default": {
-      "db": "A4E23CB7-BB01-4BD1-9F71-F73F3E15A542",
+      "db": "29D1CE08-4C35-4D2D-AAA9-23D93305B52E",
       "dbConn": "",
       "entityInitFields": [
         {
@@ -199,6 +199,10 @@
       {
         "defKey": "Rust",
         "id": "BDF457FD-9F98-4AC3-A705-7587B00A3BAB"
+      },
+      {
+        "defKey": "Doris",
+        "id": "483F9346-C99E-4014-A1D2-A554606BD8A3"
       }
     ],
     "codeTemplates": [
@@ -211,8 +215,7 @@
         "type": "appCode",
         "applyFor": "F3AC2415-E86B-40C6-9FEB-F4B7937D2C30",
         "Default": "using System;\nusing System.Collections.Generic;\n\n$blankline\n{{\n    var today=new Date();\n    var fullYear=today.getFullYear();\n    var month=today.getMonth() + 1;\n    var days=today.getDate();\n}}\n/*\n * @author : http://www.chiner.com.cn\n * @date : {{=fullYear}}-{{=month}}-{{=days}}\n * @desc : {{=it.func.join(it.entity.defName,it.entity.comment,'-')}}\n */\nnamespace PDManer.Application\n{\n    public partial class {{=it.func.camel(it.entity.defKey,true) }}\n    {\n    \n        {{~it.entity.fields:field:index}}\n        /// <summary>\n        /// {{=it.func.join(field.defName,field.comment,';')}}\n        /// </summary>\n        public {{=field.type}} {{=it.func.camel(field.defKey,true)}} { get; set; }\n        $blankline\n        {{~}}\n        \n    }\n}",
-        "SqlSugar": "using System;\nusing System.Collections.Generic;\nusing SqlSugar;\n\n$blankline\n{{\n    var today=new Date();\n    var fullYear=today.getFullYear();\n    var month=today.getMonth() + 1;\n    var days=today.getDate();\n    var sqlSugartable='[SugarTable(\"{{=it.entity.defKey}}\", TableDescription = \"{{=it.func.join(it.entity.defName,it.entity.comment,';')}}\")]';\n}}\n/*\n * @author : xkdong@163.com\n * @date : {{=fullYear}}-{{=month}}-{{=days}}\n * @desc : {{=it.func.join(it.entity.defName,it.entity.comment,'-')}}\n */\nnamespace Model.DBModel\n{\n    /// <summary>\n    /// {{=it.func.join(it.entity.defName,it.entity.comment,';')}}\n    /// </summary>\n    {{=sqlSugartable}}\n    public class {{=it.entity.defKey}}\n    {\n        {{~it.entity.fields:field:index}}\n        /// <summary>\n        /// {{=it.func.join(field.defName,field.comment,';')}}\n        /// </summary>\n        {{? field.primaryKey }}\n        [SugarColumn(IsIdentity = true, IsPrimaryKey = true)]\n        {{?}}\n        public {{=field.type}} {{=it.func.camel(field.defKey,true)}}{ get; set; }\n        $blankline\n        {{~}}\n    }\n}",
-        "FreeSql": "using System;\r\nusing FreeSql.DataAnnotations;\r\n\r\n$blankline\r\n{{\r\n    var today=new Date();\r\n    var fullYear=today.getFullYear();\r\n    var month=today.getMonth() + 1;\r\n    var days=today.getDate();\r\n    var nameSpace=it.entity.env.base.nameSpace +'.Models';\r\n    \r\n    function getTableAttribute(){ \r\n        return `[Table(Name = \"${it.func.camel(it.entity.defKey,true)}\")]`;\r\n    }\r\n    \r\n    function getIndexAttribute(){\r\n        var indexAtrr=[];  \r\n        it.entity.indexes.forEach(function(field){\r\n            var fields=[];\r\n            for(var item  of field.fields){\r\n                fields.push(it.func.camel(item.fieldDefKey,true)+(item.ascOrDesc!='A'?' desc':''));\r\n            }\r\n            index=`[Index(\"${field.defKey}\",\"${it.func.join(fields)}\",${field.unique})]`;\r\n            indexAtrr.push(index)\r\n        });\r\n        return indexAtrr.join('\\n    ');\r\n    }\r\n    \r\n    function getColumnAttribute(){\r\n        var atrrs=[];\r\n        if(field.primaryKey) atrrs.push('IsPrimary = true');\r\n        if(field.autoIncrement) atrrs.push('IsIdentity = true'); \r\n        if(field.type=='string' && field.len ) atrrs.push(`StringLength = ${field.len}`);\r\n        if(field.type=='string' && field.notNull ) atrrs.push('IsNullable = false');\r\n        if(field.type=='decimal' && field.len ) atrrs.push(`Precision = ${field.len}`);\r\n        if(field.type=='decimal' && field.scale ) atrrs.push(`Scale = ${field.scale}`);\r\n        if(field.defKey=='Version' || field.defName=='乐观锁' || field.comment=='乐观锁') atrrs.push('IsVersion = true');\r\n        return atrrs.length>0?`[Column(${it.func.join(atrrs)})]`:'';\r\n    }\r\n    \r\n   function getProperty(){\r\n       var stype = field.type ;\r\n       if(field.notNull && field.type!='string') stype+='?'; \r\n       var name = it.func.camel(field.defKey,true);\r\n       var defaultValue = field.defaultValue ? '= '+field.defaultValue.replaceAll('\\'','\\\"')+';':'';\r\n       return `public ${stype} ${name} { get; set; } ${defaultValue}`;\r\n   }\r\n}}\r\n\r\n/*\r\n * @author : Alen\r\n * @date : {{=fullYear}}-{{=month}}-{{=days}}\r\n * @desc : {{=it.func.join(it.entity.defName,it.entity.comment,'-')}}\r\n */\r\nnamespace {{=nameSpace}}\r\n{\r\n\t/// <summary>\r\n\t/// {{=it.func.join(it.entity.defName,it.entity.comment,';')}}\r\n\t/// </summary>\r\n    {{=getTableAttribute()}}\r\n    {{=getIndexAttribute()}}\r\n    public partial class {{=it.func.camel(it.entity.defKey,true) }}\r\n    {\r\n        {{~it.entity.fields:field:index}}\r\n        /// <summary>\r\n        /// {{=it.func.join(field.defName,field.comment,';')}}\r\n        /// </summary>\r\n        {{=getColumnAttribute()}}\r\n        {{=getProperty()}}\r\n        $blankline\r\n        {{~}}\r\n    }\r\n}\r\n"
+        "SqlSugar": "using System;\nusing System.Collections.Generic;\nusing SqlSugar;\n\n$blankline\n{{\n    var today=new Date();\n    var fullYear=today.getFullYear();\n    var month=today.getMonth() + 1;\n    var days=today.getDate();\n    var sqlSugartable='[SugarTable(\"{{=it.entity.defKey}}\", TableDescription = \"{{=it.func.join(it.entity.defName,it.entity.comment,';')}}\")]';\n}}\n/*\n * @author : xkdong@163.com\n * @date : {{=fullYear}}-{{=month}}-{{=days}}\n * @desc : {{=it.func.join(it.entity.defName,it.entity.comment,'-')}}\n */\nnamespace Model.DBModel\n{\n    /// <summary>\n    /// {{=it.func.join(it.entity.defName,it.entity.comment,';')}}\n    /// </summary>\n    {{=sqlSugartable}}\n    public class {{=it.entity.defKey}}\n    {\n        {{~it.entity.fields:field:index}}\n        /// <summary>\n        /// {{=it.func.join(field.defName,field.comment,';')}}\n        /// </summary>\n        {{? field.primaryKey }}\n        [SugarColumn(IsIdentity = true, IsPrimaryKey = true)]\n        {{?}}\n        public {{=field.type}} {{=it.func.camel(field.defKey,true)}}{ get; set; }\n        $blankline\n        {{~}}\n    }\n}"
       },
       {
         "applyFor": "895CFD1D-4273-4D32-A2C4-CAC70200AB5B",
@@ -360,6 +363,17 @@
         "deleteIndex": "{{~ it.entity.indexes:index}}\nDROP INDEX {{=index.defKey}} ;\n{{~}}",
         "message": "{{\n    let createEntities = it.changes.filter(function(row){return (row.opt==='add'&&row['type']==='entity');});\n    let dropEntities   = it.changes.filter(function(row){return (row.opt==='delete'&&row['type']==='entity');});\n    let modifyEntities = it.changes.filter(function(row){return (row.opt==='update'&&row['type']==='entity');});\n    \n    function baseChanged(beforeAfter){\n        if(beforeAfter == null){\n            return '';\n        }\n        let ret = [];\n        let before = beforeAfter.before || {\"defKey\":\"\",\"defName\":\"\",\"comment\":\"\"};\n        let after = beforeAfter.after || {\"defKey\":\"\",\"defName\":\"\",\"comment\":\"\"};\n        if(before.defKey !== after.defKey){\n            ret.push('代码:'+(before.defKey||'NULL')+'->'+(after.defKey||'NULL'));\n        }\n        if(before.defName !== after.defName){\n            ret.push('显示名称:'+(before.defName||'NULL')+'->'+(after.defName||'NULL'));\n        }\n        if(before.comment !== after.comment){\n            ret.push('说明:'+(before.comment||'NULL')+'->'+(after.comment||'NULL'));\n        }\n        if(ret.length>0){\n            return '    基本信息:\\n\\t'+ret.join('\\n\\t');\n        }\n        return '';\n    };\n    \n    function buildAddedDesc(entity){\n        let ret = [];\n        let fieldAdded = entity.data.fieldAdded||[];\n        \n        for (let field of fieldAdded) { \n            let row = [];\n            row.push(field.defKey+'['+field.defName+']');\n            ret.push(row.join(\"\"))\n        }\n        return ret;\n    };\n    \n    function buildRemovedDesc(entity){\n        let ret = [];\n        let fieldRemoved = entity.data.fieldRemoved||[];\n        \n        for (let field of fieldRemoved) { \n            let row = [];\n            row.push(field.defKey+'['+field.defName+']');\n            ret.push(row.join(\"\"))\n        }\n        return ret;\n    };\n    \n    function buildModifiedDesc(entity){\n        let ret = [];\n        let fieldModified = entity.data.fieldModified||[];\n        \n        for (let field1 of fieldModified) { \n            let row = [];\n            let field = field1.before;\n            row.push(field.defKey+'['+field.defName+']');\n            ret.push(row.join(\"\"))\n        }\n        return ret;\n    };\n}}\n{{? createEntities && createEntities.length > 0}}\n/* -------------------------------------------------- */\n创建表：\n{{~ createEntities:entity}}\n    {{=entity.data.defKey}}[{{=entity.data.defName}}]\n{{~}}\n{{?}}\n\n\n{{? dropEntities && dropEntities.length > 0}}\n/* -------------------------------------------------- */\n删除表：\n{{~ dropEntities:entity}}\n    {{=entity.data.defKey}}[{{=entity.data.defName}}]\n{{~}}\n{{?}}\n\n\n{{? modifyEntities && modifyEntities.length > 0}}\n{{~ modifyEntities:entity}}\n/* -------------------------------------------------- */\n修改表：{{=entity.data.baseInfo.defKey}}[{{=entity.data.baseInfo.defName}}]{{let changeText=baseChanged(entity.data.baseChanged);}}\n{{=baseChanged(entity.data.baseChanged)}}\n    {{? entity.data.fieldAdded && entity.data.fieldAdded.length > 0}}\n    添加字段：\n    {{='\\t'}}{{=buildAddedDesc(entity).join('\\n\\t')}}\n    {{?}}{{? entity.data.fieldRemoved && entity.data.fieldRemoved.length > 0}}\n    删除字段：\n    {{='\\t'}}{{=buildRemovedDesc(entity).join('\\n\\t')}}\n    {{?}}{{? entity.data.fieldModified && entity.data.fieldModified.length > 0}}\n    修改字段：\n    {{='\\t'}}{{=buildModifiedDesc(entity).join('\\n\\t')}}\n    {{?}}{{\n        /*计算是否调整了属性*/\n        let propAdded = entity.data.propAdded || [];\n        let propRemoved = entity.data.propRemoved || [];\n        let propModified = entity.data.propModified || [];\n        let changed = propAdded.length>0 || propRemoved.length>0 || propModified.length>0;\n        /*计算关联是否调整*/\n        let refEntityAdd = entity.data.refEntityAdd || [];\n        let refEntityRemoved = entity.data.refEntityRemoved || [];\n        let relaArray = [];\n        for (let rela of refEntityAdd) {\n            relaArray.push('\\n\\t建立关联:'+rela.defKey+'['+rela.defName+']');\n        }\n        for (let rela of refEntityRemoved) {\n            relaArray.push('\\n\\t解除关联:'+rela.defKey+'['+rela.defName+']');\n        }\n        /*索引是否修改过*/\n        let indexChanged = entity.data.indexChanged;\n    }}\n{{=indexChanged?'\\n\\t更改了索引':''}}\n{{=changed?'\\n\\t更改了属性':''}}\n{{=relaArray.length>0?relaArray.join(''):''}}\n{{~}}\n{{?}}",
         "update": "{{\n    let createEntities = it.changes.filter(function(row){return (row.opt==='add'&&row['type']==='entity');});\n    let dropEntities   = it.changes.filter(function(row){return (row.opt==='delete'&&row['type']==='entity');});\n    let modifyEntities = it.changes.filter(function(row){return (row.opt==='update'&&row['type']==='entity');});\n    \n    function baseChangedDDL(beforeAfter){\n        if(beforeAfter == null){\n            return '';\n        }\n        let ret = [];\n        let before = beforeAfter.before || {\"defKey\":\"\",\"defName\":\"\",\"comment\":\"\"};\n        let after = beforeAfter.after || {\"defKey\":\"\",\"defName\":\"\",\"comment\":\"\"};\n        if(before.defKey !== after.defKey){\n            ret.push(`ALTER TABLE ${before.defKey} RENAME TO ${after.defKey}`);\n        }\n        let commentText = '';\n        let commentChanged = false;\n        if(before.defName !== after.defName){\n            commentText = after.defName;\n            commentChanged = true;\n        }\n        if(before.comment !== after.comment){\n            commentChanged = true;\n            if(commentText){\n                commentText = (commentText+ ';'+after.comment)\n            }else{\n                commentText = after.comment\n            }\n        }\n        if(commentChanged){\n            let myText = `COMMENT ON TABLE ${after.defKey} IS '${commentText}'`;\n            ret.push(myText);\n        }\n        let baseText = '-- 基本信息:\\n';\n        return baseText+ret.join(';\\n')+';';\n    };\n    \n    function buildAddedDDL(entity){\n        let ret = [];\n        let fieldAdded = entity.data.fieldAdded||[];\n        if(fieldAdded.length == 0){\n            return '';\n        }\n        \n        let firstDDL = `ALTER TABLE ${entity.data.baseInfo.defKey}`;\n        for (let field of fieldAdded) { \n            let ddlItem = `ADD (${field.defKey} ${field.dbType}`;\n            /*处理数据类型长度*/\n            if(field.len>0){\n                ddlItem += ('('+field.len);\n                if(parseInt(field.scale)>0){\n                    ddlItem += (','+field.scale);\n                }\n                ddlItem += ')';\n            }\n            let defaultValue = field.defaultValue;\n            defaultValue = (defaultValue==null)?\"\":(\"\"+defaultValue);\n            if(defaultValue.length>0){\n                ddlItem += (' DEFAULT ' + defaultValue);\n            }\n            if(field.notNull){\n                ddlItem += ' NOT NULL';\n            }\n            ddlItem += ')';\n            ret.push(`${firstDDL} ${ddlItem}`);\n            \n            /*处理字段注释*/\n            let fieldComments = [];\n            if(field.defName != null &&field.defName.length>0){\n                fieldComments.push(field.defName);\n            }\n            if(field.comment != null &&field.comment.length>0){\n                fieldComments.push(field.comment);\n            }\n            let commentText = fieldComments.join(';');\n            if(commentText != null && commentText.length > 0){\n                let commentDDL = `COMMENT ON COLUMN ${entity.data.baseInfo.defKey}.${field.defKey} IS '${commentText}'`;\n                 ret.push(commentDDL);\n            }\n        }\n        return '\\n'+ret.join(';\\n');\n    };\n    \n    function buildRemovedDDL(entity){\n        let ret = [];\n        let fieldRemoved = entity.data.fieldRemoved||[];\n        if(fieldRemoved.length == 0){\n            return '';\n        }\n        \n        let firstDDL = `ALTER TABLE ${entity.data.baseInfo.defKey}`;\n        for (let field of fieldRemoved) { \n            ret.push(`${firstDDL} DROP COLUMN ${field.defKey}`);\n        }\n        return '\\n'+ret.join(';\\n');\n    };\n    \n    function buildModifiedDDL(entity){\n        let ret = [];\n        let fieldModified = entity.data.fieldModified||[];\n        \n        let firstDDL = `ALTER TABLE ${entity.data.baseInfo.defKey}`;\n        for (let field of fieldModified) { \n            let changeDDL = '';\n            let before = field.before || {};\n            let after = field.after || {};\n            if(before.defKey !== after.defKey){\n                let renameText = `ALTER TABLE ${entity.data.baseInfo.defKey} RENAME COLUMN ${before.defKey} TO ${after.defKey};`;\n                ret.push(renameText);\n            }\n            /*如果没有变化，则不生成变更语句*/\n            if(before.dbType === after.dbType \n            && before['len'] === after['len'] \n            && before.scale === after.scale\n            && before.primaryKey === after.primaryKey\n            && before.notNull === after.notNull\n            && before.autoIncrement === after.autoIncrement\n            && before.defaultValue === after.defaultValue){\n                continue;\n            }\n            changeDDL += ('MODIFY ('+after.defKey+'');\n            changeDDL += (' '+after.dbType);\n            if(after.len>0){\n                changeDDL += ('('+after.len);\n                if(parseInt(after.scale)>0){\n                    changeDDL += (','+after.scale);\n                }\n                changeDDL += ')';\n            }\n            let defaultValue = after.defaultValue;\n            defaultValue = (defaultValue==null)?\"\":(\"\"+defaultValue);\n            if(defaultValue.length>0){\n                changeDDL += (' DEFAULT ' + defaultValue);\n            }\n            \n            if(after.notNull){\n                changeDDL += ' NOT NULL';\n            }\n            changeDDL += ')';\n            ret.push(`${firstDDL} ${changeDDL};`);\n        }\n        return ret;\n    };\n}}\n{{? createEntities && createEntities.length > 0}}\n/* --------------- 创建表 --------------- */\n{{~ createEntities:entity}}\n{{=it.func.createDDL(entity.data,entity['type'])}}\n{{~}}\n{{?}}\n\n\n{{? dropEntities && dropEntities.length > 0}}\n/* --------------- 删除表 --------------- */\n{{~ dropEntities:entity}}\n{{=it.func.dropDDL(entity.data,entity['type'])}}\n{{~}}\n{{?}}\n\n\n{{? modifyEntities && modifyEntities.length > 0}}\n{{~ modifyEntities:entity}}\n/* --------------- 修改表 --------------- */\n-- 修改表：{{=entity.data.baseInfo.defKey}}[{{=entity.data.baseInfo.defName}}]\n{{=baseChangedDDL(entity.data.baseChanged)}}\n{{? entity.data.fieldModified && entity.data.fieldModified.length > 0}}\n-- 修改字段：\n{{=buildModifiedDDL(entity).join('\\n')}}\n{{?}}{{\n/*索引是否修改过*/\nlet indexChanged = entity.data.indexChanged;\n}}\n{{? indexChanged }}\n{{=it.func.indexRebuildDDL(entity.data.baseInfo,entity.data.newIndexes,entity.data.fullFields,entity['type'])}}\n{{?}}\n\n{{? entity.data.fieldAdded && entity.data.fieldAdded.length > 0}}\n-- 添加字段：\n{{=buildAddedDDL(entity)}};\n{{?}}\n\n{{? entity.data.fieldRemoved && entity.data.fieldRemoved.length > 0}}\n-- 删除字段：\n{{=buildRemovedDDL(entity)}};\n{{?}}\n{{~}}\n{{?}}"
+      },
+      {
+        "applyFor": "483F9346-C99E-4014-A1D2-A554606BD8A3",
+        "type": "dbDDL",
+        "createTable": "{{let dorisDistributedBy = it.entity.properties['dorisDistributedBy'];\n    dorisDistributedBy = dorisDistributedBy?dorisDistributedBy:'请在表的扩展属性中配置[dorisDistributedBy]属性';\n}}CREATE TABLE IF NOT EXISTS  {{=it.entity.defKey}}(\n{{ pkList = [] ; }}\n{{~it.entity.fields:field:index}}\n    {{? field.primaryKey }}{{ pkList.push(field.defKey) }}{{?}}\n    `{{=field.defKey}}` {{=field.type}}{{?field.len>0}}{{='('}}{{=field.len}}{{?field.scale>0}}{{=','}}{{=field.scale}}{{?}}{{=')'}}{{?}} {{= field.notNull ? 'NOT NULL' : '' }} COMMENT '{{=it.func.join(field.defName,field.comment,';')}}' {{= index < it.entity.fields.length-1 ? ',' : '' }}\n{{~}}\n)  COMMENT '{{=it.func.join(it.entity.defName,it.entity.comment,';') }}'\n{{=dorisDistributedBy}} ;\n$blankline\n",
+        "createView": "",
+        "deleteTable": "DROP TABLE IF EXISTS {{=it.entity.defKey}};",
+        "createIndex": "",
+        "deleteIndex": "",
+        "message": "{{\n    let createEntities = it.changes.filter(function(row){return (row.opt==='add'&&row['type']==='entity');});\n    let dropEntities   = it.changes.filter(function(row){return (row.opt==='delete'&&row['type']==='entity');});\n    let modifyEntities = it.changes.filter(function(row){return (row.opt==='update'&&row['type']==='entity');});\n    \n    function baseChanged(beforeAfter){\n        if(beforeAfter == null){\n            return '';\n        }\n        let ret = [];\n        let before = beforeAfter.before || {\"defKey\":\"\",\"defName\":\"\",\"comment\":\"\"};\n        let after = beforeAfter.after || {\"defKey\":\"\",\"defName\":\"\",\"comment\":\"\"};\n        if(before.defKey !== after.defKey){\n            ret.push('代码:'+(before.defKey||'NULL')+'->'+(after.defKey||'NULL'));\n        }\n        if(before.defName !== after.defName){\n            ret.push('显示名称:'+(before.defName||'NULL')+'->'+(after.defName||'NULL'));\n        }\n        if(before.comment !== after.comment){\n            ret.push('说明:'+(before.comment||'NULL')+'->'+(after.comment||'NULL'));\n        }\n        if(ret.length>0){\n            return '    基本信息:\\n\\t'+ret.join('\\n\\t');\n        }\n        return '';\n    };\n    \n    function buildAddedDesc(entity){\n        let ret = [];\n        let fieldAdded = entity.data.fieldAdded||[];\n        \n        for (let field of fieldAdded) { \n            let row = [];\n            row.push(field.defKey+'['+field.defName+']');\n            ret.push(row.join(\"\"))\n        }\n        return ret;\n    };\n    \n    function buildRemovedDesc(entity){\n        let ret = [];\n        let fieldRemoved = entity.data.fieldRemoved||[];\n        \n        for (let field of fieldRemoved) { \n            let row = [];\n            row.push(field.defKey+'['+field.defName+']');\n            ret.push(row.join(\"\"))\n        }\n        return ret;\n    };\n    \n    function buildModifiedDesc(entity){\n        let ret = [];\n        let fieldModified = entity.data.fieldModified||[];\n        \n        for (let field1 of fieldModified) { \n            let row = [];\n            let field = field1.before;\n            row.push(field.defKey+'['+field.defName+']');\n            ret.push(row.join(\"\"))\n        }\n        return ret;\n    };\n}}\n\n\n{{? createEntities && createEntities.length > 0}}\n/* --------------- 创建表 --------------- */\n{{~ createEntities:entity}}\n{{=entity.data.defKey}}[{{=entity.data.defName}}]\n{{~}}\n{{?}}\n\n\n{{? dropEntities && dropEntities.length > 0}}\n/* --------------- 删除表 --------------- */\n{{~ dropEntities:entity}}\n{{=entity.data.defKey}}[{{=entity.data.defName}}]\n{{~}}\n{{?}}\n\n{{? modifyEntities && modifyEntities.length > 0}}\n/* --------------- 修改表 --------------- */\n{{~ modifyEntities:entity}}\n{{=entity.data.baseInfo.defKey}}[{{=entity.data.baseInfo.defName}}]{{let changeText=baseChanged(entity.data.baseChanged);}}\n{{=baseChanged(entity.data.baseChanged)}}\n    {{? entity.data.fieldModified && entity.data.fieldModified.length > 0}}\n    修改字段：\n    {{='\\t'}}{{=buildModifiedDesc(entity).join('\\n\\t')}}{{?}}{{\n        /*计算是否调整了属性*/\n        let propAdded = entity.data.propAdded || [];\n        let propRemoved = entity.data.propRemoved || [];\n        let propModified = entity.data.propModified || [];\n        let changed = propAdded.length>0 || propRemoved.length>0 || propModified.length>0;\n        /*计算关联是否调整*/\n        let refEntityAdd = entity.data.refEntityAdd || [];\n        let refEntityRemoved = entity.data.refEntityRemoved || [];\n        let relaArray = [];\n        for (let rela of refEntityAdd) {\n            relaArray.push('建立关联:'+rela.defKey+'['+rela.defName+']');\n        }\n        for (let rela of refEntityRemoved) {\n            relaArray.push('解除关联:'+rela.defKey+'['+rela.defName+']');\n        }\n        /*索引是否修改过*/\n        let indexChanged = entity.data.indexChanged;\n    }}{{=indexChanged?'\\n\\t更改了索引':''}}{{=changed?'\\n\\t更改了属性':''}}{{=relaArray.length>0?('\\n\\t'+relaArray.join('\\n\\t')):''}}\n{{? entity.data.fieldAdded && entity.data.fieldAdded.length > 0}}\n    添加字段：\n{{='\\t'}}{{=buildAddedDesc(entity).join('\\n\\t')}}\n{{?}}{{? entity.data.fieldRemoved && entity.data.fieldRemoved.length > 0}}\n    删除字段：\n{{='\\t'}}{{=buildRemovedDesc(entity).join('\\n\\t')}}\n{{?}}\n{{~}}\n{{?}}\n",
+        "update": "{{\n    let createEntities = it.changes.filter(function(row){return (row.opt==='add'&&row['type']==='entity');});\n    let dropEntities   = it.changes.filter(function(row){return (row.opt==='delete'&&row['type']==='entity');});\n    let modifyEntities = it.changes.filter(function(row){return (row.opt==='update'&&row['type']==='entity');});\n    \n    function baseChangedDDL(beforeAfter){\n        if(beforeAfter == null){\n            return '';\n        }\n        let ret = [];\n        let before = beforeAfter.before || {\"defKey\":\"\",\"defName\":\"\",\"comment\":\"\"};\n        let after = beforeAfter.after || {\"defKey\":\"\",\"defName\":\"\",\"comment\":\"\"};\n        if(before.defKey !== after.defKey){\n            ret.push('ALTER TABLE '+before.defKey+' RENAME TO '+after.defKey);\n        }\n        let commentText = '';\n        let commentChanged = false;\n        if(before.defName !== after.defName){\n            commentText = after.defName;\n            commentChanged = true;\n        }\n        if(before.comment !== after.comment){\n            commentChanged = true;\n            if(commentText){\n                commentText = (commentText+ ';'+after.comment)\n            }else{\n                commentText = after.comment\n            }\n        }\n        if(commentChanged){\n            ret.push('ALTER TABLE '+after.defKey+' COMMENT \\''+commentText+'\\'');\n        }\n        let baseText = '-- 基本信息:\\n';\n        return baseText+ret.join(';\\n')+';';\n    };\n    \n    function buildAddedDDL(entity){\n        let ret = [];\n        let fieldAdded = entity.data.fieldAdded||[];\n        if(fieldAdded.length == 0){\n            return '';\n        }\n        \n        let firstDDL = 'ALTER TABLE '+entity.data.baseInfo.defKey;\n        for (let field of fieldAdded) { \n            let ddlItem = 'ADD COLUMN `'+field.defKey+'` '+field.dbType;\n            /*处理数据类型长度*/\n            if(field.len>0){\n                ddlItem += ('('+field.len);\n                if(parseInt(field.scale)>0){\n                    ddlItem += (','+field.scale);\n                }\n                ddlItem += ')';\n            }\n            if(field.notNull){\n                ddlItem += ' NOT NULL';\n            }\n            if(field.autoIncrement){\n                ddlItem += ' AUTO_INCREMENT';\n            }\n            if(field.defaultValue){\n                ddlItem += (' DEFAULT ' + field.defaultValue);\n            }\n            ddlItem += (' COMMENT \\''+field.defName+';'+field.comment+'\\'');\n            \n            if(field.index>0 && field.afterFieldKey){\n                ddlItem += (' AFTER '+field.afterFieldKey);\n            }\n            ret.push(ddlItem);\n        }\n        return firstDDL+'\\n'+ret.join(',\\n');\n    };\n    \n    function buildRemovedDDL(entity){\n        let ret = [];\n        let fieldRemoved = entity.data.fieldRemoved||[];\n        if(fieldRemoved.length == 0){\n            return '';\n        }\n        \n        let firstDDL = 'ALTER TABLE '+entity.data.baseInfo.defKey;\n        for (let field of fieldRemoved) { \n            ret.push('DROP '+field.defKey);\n        }\n        return firstDDL+'\\n'+ret.join(',\\n');\n    };\n    \n    function buildModifiedDDL(entity){\n        let ret = [];\n        let fieldModified = entity.data.fieldModified||[];\n        \n        let firstDDL = 'ALTER TABLE '+entity.data.baseInfo.defKey;\n        for (let field of fieldModified) { \n            let changeDDL = '';\n            let before = field.before || {};\n            let after = field.after || {};\n            if(before.defKey === after.defKey){\n                changeDDL += (' MODIFY COLUMN `'+after.defKey+'`');\n            }else{\n                changeDDL += (' CHANGE COLUMN `'+before.defKey+'` `'+after.defKey+'`');\n            }\n            changeDDL += (' '+after.dbType);\n            if(after.len>0){\n                changeDDL += ('('+after.len);\n                if(parseInt(after.scale)>0){\n                    changeDDL += (','+after.scale);\n                }\n                changeDDL += ')';\n            }\n            if(after.notNull){\n                changeDDL += ' NOT NULL';\n            }\n            let defaultValue = '';\n            if(after.defaultValue != null && after.defaultValue.length>0){\n                defaultValue = (after.defaultValue);\n            }else{\n                defaultValue = 'NULL';\n            }\n            if(defaultValue != 'NULL'){\n                changeDDL += (' DEFAULT ' + defaultValue);\n            }\n\n            let comment = after.defName;\n            if(after.comment){\n                comment = comment + ';' + (after.comment||'');\n            }\n            if(comment){\n                changeDDL += (' COMMENT \\''+comment+'\\';');\n            }\n            \n            ret.push(firstDDL+' '+changeDDL);\n        }\n        return ret;\n    };\n}}\n{{? createEntities && createEntities.length > 0}}\n/* --------------- 创建表 --------------- */\n{{~ createEntities:entity}}\n{{=it.func.createDDL(entity.data,entity['type'])}}\n{{~}}\n{{?}}\n\n\n{{? dropEntities && dropEntities.length > 0}}\n/* --------------- 删除表 --------------- */\n{{~ dropEntities:entity}}\n{{=it.func.dropDDL(entity.data,entity['type'])}}\n{{~}}\n{{?}}\n\n\n{{? modifyEntities && modifyEntities.length > 0}}\n{{~ modifyEntities:entity}}\n/* --------------- 修改表 --------------- */\n-- 修改表：{{=entity.data.baseInfo.defKey}}[{{=entity.data.baseInfo.defName}}]\n{{=baseChangedDDL(entity.data.baseChanged)}}\n{{? entity.data.fieldModified && entity.data.fieldModified.length > 0}}\n-- 修改字段：\n{{=buildModifiedDDL(entity).join('\\n')}}\n{{?}}{{\n/*索引是否修改过*/\nlet indexChanged = entity.data.indexChanged;\n}}\n{{? indexChanged }}\n{{=it.func.indexRebuildDDL(entity.data.baseInfo,entity.data.newIndexes,entity.data.fullFields,entity['type'])}}\n{{?}}\n\n{{? entity.data.fieldAdded && entity.data.fieldAdded.length > 0}}\n-- 添加字段：\n{{=buildAddedDDL(entity)}};\n{{?}}\n\n{{? entity.data.fieldRemoved && entity.data.fieldRemoved.length > 0}}\n-- 删除字段：\n{{=buildRemovedDDL(entity)}};\n{{?}}\n{{~}}\n{{?}}"
       }
     ],
     "generatorDoc": {
@@ -426,65 +440,164 @@
     "headers": [
       {
         "refKey": "defKey",
-        "hideInGraph": false
+        "hideInGraph": false,
+        "value": "字段代码",
+        "freeze": false
       },
       {
         "refKey": "defName",
-        "hideInGraph": false
+        "hideInGraph": false,
+        "value": "显示名称",
+        "freeze": false
       },
       {
         "refKey": "primaryKey",
-        "hideInGraph": false
+        "hideInGraph": false,
+        "value": "主键",
+        "freeze": false
       },
       {
         "refKey": "notNull",
-        "hideInGraph": true
+        "hideInGraph": true,
+        "value": "不为空",
+        "freeze": false
       },
       {
         "refKey": "autoIncrement",
-        "hideInGraph": true
+        "hideInGraph": true,
+        "value": "自增",
+        "freeze": false
       },
       {
         "refKey": "domain",
-        "hideInGraph": true
+        "hideInGraph": true,
+        "value": "数据域",
+        "freeze": false
       },
       {
         "refKey": "type",
-        "hideInGraph": false
+        "hideInGraph": false,
+        "value": "数据类型",
+        "freeze": false
       },
       {
         "refKey": "len",
-        "hideInGraph": false
+        "hideInGraph": false,
+        "value": "长度",
+        "freeze": false
       },
       {
         "refKey": "scale",
-        "hideInGraph": false
+        "hideInGraph": false,
+        "value": "小数位数",
+        "freeze": false
       },
       {
         "refKey": "comment",
-        "hideInGraph": true
+        "hideInGraph": true,
+        "value": "说明",
+        "freeze": false
       },
       {
         "refKey": "refDict",
-        "hideInGraph": true
+        "hideInGraph": true,
+        "value": "数据字典",
+        "freeze": false
       },
       {
         "refKey": "defaultValue",
-        "hideInGraph": true
+        "hideInGraph": true,
+        "value": "默认值",
+        "freeze": false
       },
       {
         "refKey": "isStandard",
-        "hideInGraph": false
+        "hideInGraph": false,
+        "value": "标准字段",
+        "enable": false,
+        "freeze": false
       },
       {
         "refKey": "uiHint",
-        "hideInGraph": true
+        "hideInGraph": true,
+        "value": "UI建议",
+        "enable": false,
+        "freeze": false
       },
       {
         "refKey": "extProps",
-        "hideInGraph": true
+        "hideInGraph": true,
+        "value": "拓展属性",
+        "enable": false,
+        "freeze": false
+      },
+      {
+        "refKey": "attr1",
+        "value": "属性1",
+        "hideInGraph": true,
+        "enable": true,
+        "freeze": false
+      },
+      {
+        "refKey": "attr2",
+        "value": "属性2",
+        "hideInGraph": true,
+        "enable": true,
+        "freeze": false
+      },
+      {
+        "refKey": "attr3",
+        "value": "属性3",
+        "hideInGraph": true,
+        "enable": true,
+        "freeze": false
+      },
+      {
+        "refKey": "attr4",
+        "value": "属性4",
+        "hideInGraph": true,
+        "enable": true,
+        "freeze": false
+      },
+      {
+        "refKey": "attr5",
+        "value": "属性5",
+        "hideInGraph": true,
+        "enable": true,
+        "freeze": false
+      },
+      {
+        "refKey": "attr6",
+        "value": "属性6",
+        "hideInGraph": true,
+        "enable": true,
+        "freeze": false
+      },
+      {
+        "refKey": "attr7",
+        "value": "属性7",
+        "hideInGraph": true,
+        "enable": true,
+        "freeze": false
+      },
+      {
+        "refKey": "attr8",
+        "value": "属性8",
+        "hideInGraph": true,
+        "enable": true,
+        "freeze": false
+      },
+      {
+        "refKey": "attr9",
+        "value": "属性9",
+        "hideInGraph": true,
+        "enable": true,
+        "freeze": false
       }
-    ]
+    ],
+    "modelType": "modalGroup",
+    "recentColors": [],
+    "DDLToggleCase": "L"
   },
   "entities": [],
   "views": [],
@@ -514,7 +627,8 @@
         "81CCA482-3F4D-4EAC-8CF9-F5E7BC098AD2": "string",
         "B91D99E0-9B7C-416C-8737-B760957DAF09": "string",
         "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "String",
-        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "VARCHAR"
+        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "VARCHAR",
+        "483F9346-C99E-4014-A1D2-A554606BD8A3": "VARCHAR"
       },
       {
         "defKey": "double",
@@ -537,7 +651,8 @@
         "81CCA482-3F4D-4EAC-8CF9-F5E7BC098AD2": "double",
         "B91D99E0-9B7C-416C-8737-B760957DAF09": "*float64",
         "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "f64",
-        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "DECIMAL"
+        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "DECIMAL",
+        "483F9346-C99E-4014-A1D2-A554606BD8A3": "DECIMAL"
       },
       {
         "defKey": "int",
@@ -560,7 +675,8 @@
         "81CCA482-3F4D-4EAC-8CF9-F5E7BC098AD2": "int",
         "B91D99E0-9B7C-416C-8737-B760957DAF09": "*int",
         "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "i32",
-        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "INTEGER"
+        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "INTEGER",
+        "483F9346-C99E-4014-A1D2-A554606BD8A3": "INT"
       },
       {
         "defKey": "date",
@@ -583,7 +699,8 @@
         "81CCA482-3F4D-4EAC-8CF9-F5E7BC098AD2": "timestamp",
         "B91D99E0-9B7C-416C-8737-B760957DAF09": "*time.Time",
         "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "DateTime<Local>",
-        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "DATE"
+        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "DATE",
+        "483F9346-C99E-4014-A1D2-A554606BD8A3": "DATETIME"
       },
       {
         "defKey": "bytes",
@@ -628,7 +745,8 @@
         "81CCA482-3F4D-4EAC-8CF9-F5E7BC098AD2": "string",
         "B91D99E0-9B7C-416C-8737-B760957DAF09": "string",
         "BDF457FD-9F98-4AC3-A705-7587B00A3BAB": "String",
-        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "TEXT"
+        "56F4B55B-F0B8-4049-9E6B-50B95C1D793A": "TEXT",
+        "483F9346-C99E-4014-A1D2-A554606BD8A3": "STRING"
       }
     ]
   },

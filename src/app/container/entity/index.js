@@ -124,6 +124,7 @@ const Entity = React.memo(({prefix, dataSource, entity, tabDataChange, tabKey,
               group={group}
               data={data} // 数据发生变化时需要更新
               dataSource={dataSource}
+              updateDataSource={updateDataSource}
             />,
           },
           {
