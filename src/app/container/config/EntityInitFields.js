@@ -49,6 +49,7 @@ export default React.memo(({ prefix, dataSource, dataChange,
           key: '1',
           title: FormatMessage.string({id: 'config.EntityInitFields'}),
           content: <Table
+              needHideInGraph={false}
               disableHeaderIcon
               getDataSource={getDataSource}
               updateDataSource={updateDataSource}

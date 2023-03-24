@@ -545,8 +545,8 @@ export default class ER {
         if (type === 'create') {
             initData = {
                 headers: resetHeader(dataSource, {}),
-                fields: this.getEntityInitFields(),
-                properties: this.getEntityInitProperties(),
+                fields: this.getEntityInitFields(dataSource),
+                properties: this.getEntityInitProperties(dataSource),
             };
         }
         return {

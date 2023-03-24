@@ -18,6 +18,7 @@ export default React.memo(({data, dataSource, update, FieldsExtraOpt,customerHea
     };
   }, []);
   return <Table
+    needHideInGraph={false}
     openConfig={openConfig}
     isEntity={type === 'entity'}
     updateAllVersion={updateAllVersion}

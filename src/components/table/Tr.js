@@ -8,9 +8,9 @@ export default React.memo(({f, i, expand, onMouseOver, tempHeaders, calcPosition
                              updateTableDataByName, comBlur, cellRef, onKeyDown, freeze,
                              reading, getDataSource, updateDataSource, cellClick, setDict,
                              hiddenFields, selectedColumns, openDict, defaultGroups, dicts,
-                             getFieldProps, domains, mapping, uiHint, isView}) => {
-  const otherStyle = freeze ? { position: 'sticky', left: 0, zIndex: 2 } : {};
-  const needHideInGraph = tempHeaders.findIndex(h => h.refKey === 'hideInGraph') > -1;
+                             getFieldProps, domains, mapping, uiHint, isView,
+                             needHideInGraph = true}) => {
+  const otherStyle = freeze ? { position: 'sticky', left: 0, zIndex: 2 } : {position: 'relative'};
   let type = 'fa-eye';
   if (f.hideInGraph) {
     type = 'fa-eye-slash';
@@ -49,7 +49,7 @@ export default React.memo(({f, i, expand, onMouseOver, tempHeaders, calcPosition
           {i + 1}
         </span>
         {
-          needHideInGraph && !isView && <span style={{float: 'right',marginRight: 2}}>
+          !needHideInGraph && !isView && <span style={{float: 'right',marginRight: 2}}>
             <Component.Icon
               type={type}
               onClick={e => onChange(e, {target: { value: !f.hideInGraph}})}

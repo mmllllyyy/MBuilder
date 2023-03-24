@@ -41,7 +41,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                                updateDataSource, disableAddStandard, ready, twinkle, getDataSource,
                                disableDragRow = true, freeze = false, reading = false,
                                fixHeader = true, openDict, defaultGroups, updateAllVersion,
-                               openConfig, isEntity},
+                               openConfig, isEntity, needHideInGraph},
                                      refInstance) => {
   const { lang } = useContext(ConfigContent);
   const { valueContext, valueSearch } = useContext(TableContent);
@@ -1162,6 +1162,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                 return true;
               }).map((f, i) => (
                 <Tr
+                  needHideInGraph={needHideInGraph}
                   isView={isView}
                   entities={dataSource?.entities}
                   openDict={openDict}

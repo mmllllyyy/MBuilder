@@ -66,6 +66,7 @@ export default React.memo(({prefix, dataChange, dataSource, twinkle, updateDataS
       children: <div style={{width}}>
         <Table
           {...commonProps}
+          needHideInGraph={false}
           updateDataSource={updateDataSource}
           getDataSource={getDataSource}
           data={{
