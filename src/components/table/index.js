@@ -103,14 +103,18 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
     return restData.headers.map((h) => {
       let refKey = h.refKey || h.newCode;
       const columnOthers = (dataSource?.profile?.headers || [])
-          .filter(c => c.refKey === refKey)[0] || {};
-      const column = allColumns.filter(c => c.newCode === refKey)[0] || {value: columnOthers.value};
-      return {
-        ...h,
-        ...column,
-        enable: columnOthers.enable,
-        refKey,
-      };
+          .filter(c => c.refKey === refKey)[0];
+      if(columnOthers) {
+        const column = allColumns.filter(c => c.newCode === refKey)[0]
+            || {value: columnOthers.value};
+        return {
+          ...h,
+          ...column,
+          enable: columnOthers.enable,
+          refKey,
+        };
+      }
+      return h;
     });
   }, [restData.headers, allColumns, dataSource?.profile?.headers]);
   const cellClick = (h, f) => {
