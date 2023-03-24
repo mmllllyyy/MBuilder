@@ -2473,7 +2473,7 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
     profile: {
       ...oldDataSource.profile,
       codeTemplates: tempCodeTemplates,
-      dataTypeSupports: tempDataTypeSupports,
+      dataTypeSupports: tempDataTypeSupports.map(t => _.omit(t, 'old')),
       uiHint: tempUiHint.map(t => _.omit(t, 'old')),
     },
     entities: tempEntities.map(e => refactor(e, 'entity'))
