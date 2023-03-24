@@ -3,6 +3,7 @@ import { Graph } from '@antv/x6';
 import '@antv/x6-react-shape';
 import { separator } from '../../../../../profile';
 import Tooltip from '../../../tooltip';
+import { getTitle } from '../../../../lib/datasource_util';
 import './style/index.less';
 import {hex2Rgba} from '../../../../lib/color';
 
@@ -46,12 +47,6 @@ const Table = forwardRef(({node}, ref) => {
     }
     return f[h.refKey];
   };
-  const getTitle = () => {
-    const tempDisplayMode = data.nameTemplate || '{defKey}[{defName}]';
-    return tempDisplayMode.replace(/\{(\w+)\}/g, (match, word) => {
-      return data[word] || data.defKey || '';
-    });
-  };
   const calcColor = () => {
     const color = node.getProp('fillColor') || '#DDE5FF';
     if (color.startsWith('#')) {
@@ -75,8 +70,8 @@ const Table = forwardRef(({node}, ref) => {
       style={{background: node.getProp('fillColor')}}
     >
       {
-        linkData.type ? <a style={{textDecoration: 'underline'}} onClick={nodeClickText}>{getTitle()}{store?.data.count > 0 ? `:${store?.data.count}` : ''}</a>
-            : `${getTitle()}${store?.data.count > 0 ? `:${store?.data.count}` : ''}`
+        linkData.type ? <a style={{textDecoration: 'underline'}} onClick={nodeClickText}>{getTitle(data)}{store?.data.count > 0 ? `:${store?.data.count}` : ''}</a>
+            : `${getTitle(data)}${store?.data.count > 0 ? `:${store?.data.count}` : ''}`
       }
       {
         data?.comment &&

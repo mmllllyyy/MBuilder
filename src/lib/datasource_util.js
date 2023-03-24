@@ -1245,6 +1245,13 @@ export const transformTable = (data, dataSource, code, type = 'id', codeType = '
   }
 }
 
+export const getTitle = (data) => {
+  const tempDisplayMode = data.nameTemplate || '{defKey}[{defName}]';
+  return tempDisplayMode.replace(/\{(\w+)\}/g, (match, word) => {
+    return data[word] || data.defKey || '';
+  });
+};
+
 export  const calcNodeData = (preData, nodeData, dataSource, groups) => {
   // 节点源数据
   const headers = (nodeData?.headers || []).filter(h => {
@@ -1255,7 +1262,7 @@ export  const calcNodeData = (preData, nodeData, dataSource, groups) => {
   const fields = (nodeData?.fields || []).filter(f => !f.hideInGraph)
       .map(f => ({...f, ...transform(f, dataSource), extProps: Object.keys(f.extProps || {}).length}));
   // 计算表头的宽度
-  const headerText = `${nodeData.defKey}${nodeData.count > 0 ? `:${nodeData.count}` : ''}(${nodeData.defName})`;
+  const headerText = `${getTitle(nodeData)}${nodeData.count > 0 ? `:${nodeData.count}` : ''}(${nodeData.defName})`;
   const headerWidth = getTextWidth(headerText, 12, 'bold') + 20 + (nodeData.comment ? 16 : 0);
   // 计算每一列最长的内容
   const maxWidth = {};

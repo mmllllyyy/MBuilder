@@ -2,6 +2,7 @@ import React, { forwardRef } from 'react';
 import { Graph } from '@antv/x6';
 import '@antv/x6-react-shape';
 import { separator } from '../../../../../profile';
+import { getTitle } from '../../../../lib/datasource_util';
 
 const Table = forwardRef(({node}, ref) => {
   const data = node.data;
@@ -18,12 +19,6 @@ const Table = forwardRef(({node}, ref) => {
       }
     }
     return f[h.refKey];
-  };
-  const getTitle = () => {
-    const tempDisplayMode = data.nameTemplate || '{defKey}[{defName}]';
-    return tempDisplayMode.replace(/\{(\w+)\}/g, (match, word) => {
-      return data[word] || data.defKey || '';
-    });
   };
   return <div
     ref={ref}
@@ -44,7 +39,7 @@ const Table = forwardRef(({node}, ref) => {
         padding: '2px 0 2px 0',
       }}
     >
-      {`${getTitle()}${store?.data.count > 0 ? `:${store?.data.count}` : ''}`}
+      {`${getTitle(data)}${store?.data.count > 0 ? `:${store?.data.count}` : ''}`}
     </div>
     <div>
       {
