@@ -21,7 +21,7 @@ export const img = (data, relationType, dataSource, needCalc = true, groups) => 
         enabled: true,
       },
     });
-    const mindCells = data.filter(c => c.shape === 'mind-topic-branch' || c.shape=== 'mind-topic' || c.shape === 'mind-edge');
+    const mindCells = (data || []).filter(c => c.shape === 'mind-topic-branch' || c.shape=== 'mind-topic' || c.shape === 'mind-edge');
     const cells = ((needCalc ? calcCellData(data, dataSource, null, groups, null, relationType, null, null) : data))
         .concat(mindCells).map((d) => {
       const other = {
