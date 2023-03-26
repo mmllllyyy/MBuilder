@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { FormatMessage, Radio } from 'components';
+import { FormatMessage } from 'components';
 
 import './style/index.less';
 import {getPrefix} from '../../../../lib/prefixUtil';
 
 export default React.memo(({dataSource, prefix, onChange}) => {
-    const RadioGroup = Radio.RadioGroup;
+    //const RadioGroup = Radio.RadioGroup;
     const [checked, setChecked] = useState({
         DDLToggleCase: dataSource.profile?.DDLToggleCase || '',
     });
@@ -38,32 +38,32 @@ export default React.memo(({dataSource, prefix, onChange}) => {
                 </div>;
             })
         }
-      <div className={`${currentPrefix}-togglecase-item`}>
-        <span className={`${currentPrefix}-togglecase-item-label`}>
-          <FormatMessage id='toggleCase.dbDDL'/>:</span>
-        <span className={`${currentPrefix}-togglecase-item-value`}>
-          <RadioGroup
-            name='DDLToggleCase'
-            onChange={e => _setChecked(e.target.value, 'DDLToggleCase')}
-            defaultValue={checked.DDLToggleCase}
-          >
-            <Radio value='U'>
-              <span>
-                <FormatMessage id='toggleCase.uppercase'/>
-              </span>
-            </Radio>
-            <Radio value='L'>
-              <span>
-                <FormatMessage id='toggleCase.lowercase'/>
-              </span>
-            </Radio>
-            <Radio value=''>
-              <span>
-                <FormatMessage id='toggleCase.none'/>
-              </span>
-            </Radio>
-          </RadioGroup>
-        </span>
-      </div>
+      {/*<div className={`${currentPrefix}-togglecase-item`}>*/}
+      {/*  <span className={`${currentPrefix}-togglecase-item-label`}>*/}
+      {/*    <FormatMessage id='toggleCase.dbDDL'/>:</span>*/}
+      {/*  <span className={`${currentPrefix}-togglecase-item-value`}>*/}
+      {/*    <RadioGroup*/}
+      {/*      name='DDLToggleCase'*/}
+      {/*      onChange={e => _setChecked(e.target.value, 'DDLToggleCase')}*/}
+      {/*      defaultValue={checked.DDLToggleCase}*/}
+      {/*    >*/}
+      {/*      <Radio value='U'>*/}
+      {/*        <span>*/}
+      {/*          <FormatMessage id='toggleCase.uppercase'/>*/}
+      {/*        </span>*/}
+      {/*      </Radio>*/}
+      {/*      <Radio value='L'>*/}
+      {/*        <span>*/}
+      {/*          <FormatMessage id='toggleCase.lowercase'/>*/}
+      {/*        </span>*/}
+      {/*      </Radio>*/}
+      {/*      <Radio value=''>*/}
+      {/*        <span>*/}
+      {/*          <FormatMessage id='toggleCase.none'/>*/}
+      {/*        </span>*/}
+      {/*      </Radio>*/}
+      {/*    </RadioGroup>*/}
+      {/*  </span>*/}
+      {/*</div>*/}
     </div>;
 });

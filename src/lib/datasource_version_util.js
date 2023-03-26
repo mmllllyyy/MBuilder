@@ -276,10 +276,10 @@ export const getMessageByChanges = (changes, dataSource) => {
       changes,
       separator: sqlSeparator,
     }, false, dataSource, code);
-    const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
-    if (DDLToggleCase) {
-      return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
-    }
+    // const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
+    // if (DDLToggleCase) {
+    //   return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
+    // }
     return sqlString;
   } catch (e) {
     return JSON.stringify(e.message, null, 2);

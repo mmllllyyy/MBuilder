@@ -1343,10 +1343,10 @@ export const getCodeByDataTable = (dataSource, group, dataTable, code, templateS
   let sqlString = '';
   try {
       sqlString = generateIncreaseSql(dataSource, group, dataTable, code, templateShow);
-      const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
-      if (DDLToggleCase && type === 'dbDDL') {
-        return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
-      }
+      // const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
+      // if (DDLToggleCase && type === 'dbDDL') {
+      //   return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
+      // }
       return sqlString;
   } catch (e) {
     console.error(e);
@@ -1463,10 +1463,10 @@ export const getDataByTemplate = (data, template, isDemo, dataSource, code, isAp
   let sqlString = '';
   try {
     sqlString = getTemplateString(template, data, isDemo, dataSource, code);
-    const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
-    if (DDLToggleCase && !isAppCode) {
-      return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
-    }
+    // const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
+    // if (DDLToggleCase && !isAppCode) {
+    //   return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
+    // }
     return sqlString;
   } catch (e) {
     //Message.error({title: FormatMessage.string({id: 'database.templateError'})});
@@ -1576,10 +1576,10 @@ export const getAllDataSQLByFilter = (data, code, filterTemplate, filterDefKey) 
   } catch (e) {
     sqlString = JSON.stringify(e.message);
   }
-  const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
-  if (DDLToggleCase) {
-    return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
-  }
+  // const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
+  // if (DDLToggleCase) {
+  //   return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
+  // }
   return sqlString;
 };
 export const getEmptyMessage = (name, dataSource, code) => {
@@ -1604,10 +1604,10 @@ export const getDataByChanges = (changes, dataSource) => {
       changes,
       separator: sqlSeparator,
     }, false, dataSource, code);
-    const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
-    if (DDLToggleCase) {
-      return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
-    }
+    // const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
+    // if (DDLToggleCase) {
+    //   return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
+    // }
     return sqlString;
     // return changes.map(c => {
     //   if (c.type === 'entity' || c.type === 'view') {
