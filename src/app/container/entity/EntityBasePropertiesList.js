@@ -1,7 +1,8 @@
 import React, {useState, useRef, useMemo} from 'react';
-import {Input, FormatMessage, DropButton, IconTitle} from 'components';
+import {Input, FormatMessage, DropButton, IconTitle, Message} from 'components';
 import { moveArrayPosition } from '../../../lib/array_util';
 import {getPrefix} from '../../../lib/prefixUtil';
+import {Copy, Paste} from '../../../lib/event_tool';
 
 
 export default React.memo(({prefix, properties, propertiesChange, className}) => {
@@ -34,7 +35,7 @@ export default React.memo(({prefix, properties, propertiesChange, className}) =>
       return tempA;
     }, {}));
   };
-  const optProperty = (type) => {
+  const optProperty = (type, addData) => {
     const optIndex = data.findIndex(d => d.__key === selected);
     if (type === 'delete' && selected) {
       if (optIndex === (data.length - 1)) {
@@ -47,9 +48,9 @@ export default React.memo(({prefix, properties, propertiesChange, className}) =>
       propsChange(tempData);
     } else if (type === 'add') {
       let tempData = [...data];
-      const newData = {data: ['' , ''], __key: Math.uuid()};
+      const newData = addData || [{data: ['' , ''], __key: Math.uuid()}];
       if (selected) {
-        tempData.splice(optIndex, 0, newData);
+        tempData.splice(optIndex, 0, ...newData);
       } else {
         tempData = data.concat(newData);
       }
@@ -184,6 +185,40 @@ export default React.memo(({prefix, properties, propertiesChange, className}) =>
       }
     }
   };
+  const tableKeyDown = (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      if (e.target.nodeName === 'TABLE') {
+        // 如果选中的是表格
+        if (e.keyCode === 67 && selectedRef.current) {
+          e.stopPropagation();
+          Copy(data.filter(d => d.__key === selectedRef.current),
+              FormatMessage.string({id: 'copySuccess'}));
+        } else if(e.keyCode === 86) {
+          e.preventDefault();
+          e.stopPropagation();
+          Paste((value) => {
+            try {
+              let pasteData = JSON.parse(value);
+              if (pasteData.every(d => d.__key && d.data?.length === 2)) {
+                Message.success({
+                  title: FormatMessage.string({id: 'pasteSuccess'}),
+                });
+                optProperty('add', pasteData.map(d => ({...d, __key: Math.uuid()})));
+              } else {
+                Message.error({
+                  title: FormatMessage.string({id: 'tableValidate.invalidJsonData'}),
+                });
+              }
+            } catch (error) {
+              Message.error({
+                title: FormatMessage.string({id: 'tableValidate.invalidJsonData'}),
+              });
+            }
+          });
+        }
+      }
+    }
+  };
   return <div className={`${currentPrefix}-entity-base-properties ${className}`}>
     <div className={`${currentPrefix}-entity-base-properties-list-opt`}>
       <DropButton menuClick={menuClick} dropDownMenus={dropDownMenus} position='top'>
@@ -194,7 +229,7 @@ export default React.memo(({prefix, properties, propertiesChange, className}) =>
       <IconTitle disable={!selected} title={FormatMessage.string({id: 'tableEdit.moveDown'})} onClick={() => optProperty('down')} type='fa-arrow-down'/>
     </div>
     <div className={`${currentPrefix}-entity-base-properties-list-container`}>
-      <table>
+      <table tabIndex='-1' onKeyDown={tableKeyDown}>
         <thead>
           <tr>
             <th>{}</th>
