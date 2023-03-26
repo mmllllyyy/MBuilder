@@ -288,7 +288,7 @@ const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldName
                 {
                     child.notes?.tags?.length > 0 && <Tooltip
                       force
-                      offsetLeft={30}
+                      offsetLeft={50}
                       placement='top'
                       title={<div className={`${currentPrefix}-note-tag-list`}>
                         {
