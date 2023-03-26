@@ -1,10 +1,11 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {FormatMessage, Input} from 'components';
+import {FormatMessage, IconTitle, Input} from 'components';
 
 import {getPrefix} from '../../../../lib/prefixUtil';
 import SelectGroup from '../../group/SelectGroup';
 import {separator} from '../../../../../profile';
 import './style/index.less';
+import {moveArrayPositionByArray} from '../../../../lib/array_util';
 
 export default React.memo(({ prefix, dataSource, dataChange, name }) => {
     const [selected, setSelected] = useState([]);
@@ -108,6 +109,17 @@ export default React.memo(({ prefix, dataSource, dataChange, name }) => {
       setSort(s);
       setCurrentSort(c);
     };
+    const sortEntity = (type) => {
+        const tempFields = moveArrayPositionByArray(dataSourceRef.current[name],
+            selected, type === 'up' ? -1 : 1, 'id');
+        originRef.current = dataSourceRef.current[name];
+        dataSourceRef.current = {
+            ...dataSourceRef.current,
+            [name]: tempFields,
+        };
+        dataChange && dataChange(dataSourceRef.current);
+        setSortKey(Math.uuid());
+    };
     useEffect(() => {
         if (initRef.current) {
             originRef.current = dataSourceRef.current[name];
@@ -122,79 +134,85 @@ export default React.memo(({ prefix, dataSource, dataChange, name }) => {
         }
     }, [currentSort, sort]);
     return <div className={`${currentPrefix}-quick-edit`}>
-      <table>
-        <thead>
-          <tr><th>{}</th>
-            <th>
-              <span>
+      <div className={`${currentPrefix}-quick-edit-tool`}>
+        <IconTitle disable={selected.length === 0} title={FormatMessage.string({id: 'tableEdit.moveUp'})} onClick={() => sortEntity('up')} type='fa-arrow-up'/>
+        <IconTitle disable={selected.length === 0} title={FormatMessage.string({id: 'tableEdit.moveDown'})} onClick={() => sortEntity('down')} type='fa-arrow-down'/>
+      </div>
+      <div className={`${currentPrefix}-quick-edit-table`}>
+        <table>
+          <thead>
+            <tr><th>{}</th>
+              <th>
                 <span>
-                  {FormatMessage.string({id: 'tableBase.defKey'})}
-                </span>
-                <span
-                  className={`${currentPrefix}-quick-edit-sort`}
-              >
+                  <span>
+                    {FormatMessage.string({id: 'tableBase.defKey'})}
+                  </span>
                   <span
-                    className={sort.defKey === 'asc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
-                    onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'asc' ? '' : 'asc'}), 'defKey')}
-                />
-                  <span
-                    className={sort.defKey === 'desc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
-                    onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'desc' ? '' : 'desc'}), 'defKey')}
-                />
+                    className={`${currentPrefix}-quick-edit-sort`}
+                >
+                    <span
+                      className={sort.defKey === 'asc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                      onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'asc' ? '' : 'asc'}), 'defKey')}
+                  />
+                    <span
+                      className={sort.defKey === 'desc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                      onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'desc' ? '' : 'desc'}), 'defKey')}
+                  />
+                  </span>
                 </span>
-              </span>
-            </th>
-            <th>
-              <span>
+              </th>
+              <th>
                 <span>
-                  {FormatMessage.string({id: 'tableBase.defName'})}
-                </span>
-                <span
-                  className={`${currentPrefix}-quick-edit-sort`}
-              >
+                  <span>
+                    {FormatMessage.string({id: 'tableBase.defName'})}
+                  </span>
                   <span
-                    className={sort.defName === 'asc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
-                    onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'asc' ? '' : 'asc'}), 'defName')}
-                />
-                  <span
-                    className={sort.defName === 'desc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
-                    onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'desc' ? '' : 'desc'}), 'defName')}
-                />
+                    className={`${currentPrefix}-quick-edit-sort`}
+                >
+                    <span
+                      className={sort.defName === 'asc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                      onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'asc' ? '' : 'asc'}), 'defName')}
+                  />
+                    <span
+                      className={sort.defName === 'desc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                      onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'desc' ? '' : 'desc'}), 'defName')}
+                  />
+                  </span>
                 </span>
-              </span>
-            </th>
-            <th>{FormatMessage.string({id: 'tableBase.comment'})}</th>
-            <th>{FormatMessage.string({id: 'tableBase.group'})}</th></tr>
-        </thead>
-        <tbody>
-          {
-                dataSourceRef.current[name]
-                    .map((d, i) => {
-                    const group = getGroup(d.id);
-                    return <tr key={d.id} className={`${currentPrefix}-quick-edit-item ${selected.includes(d.id) ? `${currentPrefix}-table-selected` : ''}`}>
-                      <td onClick={e => onNoClick(e, d.id, i)}>{i + 1}</td>
-                      <td>
-                        <Input placeholder={FormatMessage.string({id: 'tableBase.defKey'})} defaultValue={d.defKey} onChange={e => _dataChange(e.target.value, 'defKey', d.id)}/>
-                      </td>
-                      <td>
-                        <Input defaultValue={d.defName} onChange={e => _dataChange(e.target.value, 'defName', d.id)}/>
-                      </td>
-                      <td>
-                        <Input defaultValue={d[name === 'dicts' ? 'intro' : 'comment']} onChange={e => _dataChange(e.target.value, name === 'dicts' ? 'intro' : 'comment', d.id)}/>
-                      </td>
-                      <td>
-                        <SelectGroup
-                          key={group.join(separator)}
-                          hiddenLabel
-                          dataSource={dataSource}
-                          dataChange={(...args) => _dataChange(...args, d.id)}
-                          data={group}
-                        />
-                      </td>
-                    </tr>;
-                })
-            }
-        </tbody>
-      </table>
+              </th>
+              <th>{FormatMessage.string({id: 'tableBase.comment'})}</th>
+              <th>{FormatMessage.string({id: 'tableBase.group'})}</th></tr>
+          </thead>
+          <tbody>
+            {
+                    dataSourceRef.current[name]
+                        .map((d, i) => {
+                            const group = getGroup(d.id);
+                            return <tr key={d.id} className={`${currentPrefix}-quick-edit-item ${selected.includes(d.id) ? `${currentPrefix}-table-selected` : ''}`}>
+                              <td onClick={e => onNoClick(e, d.id, i)}>{i + 1}</td>
+                              <td>
+                                <Input placeholder={FormatMessage.string({id: 'tableBase.defKey'})} defaultValue={d.defKey} onChange={e => _dataChange(e.target.value, 'defKey', d.id)}/>
+                              </td>
+                              <td>
+                                <Input defaultValue={d.defName} onChange={e => _dataChange(e.target.value, 'defName', d.id)}/>
+                              </td>
+                              <td>
+                                <Input defaultValue={d[name === 'dicts' ? 'intro' : 'comment']} onChange={e => _dataChange(e.target.value, name === 'dicts' ? 'intro' : 'comment', d.id)}/>
+                              </td>
+                              <td>
+                                <SelectGroup
+                                  key={group.join(separator)}
+                                  hiddenLabel
+                                  dataSource={dataSource}
+                                  dataChange={(...args) => _dataChange(...args, d.id)}
+                                  data={group}
+                                    />
+                              </td>
+                            </tr>;
+                        })
+                }
+          </tbody>
+        </table>
+      </div>
     </div>;
 });
