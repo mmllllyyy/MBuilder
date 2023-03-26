@@ -2248,10 +2248,33 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
     });
   };
   const tempEntities = mergeData(entities, ignoreCaseEntities(entities, newEntities), true, true);
-  // 合并视图
-  // const views = oldDataSource.views || [];
-  // const newViews = newDataSource.views || [];
-  // const tempViews = mergeData(views, newViews, true);
+  // 合并视图(直接追加，不合并)
+  const views = oldDataSource.views || [];
+  const newViewsKeys = views.map(d => d.defKey);
+  const newViews = (newDataSource.views || []).map(d => {
+    let defKey = d.defKey;
+    if (newViewsKeys.includes(defKey)) {
+      defKey = `${defKey}_1`;
+      newViewsKeys.push(defKey);
+    }
+    return {
+      ...d,
+      old: d.id,
+      id: Math.uuid(),
+      defKey,
+      fields: (d.fields || []).map(f => {
+        if (f.refEntity) {
+          const currentEntityId = tempEntities.filter(e => e.old === f.refEntity)[0]?.id;
+          return {
+            ...f,
+            refEntity: currentEntityId || f.refEntity
+          }
+        }
+        return f;
+      })
+    }
+  });
+  const tempViews = views.concat(newViews);
 
   const getCurrentEntity = (eId, fId, type) => {
     const newData = type === 'entity' ? newEntities : [];
@@ -2284,6 +2307,7 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
     }
     return {
       ...d,
+      old: d.id,
       id: Math.uuid(),
       defKey,
       canvasData: {
@@ -2344,7 +2368,7 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
     };
   });
   const newViewGroups = (newDataSource.viewGroups || []);
-  const tempViewGroups = mergeData(viewGroups, newViewGroups, false, false);
+  const tempViewGroups = mergeData(viewGroups, newViewGroups, true, false);
   const mergeGroupData = (v, name, data) => {
     const newV = newViewGroups.filter(g => g.defKey === v.defKey)[0]?.[name];
     if(newV) {
@@ -2485,16 +2509,27 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
     },
     entities: tempEntities.map(e => refactor(e, 'entity'))
         .map(t => _.omit(t, ['old', 'group'])),
-    // views: tempViews.map(v => refactor(v, 'view')).map(t => _.omit(t, 'old')),
-    diagrams: tempDiagrams,
+    views: tempViews.map(t => _.omit(t, ['old'])),
+    diagrams: tempDiagrams.map(t => _.omit(t, ['old'])),
     viewGroups: tempViewGroups.map(v => {
       return {
         ...v,
+        refViews: mergeGroupData(v, 'refViews', tempViews),
         refDiagrams: mergeGroupData(v, 'refDiagrams', tempDiagrams),
         refDicts: mergeGroupData(v, 'refDicts', tempDicts),
         refEntities: mergeGroupData(v, 'refEntities', tempEntities),
       }
-    }),
+    }).map(v => {
+      if (!v.old) {
+        const names = ['refViews', 'refDiagrams', 'refDicts', 'refEntities'];
+        // 清除新增的空分组
+        if (names.some(n => (v[n] || []).length !== 0)) {
+          return v;
+        }
+        return null;
+      }
+      return _.omit(v, ['old']);
+    }).filter(v => !!v),
   };
 };
 

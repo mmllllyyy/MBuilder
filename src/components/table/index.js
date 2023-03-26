@@ -104,14 +104,19 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
       let refKey = h.refKey || h.newCode;
       const columnOthers = (dataSource?.profile?.headers || [])
           .filter(c => c.refKey === refKey)[0];
+      const defaultColumn = allColumns.filter(c => c.newCode === refKey)[0];
       if(columnOthers) {
-        const column = allColumns.filter(c => c.newCode === refKey)[0]
-            || {value: columnOthers.value};
+        const column = defaultColumn || {value: columnOthers.value};
         return {
           ...h,
           ...column,
           enable: columnOthers.enable,
           refKey,
+        };
+      } else if (defaultColumn) {
+        return {
+          ...h,
+          ...defaultColumn,
         };
       }
       return h;
