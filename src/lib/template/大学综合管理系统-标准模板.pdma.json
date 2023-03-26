@@ -2,14 +2,14 @@
   "name": "大学综合管理系统",
   "describe": "标准模板案例（分组主题模式）",
   "avatar": "",
-  "version": "4.4.0",
-  "createdTime": "2023-3-14 19:20:56",
-  "updatedTime": "2023-3-19 15:27:07",
+  "version": "4.5.0",
+  "createdTime": "2023-3-26 08:39:25",
+  "updatedTime": "2023-3-26 08:52:07",
   "dbConns": [],
   "profile": {
     "default": {
       "db": "29D1CE08-4C35-4D2D-AAA9-23D93305B52E",
-      "dbConn": "0020CDE0-DB0C-4F2E-8DCB-BDC3648C94DA",
+      "dbConn": "",
       "entityInitFields": [
         {
           "defKey": "TENANT_ID",
@@ -289,11 +289,15 @@
         "createView": "CREATE VIEW {{=it.view.defKey}} AS\nSELECT \n{{~it.view.fields:field:index}}\n    {{=field.refEntity}}.{{=field.refEntityField}} AS {{=field.defKey}}{{= index < it.view.fields.length-1 ? ',' : ''}}\n{{~}}\nFROM {{~it.view.refEntities:refEntity:index}}{{=refEntity}}{{= index < it.view.refEntities.length-1 ? ',' : ''}}{{~}};\n$blankline\n"
       },
       {
-        "type": "dbDDL",
         "applyFor": "0BBCABA5-B8E4-41B0-B8E4-8F5EA6029307",
-        "createTable": "CREATE TABLE {{=it.entity.defKey}}(\n{{ pkList = [] ; }}\n{{~it.entity.fields:field:index}}\n    {{? field.primaryKey }}{{ pkList.push(field.defKey) }}{{?}}\n    {{=field.defKey}} {{=field.type}}{{?field.len>0}}{{='('}}{{=field.len}}{{?field.scale>0}}{{=','}}{{=field.scale}}{{?}}{{=')'}}{{?}}{{= field.notNull ? ' NOT NULL' : '' }}{{= field.autoIncrement ? '' : '' }}{{= field.defaultValue ? it.func.join(' DEFAULT ','('+field.defaultValue+')',' ') : '' }}{{= index < it.entity.fields.length-1 ? ',' : ( pkList.length>0 ? ',' :'' ) }}\n{{~}}\n{{? pkList.length >0 }}\n    PRIMARY KEY ({{~pkList:pkName:i}}{{= pkName }}{{= i<pkList.length-1 ? ',' : '' }}{{~}})\n{{?}}\n);\n$blankline\n{{? it.entity.defKey || it.entity.defName}}COMMENT ON TABLE {{=it.entity.defKey}} IS '{{=it.func.join(it.entity.defName,it.entity.comment,';')}}';{{?}}\n{{~it.entity.fields:field:index}}\n{{? field.defName || field.comment}}COMMENT ON COLUMN {{=it.entity.defKey}}.{{=field.defKey}} IS '{{=it.func.join(field.defName,field.comment,';')}}';{{?}}\n{{~}}",
+        "type": "dbDDL",
+        "createTable": "CREATE TABLE {{=it.entity.defKey}}(\n{{ pkList = [] ; }}\n{{~it.entity.fields:field:index}}\n    {{? field.primaryKey }}{{ pkList.push(field.defKey) }}{{?}}\n    {{=field.defKey}} {{=field.type}}{{?field.len>0}}{{='('}}{{=field.len}}{{?field.scale>0}}{{=','}}{{=field.scale}}{{?}}{{=')'}}{{?}} {{= field.notNull ? 'NOT NULL' : '' }} {{= field.autoIncrement ? 'IDENTITY(1,1)' : '' }}{{= field.defaultValue ? it.func.join(' DEFAULT ',field.defaultValue,' ') : '' }} COMMENT '{{=it.func.join(field.defName,field.comment,';')}}'{{= index < it.entity.fields.length-1 ? ',' : ( pkList.length>0 ? ',' :'' ) }}\n{{~}}\n{{? pkList.length >0 }}\n    PRIMARY KEY ({{~pkList:pkName:i}}{{= pkName }}{{= i<pkList.length-1 ? ',' : '' }}{{~}})\n{{?}}\n);\n$blankline",
+        "createView": "CREATE VIEW {{=it.view.defKey}} AS\nSELECT \n{{~it.view.fields:field:index}}\n    {{=field.refEntity}}.{{=field.refEntityField}} AS {{=field.defKey}}{{= index < it.view.fields.length-1 ? ',' : ''}}\n{{~}}\nFROM {{~it.view.refEntities:refEntity:index}}{{=refEntity}}{{= index < it.view.refEntities.length-1 ? ',' : ''}}{{~}};\n$blankline\n",
+        "deleteTable": "",
         "createIndex": "{{~ it.entity.indexes:index}}\nCREATE {{? index.unique}}UNIQUE {{?}}INDEX {{=index.defKey}} ON {{=it.entity.defKey}}({{ fieldsKeys = index.fields.map(function(field){return field.fieldDefKey}) ; }}{{=it.func.join(...fieldsKeys,',')}});\n{{~}}",
-        "createView": "CREATE VIEW {{=it.view.defKey}} AS\nSELECT \n{{~it.view.fields:field:index}}\n    {{=field.refEntity}}.{{=field.refEntityField}} AS {{=field.defKey}}{{= index < it.view.fields.length-1 ? ',' : ''}}\n{{~}}\nFROM {{~it.view.refEntities:refEntity:index}}{{=refEntity}}{{= index < it.view.refEntities.length-1 ? ',' : ''}}{{~}};\n$blankline\n"
+        "deleteIndex": "",
+        "message": "",
+        "update": ""
       },
       {
         "type": "dbDDL",
