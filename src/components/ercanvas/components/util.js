@@ -82,3 +82,14 @@ export const refactorCopyData = (cells, graph) => {
         return p.concat(cloneData[n]);
     }, []);
 };
+
+export const getChildrenId = (n, nodes) => {
+    const children = n.prop('children') || [];
+    if (children.length === 0) {
+        return [];
+    }
+    return children.reduce((a, b) => {
+        const bNode = nodes.filter(cNode => cNode.id === b)[0];
+        return a.concat(bNode ? getChildrenId(bNode, nodes).concat(bNode.id) : []);
+    }, children);
+};

@@ -3,7 +3,12 @@ import React from 'react';
 import _ from 'lodash/object';
 import {Shape} from '@antv/x6';
 import ReactDOM from 'react-dom';
-import {getChildrenCell, refactorCopyData, renderer} from 'components/ercanvas/components/util';
+import {
+    getChildrenCell,
+    getChildrenId,
+    refactorCopyData,
+    renderer,
+} from 'components/ercanvas/components/util';
 import marked from 'marked';
 import {
     calcCellData,
@@ -1320,6 +1325,22 @@ export default class ER {
                         }].concat(finalResult);
                     }
                 }
+            }
+        }
+    }
+    nodeMove = (node) => {
+        if(this.filterErCell(node)) {
+            node.toFront({deep: true});
+            if(node.shape === 'group') {
+                const children = getChildrenId(node, this.graph.getNodes());
+                const edges = this.filterErCell(this.graph.getEdges());
+                setTimeout(() => {
+                    edges.forEach((e) => {
+                        if (children.includes(e.target.cell) || children.includes(e.source.cell)) {
+                            e.toFront();
+                        }
+                    });
+                });
             }
         }
     }

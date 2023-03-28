@@ -2,7 +2,7 @@ import Hierarchy from '@antv/hierarchy';
 import {FormatMessage, Message} from 'components';
 import {edgeNodeAddTool} from 'components/ercanvas/components/tool';
 import { tree2array } from '../../../lib/tree';
-import {getChildrenCell, refactorCopyData} from '../components/util';
+import {getChildrenCell, getChildrenId, refactorCopyData} from '../components/util';
 import {openUrl} from '../../../lib/json2code_util';
 import {separator} from '../../../../profile';
 import {getCache} from '../../../lib/cache';
@@ -30,23 +30,13 @@ export default class Mind {
     isMindCell = (cell) => {
         return this.filterMindCell(cell).length > 0;
     }
-    getChildrenId = (n, nodes) => {
-        const children = n.prop('children') || [];
-        if (children.length === 0) {
-            return [];
-        }
-        return children.reduce((a, b) => {
-            const bNode = nodes.filter(cNode => cNode.id === b)[0];
-            return a.concat(bNode ? this.getChildrenId(bNode, nodes).concat(bNode.id) : []);
-        }, children);
-    };
     getRoot = (node, nodes) => {
         if (node.shape === 'mind-topic') {
             return node;
         }
         return nodes.filter(n => n.shape === 'mind-topic')
             .filter((n) => {
-                return this.getChildrenId(n, nodes).includes(node.id);
+                return getChildrenId(n, nodes).includes(node.id);
             })[0];
     }
     updateTree = (node, v, filterCells = []) => {
@@ -689,7 +679,7 @@ export default class Mind {
                 };
                 if(topic.length > 0) {
                     const allChildren = topic.reduce((p, n) => {
-                        return p.concat(this.getChildrenId(n, cells));
+                        return p.concat(getChildrenId(n, cells));
                     }, topic.map(t => t.id));
                     tempCells = cells.filter((c) => {
                         if (c.isNode()) {
@@ -754,6 +744,20 @@ export default class Mind {
                     }
                 }
             });
+        }
+    }
+    nodeMove = (node) => {
+        if(this.filterMindCell(node)) {
+            if(node.shape === 'mind-topic') {
+                const children = getChildrenId(node, this.graph.getNodes());
+                const edges = this.filterMindCell(this.graph.getEdges());
+                edges.forEach((e) => {
+                    if (children.includes(e.target.cell) || children.includes(e.source.cell)) {
+                        e.toFront();
+                    }
+                });
+            }
+            node.toFront({deep: true});
         }
     }
 }

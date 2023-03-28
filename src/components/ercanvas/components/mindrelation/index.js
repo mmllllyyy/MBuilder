@@ -71,7 +71,7 @@ Graph.registerEdge('mind-edge', {
             stroke: '#ACDAFC',
         },
     },
-    zIndex: 0,
+    zIndex: 3,
 });
 
 Graph.registerEdge('mind-edge-img', {

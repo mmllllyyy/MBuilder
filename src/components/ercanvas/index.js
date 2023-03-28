@@ -441,7 +441,9 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       graph.on('node:mouseleave', ({node}) => {
         eR.nodeMouseLeave(node);
       });
-      graph.on('node:move', () => {
+      graph.on('node:move', ({node}) => {
+        eR.nodeMove(node);
+        mind.nodeMove(node);
         edgeNodeRemoveTool(id);
       });
       graph.on('node:moved', ({node}) => {

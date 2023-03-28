@@ -42,7 +42,7 @@ const Relation = React.memo(({dataSource, renderReady, diagramKey, validateTable
     renderReady && renderReady(cav);
   };
   const dataChange = (canvasData) => {
-    console.log(canvasData);
+    //console.log(canvasData);
     tabDataChange && tabDataChange({
       type: 'diagram',
       key: diagramKey,
