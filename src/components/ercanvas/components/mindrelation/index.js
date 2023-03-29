@@ -78,8 +78,6 @@ Graph.registerEdge('mind-edge-img', {
     inherit: 'mind-edge',
     attrs: {
         line: {
-            refX: 12,
-            refY: 9,
         },
     },
 });

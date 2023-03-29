@@ -20,7 +20,15 @@ export const img = (data, relationType, dataSource, needCalc = true, groups) => 
       scroller: {
         enabled: true,
       },
+      connecting: {
+        connectionPoint: 'anchor',
+      },
     });
+    const updateStyle = () => {
+      dom.querySelectorAll('body').forEach(d => {
+        d.style.margin  = '0';
+      });
+    }
     const mindCells = (data || []).filter(c => c.shape === 'mind-topic-branch' || c.shape=== 'mind-topic' || c.shape === 'mind-edge');
     const cells = ((needCalc ? calcCellData(data, dataSource, null, groups, null, relationType, null, null) : data))
         .concat(mindCells).map((d) => {
@@ -61,6 +69,7 @@ export const img = (data, relationType, dataSource, needCalc = true, groups) => 
     graph.on('render:done', () => {
       graph.centerContent();
       //setTimeout(() => {
+        updateStyle()
         res(dom);
       //});
     });

@@ -1316,11 +1316,11 @@ export  const calcNodeData = (preData, nodeData, dataSource, groups) => {
         .reduce((a, b, i) => {
       return a.concat([{
         group: 'in',
-        args: { x: 0, y: 40 + i * 23 },
+        args: { x: 0, y: 38.5 + i * 23 },
         id: `${b.id}${separator}in`,
       }, {
         group: 'out',
-        args: { x: 0 + width, y: 40 + i * 23 },
+        args: { x: 0 + width, y: 38.5 + i * 23 },
         id: `${b.id}${separator}out`,
       }]);
     }, [])

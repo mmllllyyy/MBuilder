@@ -30,6 +30,7 @@ const EditNode = forwardRef(({node}, ref) => {
       // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{__html: getLabel()}}
       style={{
+        margin: 0,
         padding: '2px',
         WebkitTextFillColor: node.getProp('fontColor') || 'rgba(0,0,0,.65)',
         width: '100%',
@@ -69,15 +70,11 @@ Graph.registerNode('edit-node-polygon-img', {
   zIndex: 2,
   attrs: {
     body: {
-      refX: 10,
-      refY: 8,
       stroke: '#DFE3EB',
       strokeWidth: 1,
       refPoints: '0,10 10,0 20,10 10,20',
     },
     text: {
-      refX2: 10,
-      refY2: 8,
       style: {
         fontSize: '12px',
         fill: 'rgba(0, 0, 0, 0.65)',
@@ -92,14 +89,10 @@ Graph.registerNode('edit-node-circle-svg-img', {
   zIndex: 2,
   attrs: {
     body: {
-      refX: 10,
-      refY: 8,
       stroke: '#DFE3EB',  // 边框颜色
       strokeWidth: 1,
     },
     text: {
-      refX2: 10,
-      refY2: 8,
       style: {
         fontSize: '12px',
         fill: 'rgba(0, 0, 0, 0.65)',
