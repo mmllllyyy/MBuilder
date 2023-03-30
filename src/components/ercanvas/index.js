@@ -2,10 +2,10 @@ import moment from 'moment';
 import html2canvas from 'html2canvas';
 import React, {useEffect, useRef, useMemo} from 'react';
 import { Graph, Addon, DataUri } from '@antv/x6';
-import { FormatMessage} from 'components';
+import {Button, Download, FormatMessage, openModal} from 'components';
 import './components';
 import {getPrefix} from '../../lib/prefixUtil';
-import { img } from '../../lib/generatefile/img';
+import {html2svg, img} from '../../lib/generatefile/img';
 import FindEntity from './FindEntity';
 import ToolBar from './ToolBar';
 import CommentEditor from './CommentEditor';
@@ -14,6 +14,7 @@ import * as align from '../../lib/position';
 import ER from './chart/ER';
 import Mind from './chart/Mind';
 import { edgeNodeRemoveTool } from './components/tool';
+import ExportImg from '../../app/container/tools/exportimg';
 
 const { Dnd } = Addon;
 
@@ -570,18 +571,44 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       getScaleNumber,
       alignment,
       exportImg: () => {
-        restProps.openLoading(FormatMessage.string({id: 'toolbar.exportImgLoading'}));
-        img(graph.toJSON().cells, relationType,null, false).then((dom) => {
-          html2canvas(dom).then((canvas) => {
-            document.body.removeChild(dom.parentElement.parentElement);
-            const diagram = (dataSourceRef.current?.diagrams || [])
-                .filter(d => d.id === diagramKey)[0] || {};
-
-            const clippedCanvas = clipCanvasEmptyPadding(canvas, 30);
-            restProps.closeLoading();
-            DataUri.downloadDataUri(clippedCanvas.toDataURL('image/png'),
-                `${dataSourceRef.current.name}-${diagram.defKey}[${diagram.defName || diagram.defKey}]-${moment().format('YYYYMDHHmmss')}.png`);
+        const diagram = (dataSourceRef.current?.diagrams || [])
+            .filter(d => d.id === diagramKey)[0] || {};
+        let modal = null;
+        let type = 'svg';
+        const onOk = () => {
+          modal && modal.close();
+          restProps.openLoading(FormatMessage.string({id: 'toolbar.exportImgLoading'}));
+          const cells = graph.toJSON().cells;
+          img(cells, relationType,null, false).then((dom) => {
+            if (type === 'svg') {
+              Download(
+                  [html2svg(cells, dom)],
+                  'image/svg+xml',
+                  `${dataSourceRef.current.name}-${diagram.defKey}[${diagram.defName || diagram.defKey}]-${moment().format('YYYYMDHHmmss')}.svg`);
+              document.body.removeChild(dom.parentElement.parentElement);
+              restProps.closeLoading();
+            } else {
+              html2canvas(dom).then((canvas) => {
+                document.body.removeChild(dom.parentElement.parentElement);
+                const clippedCanvas = clipCanvasEmptyPadding(canvas, 30);
+                restProps.closeLoading();
+                DataUri.downloadDataUri(clippedCanvas.toDataURL('image/png'),
+                    `${dataSourceRef.current.name}-${diagram.defKey}[${diagram.defName || diagram.defKey}]-${moment().format('YYYYMDHHmmss')}.png`);
+              });
+            }
           });
+        };
+        const onChange = (e) => {
+          type = e.target.value;
+        };
+        const onCancel = () => {
+          modal && modal.close();
+        };
+        modal = openModal(<ExportImg onChange={onChange} type={type}/>, {
+          buttons: [
+            <Button type='primary' key='ok' onClick={onOk}><FormatMessage id='button.ok'/></Button>,
+            <Button key='cancel' onClick={onCancel}><FormatMessage id='button.cancel'/></Button>],
+          title: FormatMessage.string({id: 'exportImg.typeSelect'}),
         });
       },
     });

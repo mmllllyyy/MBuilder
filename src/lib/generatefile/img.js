@@ -80,7 +80,7 @@ export const img = (data, relationType, dataSource, needCalc = true, groups) => 
   })
 };
 
-export const imgAll = (dataSource, callBack, useBase) => {
+export const imgAll = (dataSource, callBack, useBase, imageType) => {
   if ((dataSource.diagrams || []).length === 0){
     return new Promise((res, rej) => {
       if (useBase) {
@@ -123,16 +123,24 @@ export const imgAll = (dataSource, callBack, useBase) => {
             ...hiddenPort,
           },
         }).then((dom) => {
-          html2canvas(dom).then((canvas) => {
-            document.body.removeChild(dom.parentElement.parentElement);
-            const clippedCanvas = clipCanvasEmptyPadding(canvas, 30);
-            const baseData = clippedCanvas.toDataURL('image/png');
-            const dataBuffer = Buffer.from(baseData.replace(/^data:image\/\w+;base64,/, ""), 'base64');
-            result.push({fileName: d.id, data: useBase ? baseData : dataBuffer});
+          if (imageType === 'svg') {
+            const baseData = html2svg(d.canvasData.cells, dom);
+            result.push({fileName: d.id, data: useBase ? `data:image/svg+xml;base64,${window.btoa(unescape(encodeURIComponent(baseData)))}` : baseData});
             console.log(d.defName || d.defKey);
             callBack && callBack();
             resolve();
-          }).catch(err => reject(err));
+          } else {
+            html2canvas(dom).then((canvas) => {
+              document.body.removeChild(dom.parentElement.parentElement);
+              const clippedCanvas = clipCanvasEmptyPadding(canvas, 30);
+              const baseData = clippedCanvas.toDataURL('image/png');
+              const dataBuffer = Buffer.from(baseData.replace(/^data:image\/\w+;base64,/, ""), 'base64');
+              result.push({fileName: d.id, data: useBase ? baseData : dataBuffer});
+              console.log(d.defName || d.defKey);
+              callBack && callBack();
+              resolve();
+            }).catch(err => reject(err));
+          }
         }).catch(err => reject(err))
       })
     }
@@ -145,5 +153,18 @@ export const imgAll = (dataSource, callBack, useBase) => {
           }).catch(err => rej(err));
     }
   });
+}
+
+
+export const html2svg = (data, dom) => {
+  const cells = data.filter(c => c.position);
+  const minX = Math.min(...cells.map(c => c.position.x));
+  const minY = Math.min(...cells.map(c => c.position.y));
+  const svg = dom.querySelector('.x6-graph-svg');
+  const viewport = dom.querySelector('.x6-graph-svg-viewport');
+  viewport.setAttribute('transform', `matrix(1,0,0,1,${-minX + 10},${-minY + 10})`);
+  const rect = viewport.getBoundingClientRect();
+  return `<svg width="${rect.width + 20}px" height="${rect.height + 20}px" viewBox="0 0 ${rect.width + 20} ${rect.height + 20}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+          ${svg.innerHTML.replaceAll('size="1px">', 'size="1px"/>')}</svg>`;
 }
 

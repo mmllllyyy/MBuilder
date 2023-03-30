@@ -472,13 +472,13 @@ export const saveTempImages = (images) => {
   });
 };
 
-export const saveImages = (images) => {
+export const saveImages = (images, imageType) => {
   return new Promise((res, rej) => {
     openFileOrDirPath([], ['openDirectory']).then((p) => {
       if (p) {
         Promise.all(images.map(i => {
-          const filePath = p + path.sep + i.fileName + '.png';
-          const dataBuffer = Buffer.from(i.data.replace(/^data:image\/\w+;base64,/, ""), 'base64');
+          const filePath = p + path.sep + i.fileName + '.' + imageType;
+          const dataBuffer = Buffer.from(i.data.replace(/^data:image\/\w+\+*\w+;base64,/, ""), 'base64');
           return saveNormalFile(filePath, dataBuffer);
         })).then(() => {
           res();

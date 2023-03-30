@@ -14,6 +14,7 @@ const EditNode = forwardRef(({node}, ref) => {
   return <div
     ref={ref}
     style={{
+        boxSizing: 'border-box',
         background: node.getProp('fillColor') || '#FFFFFF',
         display: 'flex',
         flexDirection: 'row',
@@ -30,6 +31,7 @@ const EditNode = forwardRef(({node}, ref) => {
       // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{__html: getLabel()}}
       style={{
+        boxSizing: 'border-box',
         margin: 0,
         padding: '2px',
         WebkitTextFillColor: node.getProp('fontColor') || 'rgba(0,0,0,.65)',

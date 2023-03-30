@@ -40,6 +40,7 @@ Graph.registerEdge('erdRelation-img', {
   },
   attrs: {
     line: {
+      cursor: 'default',
       strokeWidth: 1,
       stroke: '#ACDAFC',
       sourceMarker: {

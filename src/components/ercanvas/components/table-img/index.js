@@ -26,7 +26,8 @@ const Table = forwardRef(({node}, ref) => {
       background: '#FFFFFF',
       color: node.getProp('fontColor'),
       borderRadius: '5px',
-      border: '1px solid #DFE3EB',
+      height: '100%',
+      boxSizing: 'border-box',
     }}
   >
     <div
@@ -36,12 +37,15 @@ const Table = forwardRef(({node}, ref) => {
         fontWeight: 'bold',
         fontSize: '12px',
         borderRadius: '5px 5px 0 0',
-        padding: '2px 0 2px 0',
+        padding: '4px 0',
+        borderBottom: '1px solid #DFE3EB',
+        lineHeight: 1.5,
+        boxSizing: 'border-box',
       }}
     >
       {`${getTitle(data)}${store?.data.count > 0 ? `:${store?.data.count}` : ''}`}
     </div>
-    <div>
+    <div style={{ height: 'calc(100% - 27px)', background: 'rgba(221,229,255, 0.05)', boxSizing: 'border-box'}}>
       {
         data.fields.map((f) => {
           return <div
@@ -50,12 +54,14 @@ const Table = forwardRef(({node}, ref) => {
               padding: '2.5px 4px 2.5px 4px',
               fontSize: '12px',
               lineHeight: '1.5',
+              boxSizing: 'border-box',
             }}
             >
             {
               data.headers.map((h) => {
                 return <span
                   style={{
+                    boxSizing: 'border-box',
                     width: data.maxWidth[h.refKey],
                     fontSize: '12px',
                     display: 'inline-block',
@@ -80,7 +86,10 @@ Graph.registerNode('table-img', {
   zIndex: 2,
   attrs: {
     body: {
-      strokeWidth: 0,
+        stroke: '#DFE3EB',  // 边框颜色
+        strokeWidth: 2,
+        rx: 5,
+        ry: 5,
     },
   },
   component: <Table/>,

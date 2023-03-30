@@ -1059,5 +1059,9 @@ projectTemplate: {
         remove: 'remove',
         noteFontColor: 'note font color',
     },
+    exportImg: {
+        type: 'picture type',
+        typeSelect: 'Choose a picture type',
+    },
 };
 

@@ -314,7 +314,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       cavRef.validateScale(factor);
     }
   };
-  const genImg = (useBase = false, filterDiagrams = []) => {
+  const genImg = (useBase = false, filterDiagrams = [], imageType = 'png') => {
     const currentDiagrams = dataSourceRef.current?.diagrams || [];
     const diagrams = filterDiagrams.length === 0 ? currentDiagrams
         : currentDiagrams.filter(d => filterDiagrams.includes(d.id));
@@ -334,7 +334,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
           id: 'toolbar.exportWordStep1',
           data: { count, length },
         }));
-      }, useBase).then((res) => {
+      }, useBase, imageType).then((res) => {
         restProps.closeLoading();
         resolve(res);
       }).catch(() => {
@@ -344,7 +344,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
   };
   const generateSimpleFile = (fileType) => {
     generateFile(fileType, dataSourceRef.current, (callback) => {
-      genImg(true).then((res) => {
+      genImg(true, [], 'svg').then((res) => {
         callback(res);
       });
     });

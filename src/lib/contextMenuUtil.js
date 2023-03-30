@@ -39,6 +39,7 @@ import * as Component from 'components';
 import Note from '../app/container/tools/note';
 import {saveImages} from './middle';
 import moment from 'moment';
+import ExportImg from '../app/container/tools/exportimg';
 
 const opt = [{
   key: 'add',
@@ -196,22 +197,39 @@ const imgOpt = (dataSource, menu, genImg) => {
       }
     })
   }
-  if (type === 'diagrams') {
-    if (parentKey) {
-      const keys = dataSource.viewGroups.filter(v => v.id === parentKey)[0]?.refDiagrams || [];
-      genImg(true, keys).then((images) => {
-        saveImages(refactorFileName(images))
-      });
+  let modal = null;
+  let imageType = 'svg';
+  const onChange = (e) => {
+    imageType = e.target.value;
+  };
+  const onOk = () => {
+    modal && modal.close();
+    if (type === 'diagrams') {
+      if (parentKey) {
+        const keys = dataSource.viewGroups.filter(v => v.id === parentKey)[0]?.refDiagrams || [];
+        genImg(true, keys, imageType).then((images) => {
+          saveImages(refactorFileName(images), imageType)
+        });
+      } else {
+        genImg(true, [], imageType).then((images) => {
+          saveImages(refactorFileName(images), imageType)
+        });
+      }
     } else {
-      genImg(true, []).then((images) => {
-        saveImages(refactorFileName(images))
+      genImg(true, otherMenus.filter(m => m.type === type).map(m => m.key), imageType).then((images) => {
+        saveImages(refactorFileName(images), imageType)
       });
     }
-  } else {
-    genImg(true, otherMenus.filter(m => m.type === type).map(m => m.key)).then((images) => {
-      saveImages(refactorFileName(images))
-    });
   }
+  const onCancel = () => {
+    modal && modal.close();
+  };
+  modal = openModal(<ExportImg onChange={onChange} type={imageType}/>, {
+    buttons: [
+      <Button type='primary' key='ok' onClick={onOk}><FormatMessage id='button.ok'/></Button>,
+      <Button key='cancel' onClick={onCancel}><FormatMessage id='button.cancel'/></Button>],
+    title: FormatMessage.string({id: 'exportImg.typeSelect'}),
+  });
 }
 
 const notesOpt = (dataSource, menu, updateDataSource) => {

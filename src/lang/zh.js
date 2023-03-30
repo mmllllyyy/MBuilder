@@ -1058,4 +1058,8 @@ export default {
         remove: '移除',
         noteFontColor: '标注文字颜色',
     },
+    exportImg: {
+        type: '图片类型',
+        typeSelect: '选择图片类型',
+    },
 };
