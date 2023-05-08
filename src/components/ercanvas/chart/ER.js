@@ -394,8 +394,8 @@ export default class ER {
         if (!empty) {
             return;
         }
-        const { width, height, fields, headers, maxWidth, ports } =
-            calcNodeData(empty, empty, dataSource, this.getTableGroup());
+        const { width, height, originWidth, fields, headers, maxWidth, ports } =
+            calcNodeData({data: empty}, empty, dataSource, this.getTableGroup());
         const node =  this.graph.createNode({
             size: {
                 width,
@@ -412,6 +412,7 @@ export default class ER {
                 fields,
                 headers,
                 maxWidth,
+                originWidth,
             },
         });
         this.dnd.start(node, e.nativeEvent);
@@ -527,6 +528,7 @@ export default class ER {
                         originKey: c.data.id,
                         ports: c.ports,
                         data: c.getProp('data'),
+                        size: c.size(),
                     },
                     dataSource,
                     this.updateFields,
@@ -1187,7 +1189,7 @@ export default class ER {
         return node.shape === 'edit-node' ||
             node.shape === 'edit-node-circle' ||
             node.shape === 'group' || node.shape === 'edit-node-polygon'
-            || node.shape === 'edit-node-circle-svg';
+            || node.shape === 'edit-node-circle-svg' || node.shape === 'table';
     };
     preserveAspectRatio = (node) => {
         return node.shape === 'edit-node-circle-svg'
@@ -1342,6 +1344,74 @@ export default class ER {
                     });
                 });
             }
+        }
+    }
+    nodeResized = (node) => {
+        if (this.isErCell(node) && node.shape === 'table') {
+            this.graph.batchUpdate('resize', () => {
+                const size = node.size();
+                const { maxWidth, ports } =
+                    calcNodeData({data: node.data, size, needTransform: false},
+                        node.data, this.getDataSource(), this.getTableGroup());
+                node.setData({maxWidth});
+                if (this.relationType === 'field') {
+                    const sliceCount = Math.floor((size.height - 31) / 23) * 2;
+                    const edges = this.filterErCell(this.graph.getEdges())
+                        .filter(e => e.target.cell === node.id || e.source.cell === node.id);
+                    edges.forEach((e) => {
+                        // 还原所有的连接线
+                        if(e.target.cell === node.id) {
+                            e.setProp('target/port', e.prop('target/portOrigin'));
+                            e.prop('target/port', e.prop('target/portOrigin'));
+                        } else if(e.source.cell === node.id) {
+                            e.setProp('source/port', e.prop('source/portOrigin'));
+                            e.prop('source/port', e.prop('source/portOrigin'));
+                        }
+                    });
+                    const updateEdge = [];
+                    node.setProp('ports', {
+                        ...ports,
+                        items: (ports.items || []).map((item, index) => {
+                            const edge = edges
+                                .filter(e => e.target.port === item.id
+                                    || e.source.port === item.id)[0];
+                            if (index >= sliceCount && item.group !== 'extend') {
+                                if(edge && item.id !== 'out_more' && item.id !== 'in_more') {
+                                    // 记录需要变更的连接线
+                                    updateEdge.push({e: edge, i: item});
+                                }
+                                return {
+                                    ...item,
+                                    attrs: {
+                                        circle: {
+                                            magnet: false,
+                                            style: {
+                                                // 隐藏锚点
+                                                opacity: 0,
+                                            },
+                                        },
+                                    },
+                                };
+                            }
+                            return item;
+                        }),
+                    });
+                    updateEdge.forEach(({e, i}) => {
+                        // 调整连接线
+                        const type = i.id.split(separator)[1];
+                        if(e.target.port === i.id) {
+                            e.setProp('target/port', `${type}_more`);
+                            e.prop('target/port', `${type}_more`);
+                            e.prop('target/portOrigin', i.id);
+                        } else if(e.source.port === i.id){
+                            e.setProp('source/port', `${type}_more`);
+                            e.prop('source/port', `${type}_more`);
+                            e.prop('source/portOrigin', i.id);
+                        }
+                    });
+                }
+            });
+
         }
     }
 }

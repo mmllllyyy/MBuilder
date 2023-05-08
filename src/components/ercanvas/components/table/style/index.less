@@ -32,13 +32,14 @@
         border-style: solid;
         border-width: 11px;
         border-right-color: @third-primary-color;
-        transform: translate(-11.5px, 5px) rotate(-45deg);
+        transform: translate(-11px, 5px) rotate(-45deg);
       }
     }
   }
   &-body {
     height: calc(100% - 27px);
     background: rgba(221,229,255, 0.05);
+    overflow-y: hidden;
     &-selected {
       background: @four-font-color;
     }
@@ -49,8 +50,9 @@
       }
     }
     & > div {
+      white-space: nowrap;
       height: 23px;
-      padding: 2.5px 4px 2.5px 4px;
+      padding: 2px 4px 2px 4px;
       & > span {
         display: inline-block;
         margin-left: 8px;

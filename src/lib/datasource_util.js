@@ -200,6 +200,8 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
             } else if (c.shape === 'group' || c.shape === 'mind-topic' || c.shape === 'mind-topic-branch') {
               pickFields.push('size');
               pickFields.push('children');
+            } else if(c.shape === 'table') {
+              pickFields.push('size');
             }
             if (d.relationType === 'entity') {
               pickFields.push('ports');
@@ -296,10 +298,12 @@ const updateAllEntity = (dataSource, diagrams) => {
         if (myEntity && refEntity) {
           return {
             myEntity,
-            myField: _.get(cell, status ? 'source.port' : 'target.port', '')
+            myField: _.get(cell, status ? 'source.portOrigin' : 'target.portOrigin', '')
+                .split(separator)[0] || _.get(cell, status ? 'source.port' : 'target.port', '')
               .split(separator)[0],
             refEntity,
-            refField: _.get(cell, status ? 'target.port' : 'source.port', '')
+            refField: _.get(cell, status ? 'target.portOrigin' : 'source.portOrigin', '')
+                .split(separator)[0] || _.get(cell, status ? 'target.port' : 'source.port', '')
               .split(separator)[0],
             myRows: (status ? relation[0] : relation[1]) || '',
             refRows: (status ? relation[1] : relation[0]) || '',
@@ -1252,7 +1256,8 @@ export const getTitle = (data) => {
   });
 };
 
-export  const calcNodeData = (preData, nodeData, dataSource, groups) => {
+export  const calcNodeData = ({data: preData, size, needTransform = true},
+                              nodeData, dataSource, groups) => {
   // 节点源数据
   const headers = (nodeData?.headers || []).filter(h => {
     const columnOthers = (dataSource?.profile?.headers || [])
@@ -1260,14 +1265,15 @@ export  const calcNodeData = (preData, nodeData, dataSource, groups) => {
     return (!h.hideInGraph) && (columnOthers.enable !== false);
   });
   const fields = (nodeData?.fields || []).filter(f => !f.hideInGraph)
-      .map(f => ({...f, ...transform(f, dataSource), extProps: Object.keys(f.extProps || {}).length}));
+      .map(f => ({...f, ...(needTransform ? transform(f, dataSource) : {})
+        , extProps: Object.keys(f.extProps || {}).length}));
   // 计算表头的宽度
   const headerText = `${getTitle(nodeData)}${nodeData.count > 0 ? `:${nodeData.count}` : ''}(${nodeData.defName})`;
   const headerWidth = getTextWidth(headerText, 12, 'bold') + 20 + (nodeData.comment ? 16 : 0);
   // 计算每一列最长的内容
   const maxWidth = {};
   const defaultWidth = {
-    primaryKey: 30,// 主键和外键的默认宽度
+    primaryKey: 40,// 主键和外键的默认宽度
     notNull: 70,// 非空默认宽度
   }
   const preFields = preData?.fields || [];
@@ -1281,8 +1287,8 @@ export  const calcNodeData = (preData, nodeData, dataSource, groups) => {
         const fieldValue = (f[fName] || '').toString();
         if (preF) {
           const preFieldValue = (preF[fName] || '').toString();
-          if (preFieldValue === fieldValue && preData.maxWidth) {
-            return preData.maxWidth[fName] || 0;
+          if (preFieldValue === fieldValue && preData.originWidth) {
+            return preData.originWidth[fName] || 0;
           }
           return getTextWidth(fieldValue, 12);
         }
@@ -1310,50 +1316,114 @@ export  const calcNodeData = (preData, nodeData, dataSource, groups) => {
       return repeat.filter(r => r.defKey === d.defKey).length === 1;
     });
   };
+  const realWidth = size ? size.width : width;
+  const realHeight = size ? size.height : height;
+  let sliceCount = -1;
+  if(size) {
+    sliceCount = Math.floor((size.height - 31) / 23) * 2;
+  }
   const ports = groups ? {
     groups,
     items: filterFields(fields)
         .reduce((a, b, i) => {
       return a.concat([{
         group: 'in',
-        args: { x: 0, y: 38.5 + i * 23 },
+        args: { x: 0, y: 38 + i * 23 },
         id: `${b.id}${separator}in`,
       }, {
         group: 'out',
-        args: { x: 0 + width, y: 38.5 + i * 23 },
+        args: { x: 0 + realWidth, y: 38 + i * 23 },
         id: `${b.id}${separator}out`,
       }]);
-    }, [])
+    }, []).map((item, i) => {
+          if (size && sliceCount !== -1 && i >= sliceCount) {
+            return {
+              ...item,
+              attrs: {
+                circle: {
+                  magnet: false,
+                  style: {
+                    // 隐藏锚点
+                    opacity: 0,
+                  },
+                },
+              },
+            };
+          }
+      return item;
+        }).concat([{
+          group: 'in',
+          args: { x: 0, y: realHeight - 6 },
+          id: 'in_more',
+          attrs: {
+            circle: {
+              magnet: false,
+              style: {
+                // 隐藏锚点
+                opacity: 0,
+              },
+            },
+          },
+        }, {
+          group: 'out',
+          args: { x: realWidth, y: realHeight - 6 },
+          id: 'out_more',
+          attrs: {
+            circle: {
+              magnet: false,
+              style: {
+                // 隐藏锚点
+                opacity: 0,
+              },
+            },
+          },
+        }])
         .concat([
       { group: 'extend',
-        args: { x: (width / 4), y: 0 },
+        args: { x: (realWidth / 4), y: 0 },
         id: 'extend-1',
       },
       { group: 'extend',
-        args: { x: (width / 4) * 2 , y: 0 },
+        args: { x: (realWidth / 4) * 2 , y: 0 },
         id: 'extend-2',
       },
       { group: 'extend',
-        args: { x: (width / 4) * 3 , y: 0 },
+        args: { x: (realWidth / 4) * 3 , y: 0 },
         id: 'extend-3',
       },
       { group: 'extend',
-        args: { x: (width / 4), y: height },
+        args: { x: (realWidth / 4), y: realHeight },
         id: 'extend-4',
       },
       { group: 'extend',
-        args: { x: (width / 4) * 2, y: height },
+        args: { x: (realWidth / 4) * 2, y: realHeight },
         id: 'extend-5',
       },
       { group: 'extend',
-        args: { x: (width / 4) * 3, y: height },
+        args: { x: (realWidth / 4) * 3, y: realHeight },
         id: 'extend-6',
       },
     ])} : {};
+  const getRealMaxWidth = (w) => {
+    if (size) {
+      const allKeys = Object.keys(w).filter(n => headers.some(h => h.refKey === n));
+      const finalWidth = realWidth - 16 - allKeys.length * 8;
+      const keysWidth = allKeys.reduce((p, n) => p + w[n], 0);
+      return allKeys.reduce((p, n) => {
+        return {
+          ...p,
+          [n]: Math.ceil(w[n] / keysWidth * finalWidth)
+        }
+      }, {...w});
+    }
+    return w;
+  }
+  console.log(maxWidth)
   return {
-    width,
-    height,
-    maxWidth,
+    width: realWidth,
+    height: realHeight,
+    maxWidth: getRealMaxWidth(maxWidth),
+    originWidth: maxWidth,
     fields,
     headers,
     ports,
@@ -1364,7 +1434,7 @@ export const mapData2Table = (n, dataSource, updateFields, groups, commonPorts,
                               relationType, commonEntityPorts, nodeClickText) => {
   const nodeData = dataSource?.entities?.filter(e => e.id === n.originKey)[0];
   if (nodeData) {
-    const { width, height, fields, headers, maxWidth, ports } = calcNodeData(n.data, nodeData, dataSource, groups);
+    const { width, originWidth, height, fields, headers, maxWidth, ports } = calcNodeData(n, nodeData, dataSource, groups);
     return {
       ...n,
       size: {
@@ -1379,6 +1449,7 @@ export const mapData2Table = (n, dataSource, updateFields, groups, commonPorts,
         fields,
         headers,
         maxWidth,
+        originWidth
       },
     };
   }

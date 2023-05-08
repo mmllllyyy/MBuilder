@@ -464,6 +464,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
       });
       graph.on('node:resized', ({node}) => {
         mind.nodeResized(node);
+        eR.nodeResized(node);
       });
       graph.on('scale', (scale) => {
         toolBarRef.current.scaleChange(scale.sx);

@@ -11,6 +11,7 @@ const Table = forwardRef(({node}, ref) => {
   const data = node.data;
   const store = node.store;
   const id = node.id;
+  const size = node.size();
   const linkData = JSON.parse(node.getProp('link') || '{}');
   const allFk = node?._model?.getIncomingEdges(id)?.map(t => t.getTargetPortId()
       ?.split(separator)[0]) || [];
@@ -58,6 +59,37 @@ const Table = forwardRef(({node}, ref) => {
         .split(',');
     return `rgba(${tempColor.join(',')}, 0.05)`;
   };
+  const sliceCount = Math.floor((size.height - 31) / 23);
+  const renderBody = (bodyData, calcWidth) => {
+    return bodyData.map((f) => {
+      return <div
+        key={`${f.id}${f.defName}`}
+        className={`${validateSelected(f, store.data) ? 'chiner-er-table-body-selected' : ''} ${f.primaryKey ? 'chiner-er-table-body-primary' : ''}`}>
+        {
+          data.headers.map((h) => {
+            const label = calcFKPKShow(f, h);
+            return <Tooltip
+              key={h.refKey}
+              title={typeof label === 'string' ?
+                  label.replace(/\r|\n|\r\n/g, '')
+                  : label}><span
+                    style={{
+                  width: calcWidth(h.refKey),
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+                    key={h.refKey}
+            >
+                    {typeof label === 'string' ?
+                      label.replace(/\r|\n|\r\n/g, '')
+                      : label}
+                  </span></Tooltip>;
+          })
+        }
+      </div>;
+    });
+  };
   return <div
     ref={ref}
     className='chiner-er-table'
@@ -87,26 +119,29 @@ const Table = forwardRef(({node}, ref) => {
       style={{background: calcColor()}}
     >
       {
-        data.fields.map((f) => {
-          return <div
-            key={`${f.id}${f.defName}`}
-            className={`${validateSelected(f, store.data) ? 'chiner-er-table-body-selected' : ''} ${f.primaryKey ? 'chiner-er-table-body-primary' : ''}`}>
-            {
-              data.headers.map((h) => {
-                const label = calcFKPKShow(f, h);
-                return <span
-                  style={{width: data.maxWidth[h.refKey]}}
-                  key={h.refKey}
-                >
-                  {typeof label === 'string' ?
-                    label.replace(/\r|\n|\r\n/g, '')
-                    : label}
-                </span>;
-              })
-            }
-          </div>;
+        renderBody(data.fields.slice(0, sliceCount), (key) => {
+          return data.maxWidth[key];
         })
       }
+      {data.fields.length > sliceCount && <Tooltip
+        force
+        offsetTop={5}
+        title={<div
+          className='chiner-er-table-body'
+          style={{
+            fontSize: '12px',
+            overflow: 'auto',
+        }}
+        >
+          {renderBody(data.fields.slice(sliceCount), (key) => {
+            return data.originWidth[key];
+          })}
+        </div>}
+      >
+        <div
+          style={{textAlign: 'center', position: 'fixed', bottom: 0, left: 0, width: '100%', cursor: 'pointer'}}
+        >...</div>
+      </Tooltip>}
     </div>
   </div>;
 });

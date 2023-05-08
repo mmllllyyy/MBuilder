@@ -8,6 +8,7 @@ const Table = forwardRef(({node}, ref) => {
   const data = node.data;
   const store = node.store;
   const id = node.id;
+  const size = node.size();
   const allFk = node?._model?.getIncomingEdges(id)?.map(t => t.getTargetPortId()
       ?.split(separator)[0]) || [];
   const calcFKPKShow = (f, h) => {
@@ -20,6 +21,7 @@ const Table = forwardRef(({node}, ref) => {
     }
     return f[h.refKey];
   };
+  const sliceCount = Math.floor((size.height - 31) / 23);
   return <div
     ref={ref}
     style={{
@@ -39,22 +41,24 @@ const Table = forwardRef(({node}, ref) => {
         borderRadius: '5px 5px 0 0',
         padding: '4px 0',
         borderBottom: '1px solid #DFE3EB',
-        lineHeight: 1.5,
+        height: '25px',
         boxSizing: 'border-box',
+        overflowY: 'hidden',
       }}
     >
       {`${getTitle(data)}${store?.data.count > 0 ? `:${store?.data.count}` : ''}`}
     </div>
     <div style={{ height: 'calc(100% - 27px)', background: 'rgba(221,229,255, 0.05)', boxSizing: 'border-box'}}>
       {
-        data.fields.map((f) => {
+          data.fields.slice(0, sliceCount).map((f) => {
           return <div
             key={`${f.id}${f.defName}`}
             style={{
-              padding: '2.5px 4px 2.5px 4px',
-              fontSize: '12px',
-              lineHeight: '1.5',
-              boxSizing: 'border-box',
+                whiteSpace: 'nowrap',
+                height: '23px',
+                padding: '2px 4px',
+                boxSizing: 'border-box',
+                fontSize: '12px',
             }}
             >
             {
@@ -67,6 +71,10 @@ const Table = forwardRef(({node}, ref) => {
                     display: 'inline-block',
                     marginLeft: '8px',
                     WebkitTextFillColor: node.getProp('fontColor') || 'rgba(0,0,0,.65)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    textDecoration: f.primaryKey ? 'underline' : 'none',
                   }}
                   key={h.refKey}
                 >
@@ -77,6 +85,20 @@ const Table = forwardRef(({node}, ref) => {
           </div>;
         })
       }
+      {data.fields.length > sliceCount && <div
+        style={{
+            boxSizing: 'border-box',
+            whiteSpace: 'nowrap',
+            height: '23px',
+            padding: '2px 4px 2px 4px',
+            textAlign: 'center',
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            width: '100%',
+            cursor: 'pointer',
+      }}
+        >...</div>}
     </div>
   </div>;
 });
