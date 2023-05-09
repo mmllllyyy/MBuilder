@@ -23,7 +23,7 @@ export default React.memo(({prefix, info, data, openLoading, closeLoading,
               <Button key='cancel' onClick={onCancel}>
                 <FormatMessage id='button.close'/>
               </Button>],
-            title: FormatMessage.string({id: 'toolbar.history'}),
+            title: FormatMessage.string({id: 'operationsHistory.log'}),
         });
     };
     const reset = (h) => {
@@ -84,6 +84,7 @@ export default React.memo(({prefix, info, data, openLoading, closeLoading,
                 </div>;
             })
         }
-      {historyOpt.length === 0 ? FormatMessage.string({id: 'operationsHistory.emptyHistory'}) : ''}
+      {historyOpt.length === 0 ?
+        <div style={{textAlign: 'center'}}>{FormatMessage.string({id: 'operationsHistory.emptyHistory'})}</div> : ''}
     </div>;
 });

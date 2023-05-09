@@ -1077,5 +1077,6 @@ export default {
         emptyHistory: '暂无操作历史',
         openWindow: '新窗口打开',
         log: '详细日志',
+        emptyLog: '暂无详细日志',
     },
 };

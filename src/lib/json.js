@@ -553,7 +553,10 @@ export const getBackupAllFile = ({info, data}, callback) => {
             // 默认保存100条历史数据
             if (allFiles.length >= 100) {
               // 删除最旧的
-              fs.unlinkSync(path.join(dir, allFiles[0]));
+              const file = path.join(dir, allFiles[0]);
+              if (fs.existsSync(file)) {
+                fs.unlinkSync(file);
+              }
             }
             const fileName = `T${moment().format('YYYYMMDDHHmmss')}.pdma.json`;
             fs.writeFileSync(path.join(dir, fileName), JSON.stringify(data, null, 2));

@@ -1078,6 +1078,7 @@ projectTemplate: {
         emptyHistory: 'empty history',
         openWindow: 'open new window',
         log: 'log',
+        emptyLog: 'empty log',
     },
 };
 

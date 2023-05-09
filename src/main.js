@@ -135,16 +135,12 @@ function createWindow() {
     }
     event.returnValue = template;
   });
-  ipcMain.on("loadFile", (event, {path}) => {
+  ipcMain.on("loadFile", (event, args) => {
     let urlPtah = '';
     if (process.env.CHINER_NODE_ENV === 'development') {
-      urlPtah = `http://${profile.host}:${profile.port}/index.html?path=${path}`;
+      urlPtah = `http://${profile.host}:${profile.port}/index.html?path=${args.path}`;
     } else {
-      urlPtah = url.format({
-        pathname: path.join(__dirname, `index.html?path=${path}`),
-        protocol: 'file:',
-        slashes: true,
-      })
+      urlPtah = path.join(__dirname, `index.html?path=${args.path}`)
     }
     event.returnValue = urlPtah;
   });

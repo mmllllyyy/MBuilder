@@ -66,7 +66,8 @@ const Table = forwardRef(({node}, ref) => {
         key={`${f.id}${f.defName}`}
         className={`${validateSelected(f, store.data) ? 'chiner-er-table-body-selected' : ''} ${f.primaryKey ? 'chiner-er-table-body-primary' : ''}`}>
         {
-          data.headers.map((h) => {
+          [{refKey: 'primaryKey'}].concat(data.headers
+              .filter(h => h.refKey !== 'primaryKey')).map((h) => {
             const label = calcFKPKShow(f, h);
             return <Tooltip
               key={h.refKey}

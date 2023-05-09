@@ -62,7 +62,8 @@ const Table = forwardRef(({node}, ref) => {
             }}
             >
             {
-              data.headers.map((h) => {
+                [{refKey: 'primaryKey'}].concat(data.headers
+                    .filter(h => h.refKey !== 'primaryKey')).map((h) => {
                 return <span
                   style={{
                     boxSizing: 'border-box',
