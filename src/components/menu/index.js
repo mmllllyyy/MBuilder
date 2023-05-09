@@ -11,10 +11,11 @@ import { allType } from '../../lib/datasource_util';
 import {separator} from '../../../profile';
 import {firstUp} from '../../lib/string';
 import {tree2array} from '../../lib/tree';
+import {READING} from '../../lib/variable';
 
 const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldNames,
                            contextMenuClick, prefix, menus = [], doubleMenuClick, getName,
-                           emptyData, defaultExpands, dragTable, groupType, header,
+                           emptyData, defaultExpands, dragTable, groupType, header, mode,
                            update, dataSource, sortEnable = true, draggable}, ref) => {
   const currentPrefix = getPrefix(prefix);
   const menuRef = useRef(null);
@@ -88,15 +89,17 @@ const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldName
     onMenuClick(e, id, type, parentKey);
   };
   const _onContextMenu = (e, key, type, parentKey) => {
-    e.stopPropagation();
-    if (!selectedMenu.some(s => s.key === key)){
-      onMenuClick(e, key, type, parentKey,(data) => {
-        onContextMenu && onContextMenu(key, type, data, parentKey);
-      });
-    } else {
-      onContextMenu && onContextMenu(key, type, selectedMenu, parentKey);
+    if (mode !== READING) {
+      e.stopPropagation();
+      if (!selectedMenu.some(s => s.key === key)){
+        onMenuClick(e, key, type, parentKey,(data) => {
+          onContextMenu && onContextMenu(key, type, data, parentKey);
+        });
+      } else {
+        onContextMenu && onContextMenu(key, type, selectedMenu, parentKey);
+      }
+      updatePosition({left: e.clientX, top: e.clientY});
     }
-    updatePosition({left: e.clientX, top: e.clientY});
   };
   const getClassName = (baseClass, key, childKey, type, offset) => {
     let tempClass = '';

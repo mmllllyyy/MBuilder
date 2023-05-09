@@ -12,6 +12,7 @@ import { version } from '../../../package';
 import { openUrl } from '../../lib/json2code_util';
 
 import template from '../../lib/template';
+import {READING} from '../../lib/variable';
 
 const CodeImg = ({currentPrefix}) => {
   return <div className={`${currentPrefix}-home-container-codeimg`}>
@@ -121,6 +122,8 @@ export default React.memo(({prefix, importProject, createProject, openTemplate,
   const _menuClick = (m, p) => {
     if (m.key === 'removeHistory') {
       removeHistory(p);
+    } else if(m.key === 'openReading') {
+      importProject(p.path, READING);
     } else {
       removeProject(p);
     }
@@ -139,6 +142,7 @@ export default React.memo(({prefix, importProject, createProject, openTemplate,
   };
   const Tool = ({p}) => {
     const dropDownMenus = [
+      {key: 'openReading', name: FormatMessage.string({id: 'home.openReading'})},
       {key: 'removeHistory', name: FormatMessage.string({id: 'home.removeHistory'})},
       {key: 'removeProject', name: FormatMessage.string({id: 'home.removeProject'})},
     ];

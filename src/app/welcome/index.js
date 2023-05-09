@@ -149,6 +149,7 @@ const mapStateToProps = (state) => {
     versionsData: state.core.versionsData,
     config: state.config,
     common: state.common,
+    mode: state.core.mode,
   };
 };
 const mapDispatchToProps = (dispatch) => {
@@ -162,8 +163,8 @@ const mapDispatchToProps = (dispatch) => {
     openTemplate: (h, t, title) => {
       dispatch(openDemoProject(h, t, title, pageType[2]));
     },
-    open: (title, path, suffix, isDemoProject) => {
-      dispatch(openProject(title, pageType[2], path, suffix, isDemoProject));
+    open: (title, path, suffix, isDemoProject, mode) => {
+      dispatch(openProject(title, pageType[2], path, suffix, isDemoProject, mode));
     },
     close: () => {
       dispatch(closeProject(pageType[1]));

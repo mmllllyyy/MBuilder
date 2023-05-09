@@ -2,8 +2,10 @@ import React, { useState, useRef, forwardRef } from 'react';
 import './style/index.less';
 import {getPrefix} from '../../lib/prefixUtil';
 import ContextMenu from '../contextmenu';
+import {READING} from '../../lib/variable';
 
 export default React.memo(forwardRef(({data, prefix, draggable, contextMenuClick, contextMenus,
+                                          mode,
                                           emptyData, onDoubleClick, ...restProps}, ref) => {
     const currentPrefix = getPrefix(prefix);
     const [selected, setSelected] = useState([]);
@@ -35,16 +37,18 @@ export default React.memo(forwardRef(({data, prefix, draggable, contextMenuClick
         }
     };
     const onContextMenu = (e, d) => {
-        let otherMenus = [];
-        if (!selected.includes(d.id)) {
-            setSelected(d.id);
-            otherMenus = data.filter(item => item.id === d.id);
-        } else {
-            otherMenus = data.filter(item => selected.includes(item.id));
+        if (mode !== READING) {
+            let otherMenus = [];
+            if (!selected.includes(d.id)) {
+                setSelected(d.id);
+                otherMenus = data.filter(item => item.id === d.id);
+            } else {
+                otherMenus = data.filter(item => selected.includes(item.id));
+            }
+            restProps.onContextMenu?.(d.id, d.type, otherMenus);
+            e.stopPropagation();
+            setPosition({left: e.clientX, top: e.clientY});
         }
-        restProps.onContextMenu?.(d.id, d.type, otherMenus);
-        e.stopPropagation();
-        setPosition({left: e.clientX, top: e.clientY});
     };
     const doubleClick = (e, id) => {
         onClick(e, id);

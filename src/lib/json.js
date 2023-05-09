@@ -536,26 +536,27 @@ export const basename = (fileName, extension) => {
   return path.basename(fileName, extension);
 }
 
-export const getBackupAllFile = ({core, config}, callback) => {
-  if (core.info && config.autoBackup) {
+export const getBackupAllFile = ({info, data}, callback) => {
+  if (info) {
     try {
-      const dir = path.join(path.dirname(core.info), `.back_${core.data.name}`);
+      const dir = path.join(path.dirname(info), `.back_${data.name}`);
       // 文件名-backup-${年月日时分秒}.chnr.json
-      //const name = basename(core.info, '.json');
+      //const name = basename(info, '.json');
       ensureDirectoryExistence(dir);
-      const reg = new RegExp(`${core.data.name}-backup-\(\\d)+.pdma.json`);
+      const reg = new RegExp(`T\(\\d)+.pdma.json`);
       fs.readdir(dir, (error, files) => {
         if (!error) {
           try {
             const allFiles = files.filter(f => reg.test(f)).sort((a, b) => {
-              return moment(a.match(/(\d)+/)[0]).isAfter(b.match(/(\d)+/)[0]);
+              return a.match(/(\d)+/)[0] - b.match(/(\d)+/)[0];
             });
-            if (allFiles.length >= config.autoBackup) {
+            // 默认保存100条历史数据
+            if (allFiles.length >= 100) {
               // 删除最旧的
               fs.unlinkSync(path.join(dir, allFiles[0]));
             }
-            const fileName = `${core.data.name}-backup-${moment().format('YYYYMDHHmmss')}.pdma.json`;
-            fs.writeFileSync(path.join(dir, fileName), JSON.stringify(core.data, null, 2));
+            const fileName = `T${moment().format('YYYYMMDDHHmmss')}.pdma.json`;
+            fs.writeFileSync(path.join(dir, fileName), JSON.stringify(data, null, 2));
             callback && callback();
           } catch (e) {
             callback && callback(e);
@@ -571,6 +572,39 @@ export const getBackupAllFile = ({core, config}, callback) => {
     callback && callback();
   }
 };
+
+export const getBackupAllFileData = ({info, data}, callback) => {
+  if (info) {
+    try {
+      const dir = path.join(path.dirname(info), `.back_${data.name}`);
+      const reg = new RegExp(`T\(\\d)+.pdma.json`);
+      fs.readdir(dir, (error, files) => {
+        if (!error) {
+          try {
+            const allFiles = files.filter(f => reg.test(f))
+                .sort((a, b) => {
+              return b.match(/(\d)+/)[0] - a.match(/(\d)+/)[0];
+            }).map(f => {
+                  return {
+                    file: f.match(/T(\d)+/)[0],
+                    path: path.join(dir, f)
+                  }
+                });
+            callback && callback(allFiles);
+          } catch (e) {
+            callback && callback([]);
+          }
+        } else {
+          callback && callback([]);
+        }
+      });
+    } catch (e) {
+      callback && callback([]);
+    }
+  } else {
+    callback([])
+  }
+}
 
 export const deleteVersion = (versionData, dataSource, info) => {
   const versionDir = path.join(path.dirname(info), `.version_${dataSource.name}`);
@@ -615,6 +649,22 @@ export const renameVersion = (oldFilePath, newFilePath, oldData, newData) => {
   }
 };
 
+export const renameBackupAllFile = (oldFilePath, newFilePath, oldData, newData) => {
+  const oldBackupDir = path.join(path.dirname(oldFilePath), `.back_${oldData.name}`);
+  const newBackupDir = path.join(path.dirname(newFilePath), `.back_${newData.name}`);
+  if (fs.existsSync(oldBackupDir)) {
+    if (oldBackupDir) {
+      ensureDirectoryExistence(newBackupDir);
+    }
+    fs.readdirSync(oldBackupDir)
+        .filter(f => f.endsWith('.json') && !f.startsWith('.'))
+        .forEach(f => {
+          fs.renameSync(path.join(oldBackupDir, f), path.join(newBackupDir , f));
+        });
+    deleteDirectoryFile(oldBackupDir);
+  }
+}
+
 export const saveAllTemplate = (data, filePath) => {
   try {
     return Promise.all(data.filter(d => d.suffix).map(d => {
@@ -634,3 +684,8 @@ export const saveAllTemplate = (data, filePath) => {
 export const extractFile = (filePath) => {
   return readNormalFile(filePath);
 };
+
+
+export const getFilePath = (path) => {
+  return ipcRenderer.sendSync('loadFile',{path});
+}

@@ -4,6 +4,7 @@ export default {
         template: 'The current project is a template project',
         err: 'Error',
         errorMessage: 'The program is abnormal. Please go to the log file to check the error log',
+        readingMode: 'readingMode',
     },
     toolbar: {
         save: 'save',
@@ -78,6 +79,7 @@ export default {
         open: 'open',
         relationEnableTitle: 'This function is only available under the currently active tab page is diagram',
         group: 'group',
+        history: 'history',
     },
     createProject: 'createNewProject...',
     renameProject: 'updateProject...',
@@ -170,6 +172,7 @@ export default {
         proConfig: 'project config',
         openProject: 'Double click to open project',
         removeHistory: 'Remove from recent',
+        openReading: 'Open Reading',
         removeProject: 'Remove Project',
         page: 'Official website',
     },
@@ -1062,6 +1065,19 @@ projectTemplate: {
     exportImg: {
         type: 'picture type',
         typeSelect: 'Choose a picture type',
+    },
+    operationsHistory: {
+        resetTitle: 'Do you want to restore the project to the current save node',
+        resetMessage: 'The recovery operation will overwrite the current project and cannot be undone. Do you want to continue?',
+        reset: 'reset',
+        resetSuccess: 'reset success',
+        deleteTitle: 'Do you want to delete the current saved node?',
+        deleteMessage: 'The deletion is irrevocable. Do you want to continue?',
+        delete: 'delete',
+        deleteSuccess: 'delete success',
+        emptyHistory: 'empty history',
+        openWindow: 'open new window',
+        log: 'log',
     },
 };
 

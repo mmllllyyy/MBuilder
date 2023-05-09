@@ -135,6 +135,19 @@ function createWindow() {
     }
     event.returnValue = template;
   });
+  ipcMain.on("loadFile", (event, {path}) => {
+    let urlPtah = '';
+    if (process.env.CHINER_NODE_ENV === 'development') {
+      urlPtah = `http://${profile.host}:${profile.port}/index.html?path=${path}`;
+    } else {
+      urlPtah = url.format({
+        pathname: path.join(__dirname, `index.html?path=${path}`),
+        protocol: 'file:',
+        slashes: true,
+      })
+    }
+    event.returnValue = urlPtah;
+  });
   let menu;
   // 设置菜单
   if (process.platform === 'darwin') {

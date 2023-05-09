@@ -6,8 +6,9 @@ import { minimize, close, resizable, maximize, maximizeChange, fullScreen } from
 
 import './style/index.less';
 import {getPrefix} from '../../lib/prefixUtil';
+import {READING} from '../../lib/variable';
 // 网页版 无需显示该组件
-export default React.memo(({prefix, title, resizeable, info}) => {
+export default React.memo(({prefix, title, resizeable, info, mode}) => {
   const iconRef = useRef(null);
   const currentPrefix = getPrefix(prefix);
   const _close = () => {
@@ -88,7 +89,11 @@ export default React.memo(({prefix, title, resizeable, info}) => {
       <span className={`${currentPrefix}-toolbar-title${darwinClass}`}>
         <span>{}</span>
         <span>{title}</span>
-        <span className={`${currentPrefix}-toolbar-info`} title={info}>{info}</span>
+        <span
+          className={`${currentPrefix}-toolbar-info`}
+          title={info}
+        >
+          {info}{(info && mode === READING) ? `[${FormatMessage.string({id: 'system.readingMode'})}]` : ''}</span>
       </span>
       {
         process.platform !== 'darwin' ? <span className={`${currentPrefix}-toolbar-opt`}>

@@ -4,6 +4,7 @@ export default {
         template: '当前项目为模板项目',
         err: '出错了',
         errorMessage: '程序出现异常，请前往日志文件查看出错日志：',
+        readingMode: '只读模式',
     },
     toolbar: {
         save: '保存',
@@ -78,6 +79,7 @@ export default {
         open: '打开',
         relationEnableTitle: '该功能仅在当前激活的tab页为关系图下可用',
         group: '分组',
+        history: '操作历史',
     },
     createProject: '创建新项目...',
     renameProject: '修改项目信息...',
@@ -170,6 +172,7 @@ export default {
         proConfig: '项目配置',
         openProject: '双击打开项目',
         removeHistory: '移除',
+        openReading: '以只读模式打开',
         removeProject: '文件物理删除',
         page: '官方网站',
     },
@@ -1061,5 +1064,18 @@ export default {
     exportImg: {
         type: '图片类型',
         typeSelect: '选择图片类型',
+    },
+    operationsHistory: {
+        resetTitle: '是否将项目恢复至当前保存节点',
+        resetMessage: '恢复操作将会覆盖当前项目且不可撤销，是否继续？',
+        reset: '恢复',
+        resetSuccess: '恢复成功',
+        deleteTitle: '是否将当前保存节点删除？',
+        deleteMessage: '删除不可撤销，是否继续？',
+        delete: '删除',
+        deleteSuccess: '删除成功',
+        emptyHistory: '暂无操作历史',
+        openWindow: '新窗口打开',
+        log: '详细日志',
     },
 };

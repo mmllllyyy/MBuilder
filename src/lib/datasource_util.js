@@ -2416,8 +2416,10 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
   const tempDiagrams = diagrams.concat(newDiagrams);
   // 合并分组
   const removeGroupEntities = tempEntities.filter(e => e.old).map(e => e.id);
-  const viewGroups = (oldDataSource.viewGroups || []).map(g => {
-    const currentGroupEntities = newEntities.filter(e => e.group === g.id)
+  const viewGroups = (oldDataSource.viewGroups || []);
+  const newViewGroups = (newDataSource.viewGroups || []);
+  const tempViewGroups = mergeData(viewGroups, newViewGroups, true, false).map(g => {
+    const currentGroupEntities = newEntities.filter(e => e.group === g.id || e.group === g.old)
         .map((newE) => {
           const data = tempEntities.filter(e => e.old === newE.id)[0]
           if (data) {
@@ -2438,8 +2440,6 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
       refEntities,
     };
   });
-  const newViewGroups = (newDataSource.viewGroups || []);
-  const tempViewGroups = mergeData(viewGroups, newViewGroups, true, false);
   const mergeGroupData = (v, name, data) => {
     const newV = newViewGroups.filter(g => g.defKey === v.defKey)[0]?.[name];
     if(newV) {
@@ -2591,7 +2591,7 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
         refEntities: mergeGroupData(v, 'refEntities', tempEntities),
       }
     }).map(v => {
-      if (!v.old) {
+      if ((oldDataSource.viewGroups || []).findIndex(g => g.defKey === v.defKey) < 0) {
         const names = ['refViews', 'refDiagrams', 'refDicts', 'refEntities'];
         // 清除新增的空分组
         if (names.some(n => (v[n] || []).length !== 0)) {
@@ -2599,8 +2599,8 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
         }
         return null;
       }
-      return _.omit(v, ['old']);
-    }).filter(v => !!v),
+      return v;
+    }).filter(v => !!v).map(g => _.omit(g, 'old')),
   };
 };
 

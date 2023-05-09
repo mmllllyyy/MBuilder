@@ -9,3 +9,7 @@ export const pageType = ['welcome', 'home', 'main'];
 
 // 语言类型
 export const langType = ['zh', 'en'];
+
+// 状态
+export const READING = 'reading';
+export const EDIT = 'edit';

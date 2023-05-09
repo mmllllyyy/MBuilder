@@ -31,6 +31,7 @@ import HeaderTool from './HeaderTool';
 import MessageHelp from './MessageHelp';
 import ToggleCase from '../container/tools/togglecase';
 import CompareTable from '../container/tools/comparetable';
+import History from '../container/tools/operationshistory';
 import { separator } from '../../../profile';
 import { getMenu, getMenus, dealMenuClick } from '../../lib/contextMenuUtil';
 import { moveArrayPosition } from '../../lib/array_util';
@@ -71,10 +72,12 @@ import {connectDB, getLogPath, selectWordFile, showItemInFolder} from '../../lib
 import { imgAll } from '../../lib/generatefile/img';
 import {compareVersion} from '../../lib/update';
 import {notify} from '../../lib/subscribe';
+import {READING} from '../../lib/variable';
 
 const TabItem = Tab.TabItem;
 
-const Index = React.memo(({getUserData, open, openTemplate, config, common, prefix, projectInfo,
+const Index = React.memo(({getUserData, mode, isChildWindow,
+                            open, openTemplate, config, common, prefix, projectInfo,
                             ...restProps}) => {
   const isRefreshRef = useRef(false);
   const [mainId, setMainId] = useState(Math.uuid());
@@ -921,6 +924,31 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       },
     });
   };
+  const showHistory = () => {
+    let modal;
+    const onCancel = () => {
+      modal && modal.close();
+    };
+    const close = () => {
+      onCancel();
+      _tabCloseAll();
+    };
+    modal = openModal(<History
+      close={close}
+      info={projectInfoRef.current}
+      data={dataSourceRef.current}
+      openLoading={restProps.openLoading}
+      closeLoading={restProps.closeLoading}
+      updateProject={restProps.update}
+    />, {
+      bodyStyle: { width: '60%' },
+      buttons:  [
+        <Button key='cancel' onClick={onCancel}>
+          <FormatMessage id='button.close'/>
+        </Button>],
+      title: FormatMessage.string({id: 'toolbar.history'}),
+    });
+  };
   const quickCompareTable = () => {
     let modal;
     const onCancel = () => {
@@ -1449,6 +1477,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
       case 'horizontalCenter': alignment(key);break;
       case 'toggleCase': toggleCase();break;
       case 'theme': themeChange();break;
+      case 'history': showHistory();break;
       default: break;
     }
   };
@@ -1711,6 +1740,8 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
   };
   return <Loading visible={common.loading} title={common.title}>
     <HeaderTool
+      isChildWindow={isChildWindow}
+      mode={mode}
       dataSource={restProps.dataSource}
       ref={headerToolRef}
       currentPrefix={currentPrefix}
@@ -1768,6 +1799,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
                 </span>
               </div>
               <Menu
+                mode={mode}
                 ref={menuModelRef}
                 prefix={prefix}
                 {...restProps}
@@ -1812,6 +1844,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
                 </span>
               </div>
               <Menu
+                mode={mode}
                 ref={menuDomainRef}
                 prefix={prefix}
                 {...restProps}
@@ -1838,6 +1871,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
                 </span>
               </div>
               <List
+                mode={mode}
                 onDoubleClick={onDoubleClick}
                 onDrop={onListDrop}
                 ref={menuDomainRef}
@@ -1861,7 +1895,7 @@ const Index = React.memo(({getUserData, open, openTemplate, config, common, pref
               />
             </div>
           </TabItem>
-          <TabItem key='4' title={FormatMessage.string({id: 'versionTab'})} icon='fa-history'>
+          <TabItem hidden={mode === READING} key='4' title={FormatMessage.string({id: 'versionTab'})} icon='fa-history'>
             <div
               ref={menuContainerCode}
               className={`${currentPrefix}-home-menu-container`}

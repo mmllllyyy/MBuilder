@@ -37,6 +37,9 @@ const saveAllTemplate = json.saveAllTemplate;
 const updateAllVersion = json.updateAllVersion;
 const saveImages = json.saveImages;
 const extractFile = json.extractFile;
+const renameBackupAllFile = json.renameBackupAllFile;
+const getBackupAllFileData = json.getBackupAllFileData;
+const getFilePath = json.getFilePath;
 
 export {
   saveJsonPromise,
@@ -73,6 +76,9 @@ export {
   saveAllTemplate,
   updateAllVersion,
   saveImages,
-  extractFile
+  extractFile,
+  renameBackupAllFile,
+  getBackupAllFileData,
+  getFilePath,
 };
 

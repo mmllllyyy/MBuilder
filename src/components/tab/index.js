@@ -26,7 +26,7 @@ const Header = React.memo(({
     return c.props.title;
   };
   return <div className={`${currentPrefix}-tab-header ${currentPrefix}-tab-header-${position}`}>
-    {tabChildren.map(c =>
+    {tabChildren.filter(c => !c.props.hidden).map(c =>
       <DropDown
         trigger='contextMenu'
         key={c.key}
