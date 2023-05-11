@@ -1402,10 +1402,12 @@ const moveOpt = (dataSource, menu, updateDataSource) => {
   const allGroupData = otherMenus.reduce((a, b) => {
     const tempA = {...a};
     const type = getRefName(b.type);
-    if (!tempA[type]) {
-      tempA[type] = [];
+    if (type) {
+      if (!tempA[type]) {
+        tempA[type] = [];
+      }
+      tempA[type].push(b.key);
     }
-    tempA[type].push(b.key);
     return tempA;
   }, {});
   const dataChange = (groups) => {
