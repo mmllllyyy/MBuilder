@@ -141,17 +141,25 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
       value = e.target.checked;
     }
     updateTableData((pre) => {
+      const changeFields = [];
       const newData = {
         ...pre,
         fields: pre.fields.map((field) => {
           if (name === 'domain') {
             if (selectedFieldsRef.current.includes(field.id) || (f.id === field.id)) {
-              return {
-                ...field,
+              const newField = {
                 [name]: value,
                 type: value ? '' : f.type,
                 len: value ? '' : f.len,
                 scale: value ? '' : f.scale,
+              };
+              changeFields.push({
+                id: field.id,
+                ...newField,
+              });
+              return {
+                ...field,
+                ...newField,
               };
             }
             return field;
@@ -162,23 +170,30 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                 notNull: true,
               };
             } else if((name === 'type' || name === 'len' || name === 'scale')
-              && !!field.domain && (f[name] !== value)){
+                && !!field.domain && (f[name] !== value)){
               // 将当前domain的对应的数据落地
               others = {
                 ...getFieldProps(field.domain),
                 domain: '',
               };
             }
-            return {
-              ...field,
+            const newField = {
               ...others,
               [name]: value,
+            };
+            changeFields.push({
+              id: field.id,
+              ...newField,
+            });
+            return {
+              ...field,
+              ...newField,
             };
           }
           return field;
         }),
       };
-      tableDataChange && tableDataChange(newData.fields, 'fields');
+      tableDataChange && tableDataChange(newData.fields, 'fields', changeFields);
       return newData;
     });
   };

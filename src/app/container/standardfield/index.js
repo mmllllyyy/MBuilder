@@ -16,8 +16,10 @@ import StandardFieldsEdit from './StandardFieldsEdit';
 import StandardFieldsListSelect from './StandardFieldsListSelect';
 import {getPrefix} from '../../../lib/prefixUtil';
 import { separator } from '../../../../profile';
-import {validateStandardFields, reset} from '../../../lib/datasource_util';
+import {validateStandardFields, reset, resetHeader} from '../../../lib/datasource_util';
 import './style/index.less';
+import {getAllTabData, replaceDataByTabId} from '../../../lib/cache';
+import {notify} from '../../../lib/subscribe';
 
 const OptHelp = ({currentPrefix}) => {
   return <div className={`${currentPrefix}-standard-fields-list-title-help`}>
@@ -74,16 +76,77 @@ export default forwardRef(({prefix, dataSource, updateDataSource, activeKey}, re
   useEffect(() => {
     setExpandMenu(finalData.map(d => d.id));
   }, [filterValue]);
+  const calcChangeFieldData = (changeFields) => {
+    const fullChange = [];
+    changeFields.forEach((c) => {
+      const index = fullChange.findIndex(f => f.id === c.id);
+      if(index < 0) {
+        fullChange.push({...c});
+      } else {
+        fullChange[index] = {
+          ...fullChange[index],
+          ...c,
+        };
+      }
+    });
+    return fullChange;
+  };
+  const updateFields = (data = [], update = []) => {
+    const updateData = [];
+    const newData = data.map((d) => {
+      return {
+        ...d,
+        fields: (d.fields || []).map((f) => {
+          if (f.refStandard) {
+            const currentStandard = update.filter(s => s.id === f.refStandard)[0];
+            if (currentStandard) {
+              updateData.push(d.id);
+              return {
+                ...f,
+                ...currentStandard,
+              };
+            }
+            return f;
+          }
+          return f;
+        }),
+      };
+    });
+    return {
+      updateData: [...new Set(updateData)],
+      data: newData,
+    };
+  };
+  const updateTabData = (needUpdateFields) => {
+    const allTab = getAllTabData();
+    Object.keys(allTab).map(t => ({tabKey: t, tabData: allTab[t]})).forEach((t) => {
+      if (t.tabData.type === 'entity' || t.tabData.type === 'view') {
+        const { data: [d], updateData} = updateFields([t.tabData.data], needUpdateFields);
+        if (updateData.includes(t.tabData.key)) {
+          replaceDataByTabId(t.tabKey, {
+            ...t.tabData,
+            data: d,
+          });
+          notify('tabDataChange', {id: t.tabData.key, d});
+        }
+      }
+    });
+  };
   const onClick = (d) => {
+    let changeFields = [];
     let tempData;
     let modal;
     const onOK = () => {
       if (tempData) {
         if (validateStandardFields(tempData)) {
+          const needUpdateFields = calcChangeFieldData(changeFields);
           tempData && updateDataSource({
             ...dataSourceRef.current,
+            entities: updateFields(dataSourceRef.current.entities, needUpdateFields).data,
+            views: updateFields(dataSourceRef.current.views, needUpdateFields).data,
             standardFields: tempData,
           });
+          updateTabData(needUpdateFields);
           modal.close();
         } else {
           Modal.error({
@@ -98,7 +161,8 @@ export default forwardRef(({prefix, dataSource, updateDataSource, activeKey}, re
     const onCancel = () => {
       modal.close();
     };
-    const dataChange = (data) => {
+    const dataChange = (data, fields) => {
+      changeFields.push(...fields);
       tempData = data;
     };
     let twinkle;

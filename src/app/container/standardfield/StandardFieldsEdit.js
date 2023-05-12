@@ -28,7 +28,7 @@ export default React.memo(({prefix, dataChange, dataSource, twinkle, updateDataS
     };
   }, []);
   const currentPrefix = getPrefix(prefix);
-  const tableDataChange = (groupData, tableData) => {
+  const tableDataChange = (groupData, tableData, fields) => {
     newDataRef.current = newDataRef.current.map((g) => {
       if (g.id === groupData.id) {
         return {
@@ -38,7 +38,7 @@ export default React.memo(({prefix, dataChange, dataSource, twinkle, updateDataS
       }
       return g;
     });
-    dataChange && dataChange(newDataRef.current);
+    dataChange && dataChange(newDataRef.current, fields);
   };
   const tableDataGroupChange = (groupData) => {
     newDataRef.current = groupData.map((g) => {
@@ -74,7 +74,7 @@ export default React.memo(({prefix, dataChange, dataSource, twinkle, updateDataS
               fields: g.fields,
             }}
           dataSource={dataSource}
-          tableDataChange={tableData => tableDataChange(g, tableData)}
+          tableDataChange={(tableData, type, data) => tableDataChange(g, tableData, data)}
         />
       </div>,
     };

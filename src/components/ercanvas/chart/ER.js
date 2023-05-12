@@ -264,7 +264,12 @@ export default class ER {
                         return {
                             ...e,
                             // eslint-disable-next-line max-len
-                            fields: (e.fields || []).concat(success.map(s => ({...s, isStandard: true}))),
+                            fields: (e.fields || []).concat(success.map(s => ({
+                                ...s,
+                                id: Math.uuid(),
+                                isStandard: true,
+                                refStandard: s.id,
+                            }))),
                         };
                     }
                     return e;

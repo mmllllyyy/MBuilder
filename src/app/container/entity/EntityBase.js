@@ -86,6 +86,7 @@ export default React.memo(({prefix, data, dataSource, BaseExtraCom, customerHead
             .concat(success.map(s => ({
               ...s,
               isStandard: true,
+              refStandard: s.id,
               id: Math.uuid(),
             })));
           dataChange && dataChange(finalFields, 'fields');
