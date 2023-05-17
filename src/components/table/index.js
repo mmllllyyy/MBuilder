@@ -844,6 +844,14 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
       left: calcLeft(h),
     };
   };
+  const filterFields = fields.filter((f) => {
+    if (valueSearch || search) {
+      return (valueSearch || search)(f, valueContext || searchValue);
+    }
+    return true;
+  });
+  const filterFieldsRef = useRef([...filterFields]);
+  filterFieldsRef.current = [...filterFields];
   const otherStyle = { position: 'sticky', left: 0, zIndex: 100, top: fixHeader ? 0 : 'unset' };
   const twinkleTr = (id) => {
     const keyArray = id.split(separator);
@@ -855,21 +863,32 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
         current = (current.fields || []).filter(f => f.id === keyArray[1])[0];
       }
       const container = tableRef.current.parentElement;
-      const currentTr = Array.from(container.querySelectorAll('tr'))
-          .filter(t => t.getAttribute('data-key') === current?.id)[0];
-      if (currentTr) {
-        setTimeout(() => {
-          const trRect = currentTr.getBoundingClientRect();
-          const optRect = optRef.current.getBoundingClientRect();
-          const offset = trRect.bottom - optRect.bottom - trRect.height - (fixHeader ? 25 : 0);
-          container.scrollTop += offset;
+      const fieldIndex = filterFieldsRef.current.findIndex(f => f.id === current?.id);
+      if (fieldIndex >= 0) {
+        if (virtualRef.current) {
+          virtualRef.current.scrollTop(fieldIndex * 30);
+        } else {
+          container.scrollTop = fieldIndex * 30;
+        }
+      } else if(filterFieldsRef.current.some(f => f.children)) {
+        const currentTr = Array.from(container.querySelectorAll('tr'))
+            .filter(t => t.getAttribute('data-key') === current?.id)[0];
+        const trRect = currentTr.getBoundingClientRect();
+        const optRect = optRef.current.getBoundingClientRect();
+        const offset = trRect.bottom - optRect.bottom - trRect.height - 20;
+        container.scrollTop += offset;
+      }
+      setTimeout(() => {
+        const currentTr = Array.from(container.querySelectorAll('tr'))
+            .filter(t => t.getAttribute('data-key') === current?.id)[0];
+        if (currentTr) {
           const tempClass = currentTr.getAttribute('class');
           currentTr.setAttribute('class', `${tempClass} ${currentPrefix}-table-twinkle`);
           setTimeout(() => {
             currentTr.setAttribute('class', tempClass);
           }, 1000);
-        }, 100);
-      }
+        }
+      }, 100);
     }
   };
   useEffect(() => {
@@ -1046,12 +1065,6 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
       length,
     });
   };
-  const filterFields = fields.filter((f) => {
-    if (valueSearch || search) {
-      return (valueSearch || search)(f, valueContext || searchValue);
-    }
-    return true;
-  });
   const renderTable = () => {
     return <table
       ref={tableRef}

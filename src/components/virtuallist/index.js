@@ -17,14 +17,13 @@ export default React.memo(forwardRef(({children, onScroll, containerHeight,
     const scrollData = useRef(0);
     const scrollTopRef = useRef(0);
     const scrollTopTypeRef = useRef('');
+    const topRef = useRef(0);
+    topRef.current = top;
 
     const onScrollEnd = () => {
-        setTop((p) => {
-            if (p !== scrollRef.current.scrollTop && scrollTopTypeRef.current === 'bottom') {
-                return scrollRef.current.scrollTop;
-            }
-            return p;
-        });
+        if(topRef.current !== scrollRef.current.scrollTop && scrollTopTypeRef.current === 'bottom') {
+            scrollRef.current.scrollTop = topRef.current;
+        }
     };
     const checkScroll = () => {
         isScroll.current = true;
@@ -99,6 +98,9 @@ export default React.memo(forwardRef(({children, onScroll, containerHeight,
         return {
             scroll: (data) => {
                 scrollRef.current.scrollTop += data;
+            },
+            scrollTop: (data) => {
+                scrollRef.current.scrollTop = data;
             },
         };
     }, []);

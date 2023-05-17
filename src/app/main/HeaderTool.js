@@ -35,7 +35,7 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, openModa
       close();
     }
   };
-  return <div className={`${currentPrefix}-head`}>
+  return <div className={`${currentPrefix}-head ${currentPrefix}-head-${!isChildWindow ? 'normal' : 'view'}`}>
     <div className={`${currentPrefix}-head-logo`}>
       <div className={`${currentPrefix}-head-logo-opt`}>
         {!isChildWindow && <span>
@@ -229,14 +229,14 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, openModa
         <GroupIcon className={`${currentPrefix}-head-db`} title={FormatMessage.string({id: 'toolbar.dbConnect'})} icon='fa-database' onClick={() => openModal('dbConnect')}/>
         <GroupIcon className={`${currentPrefix}-head-db`} title={FormatMessage.string({id: 'toolbar.history'})} icon='fa-history' onClick={e => iconClick(e, 'history')}/>
       </GroupIconGroup>
-      <div className={`${currentPrefix}-head-search`}>
-        <SearchSuggest
-          jumpPosition={jumpPosition}
-          jumpDetail={jumpDetail}
-          placeholder={FormatMessage.string({id: 'toolbar.search'})}
-          dataSource={dataSource}
-      />
-      </div>
     </>}
+    <div className={`${currentPrefix}-head-search`}>
+      <SearchSuggest
+        jumpPosition={jumpPosition}
+        jumpDetail={jumpDetail}
+        placeholder={FormatMessage.string({id: 'toolbar.search'})}
+        dataSource={dataSource}
+      />
+    </div>
   </div>;
 }));
