@@ -16,7 +16,7 @@ import StandardFieldsEdit from './StandardFieldsEdit';
 import StandardFieldsListSelect from './StandardFieldsListSelect';
 import {getPrefix} from '../../../lib/prefixUtil';
 import { separator } from '../../../../profile';
-import {validateStandardFields, reset, resetHeader} from '../../../lib/datasource_util';
+import {validateStandardFields, reset} from '../../../lib/datasource_util';
 import './style/index.less';
 import {getAllTabData, replaceDataByTabId} from '../../../lib/cache';
 import {notify} from '../../../lib/subscribe';
@@ -138,7 +138,8 @@ export default forwardRef(({prefix, dataSource, updateDataSource, activeKey}, re
     let modal;
     const onOK = () => {
       if (tempData) {
-        if (validateStandardFields(tempData)) {
+        const result = validateStandardFields(tempData);
+        if (!result) {
           const needUpdateFields = calcChangeFieldData(changeFields);
           tempData && updateDataSource({
             ...dataSourceRef.current,
@@ -151,7 +152,7 @@ export default forwardRef(({prefix, dataSource, updateDataSource, activeKey}, re
         } else {
           Modal.error({
             title: FormatMessage.string({id: 'optFail'}),
-            message: FormatMessage.string({id: 'standardFields.groupAndFieldNotAllowRepeatAndEmpty'}),
+            message: result,
           });
         }
       } else {

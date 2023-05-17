@@ -41,12 +41,11 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                                updateDataSource, disableAddStandard, ready, twinkle, getDataSource,
                                disableDragRow = true, freeze = false, reading = false,
                                fixHeader = true, openDict, defaultGroups, updateAllVersion,
-                               openConfig, isEntity, needHideInGraph},
+                               openConfig, isEntity, needHideInGraph, virtual = true},
                                      refInstance) => {
   const { lang } = useContext(ConfigContent);
   const { valueContext, valueSearch } = useContext(TableContent);
   const inputRef = useRef({});
-  const ioRef = useRef(null);
   const currentPrefix = getPrefix(prefix);
   const [expands, setExpands] = useState([]);
   const [searchValue, setSearchValue] = useState('');
@@ -60,7 +59,12 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
   const tableRef = useRef(null);
   const dragRef = useRef(null);
   const optRef = useRef(null);
+  const virtualRef = useRef(null);
   const dragStatus = useRef({status: false, x: 0, y: 0});
+  const [dataPosition, setDataPosition] = useState({
+    index: 0,
+    length: 12,
+  });
   const allColumns = useMemo(() => {
     if (customerHeaders) {
       if (Array.isArray(customerHeaders)) {
@@ -772,6 +776,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
   const onKeyDown = (e, row, cell) => {
     if (e.keyCode === 38) {
       // up
+      virtualRef.current?.scroll(-30);
       const { rowKey, cellKey } = getRowAndCellIndex(row, cell, 'up');
       const cellDom = inputRef.current?.[rowKey]?.[cellKey]?.current;
       if (cellDom) {
@@ -781,6 +786,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
       }
     } else if (e.keyCode === 40) {
       // down
+      virtualRef.current?.scroll(30);
       const { rowKey, cellKey } = getRowAndCellIndex(row, cell, 'down');
       const cellDom = inputRef.current?.[rowKey]?.[cellKey]?.current;
       if (cellDom) {
@@ -961,28 +967,6 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
       <span>{Component.FormatMessage.string({id: 'tableEdit.opt[6]'})}</span>
     </div>;
   };
-  useEffect(() => {
-    ioRef.current = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        if (e.isIntersecting) {
-          e.target.style.visibility = 'visible';
-        } else {
-          e.target.style.visibility = 'hidden';
-        }
-      });
-    }, {
-      threshold: [0, 0.25, 0.5, 1],
-      //threshold: [0, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95, 1],
-    });
-    return () => {
-      ioRef.current.disconnect();
-    };
-  }, []);
-  useEffect(() => {
-    Array.from(tableRef.current.querySelectorAll('tbody > tr')).forEach((r) => {
-      ioRef.current.observe(r);
-    });
-  }, [fields]);
   const onFilterChange = (e) => {
     setSearchValue(e.target.value);
     expand && setExpands(fieldsRef.current.map(f => f.id));
@@ -1056,6 +1040,130 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
     openConfig && openConfig();
   };
   const isView = finalTempHeaders.some(h => h.refKey === 'refEntity');
+  const onScroll = (index, length) => {
+    setDataPosition({
+      index,
+      length,
+    });
+  };
+  const filterFields = fields.filter((f) => {
+    if (valueSearch || search) {
+      return (valueSearch || search)(f, valueContext || searchValue);
+    }
+    return true;
+  });
+  const renderTable = () => {
+    return <table
+      ref={tableRef}
+      className={`${currentPrefix}-table`}
+      tabIndex='0'
+      onKeyDown={tableKeyDown}
+      style={style}
+    >
+      {!hiddenHeader && <thead>
+        <tr>
+          <th style={{...otherStyle}}>{}</th>
+          {expand && <th>{}</th>}
+          {finalTempHeaders.map((h, i) => {
+          const freezeStyle = (h?.freeze && freeze) ?
+              { position: 'sticky', ...calcPosition(h, i) } : {};
+          // let type = 'fa-eye';
+          // if (h.hideInGraph) {
+          //   type = 'fa-eye-slash';
+          // }
+          const thClass = selectedColumns.includes(h?.refKey)
+              ? `${currentPrefix}-table-selected` : '';
+          return <th
+            className={thClass}
+            onClick={() => onHeaderClick(h?.refKey)}
+            key={h?.refKey}
+            style={{
+                cursor: 'pointer',
+                width: columnWidth[h?.refKey],
+                zIndex: h?.freeze ? 100 : 99,
+                top: fixHeader ? 0 : 'unset',
+                ...freezeStyle,
+              }}
+          >
+            <span style={{width: columnWidth[h?.refKey] ? columnWidth[h?.refKey] - 3 : 'auto'}}>
+              {h?.value}
+              {/*{!disableHeaderIcon && h?.refKey !== 'extProps' && isView &&*/}
+              {/*    <Component.Icon*/}
+              {/*  onClick={*/}
+              {/*      e => headerIconClick(e, h?.refKey, 'hideInGraph', !h.hideInGraph)*/}
+              {/*    }*/}
+              {/*  type={type}*/}
+              {/*  style={{ marginLeft: 5,cursor: 'pointer' }}*/}
+              {/*/>}*/}
+              {freeze &&
+                        ((i < freezeCount.left) ||
+                            (i > (finalTempHeaders.length - freezeCount.right - 1)))
+                        && <Component.Icon
+                          onClick={e => headerIconClick(e, h?.refKey, 'freeze', !h.freeze, i)}
+                          type={h?.freeze ? 'fa-lock' : 'fa-unlock'}
+                          style={{marginLeft: 5, cursor: 'pointer'}}
+                        />}
+            </span>
+          </th>;
+        })}
+        </tr>
+      </thead>}
+      <TableContent.Provider value={tableContextMemo}>
+        <tbody
+          onClick={onBodyClick}
+        >
+          {
+          (virtual && filterFields.length > 100 ? filterFields.slice(dataPosition.index,
+                  dataPosition.length + dataPosition.index)
+              : filterFields).map((f, i) => (
+                <Tr
+                  needHideInGraph={needHideInGraph}
+                  isView={isView}
+                  entities={dataSource?.entities}
+                  openDict={openDict}
+                  selectedColumns={selectedColumns}
+                  hiddenFields={hiddenFields}
+                  updateDataSource={updateDataSource}
+                  getDataSource={getDataSource}
+                  reading={reading}
+                  onKeyDown={onKeyDown}
+                  cellRef={cellRef}
+                  key={f.id}
+                  f={f}
+                  i={virtual && filterFields.length > 100
+                      ? filterFields.findIndex(p => p.id === f.id) : i}
+                  searchValue={searchValue}
+                  search={search}
+                  expand={expand}
+                  onMouseOver={onMouseOver}
+                  tempHeaders={tempHeaders}
+                  calcPosition={calcPosition}
+                  getClass={getClass(f)}
+                  tableRowClick={tableRowClick}
+                  disableDragRow={disableDragRow}
+                  checkboxComponents={checkboxComponents}
+                  onMouseDown={onMouseDown}
+                  currentPrefix={currentPrefix}
+                  onExpand={onExpand}
+                  selectedFields={selectedFields}
+                  expands={expands}
+                  dicts={dicts}
+                  setDict={setDict}
+                  updateTableDataByName={updateTableDataByName}
+                  freeze={freeze}
+                  cellClick={cellClick}
+                  defaultGroups={defaultGroups}
+                  getFieldProps={getFieldProps}
+                  domains={domains}
+                  mapping={mapping}
+                  uiHint={uiHint}
+              />
+          ))
+        }
+        </tbody>
+      </TableContent.Provider>
+    </table>;
+  };
   return (
     <div className={`${currentPrefix}-table-container ${className || ''}`}>
       {
@@ -1120,118 +1228,19 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
             {!isView && updateAllVersion && <span className={`${currentPrefix}-table-opt-setting`} onClick={jumpEdit}>{Component.FormatMessage.string({id: 'tableEdit.columnSetting'})}</span>}
           </span>
         }
-      <div className={`${currentPrefix}-table-content`}>
-        <table
-          ref={tableRef}
-          className={`${currentPrefix}-table`}
-          tabIndex='0'
-          onKeyDown={tableKeyDown}
-          style={style}
-          >
-          {!hiddenHeader && <thead>
-            <tr>
-              <th style={{...otherStyle}}>{}</th>
-              {expand && <th>{}</th>}
-              {finalTempHeaders.map((h, i) => {
-                const freezeStyle = (h?.freeze && freeze) ?
-                    { position: 'sticky', ...calcPosition(h, i) } : {};
-                // let type = 'fa-eye';
-                // if (h.hideInGraph) {
-                //   type = 'fa-eye-slash';
-                // }
-                const thClass = selectedColumns.includes(h?.refKey)
-                    ? `${currentPrefix}-table-selected` : '';
-                return <th
-                  className={thClass}
-                  onClick={() => onHeaderClick(h?.refKey)}
-                  key={h?.refKey}
-                  style={{
-                      cursor: 'pointer',
-                      width: columnWidth[h?.refKey],
-                      zIndex: h?.freeze ? 100 : 99,
-                      top: fixHeader ? 0 : 'unset',
-                      ...freezeStyle,
-                    }}
-                >
-                  <span style={{width: columnWidth[h?.refKey] ? columnWidth[h?.refKey] - 3 : 'auto'}}>
-                    {h?.value}
-                    {/*{!disableHeaderIcon && h?.refKey !== 'extProps' && isView &&*/}
-                    {/*    <Component.Icon*/}
-                    {/*  onClick={*/}
-                    {/*      e => headerIconClick(e, h?.refKey, 'hideInGraph', !h.hideInGraph)*/}
-                    {/*    }*/}
-                    {/*  type={type}*/}
-                    {/*  style={{ marginLeft: 5,cursor: 'pointer' }}*/}
-                    {/*/>}*/}
-                    {freeze &&
-                    ((i < freezeCount.left) ||
-                        (i > (finalTempHeaders.length - freezeCount.right - 1)))
-                    && <Component.Icon
-                      onClick={e => headerIconClick(e, h?.refKey, 'freeze', !h.freeze, i)}
-                      type={h?.freeze ? 'fa-lock' : 'fa-unlock'}
-                      style={{marginLeft: 5, cursor: 'pointer'}}
-                    />}
-                  </span>
-                </th>;
-              })}
-            </tr>
-            </thead>}
-          <TableContent.Provider value={tableContextMemo}>
-            <tbody onClick={onBodyClick}>
-              {
-              fields.filter((f) => {
-                if (valueSearch || search) {
-                  return (valueSearch || search)(f, valueContext || searchValue);
-                }
-                return true;
-              }).map((f, i) => (
-                <Tr
-                  needHideInGraph={needHideInGraph}
-                  isView={isView}
-                  entities={dataSource?.entities}
-                  openDict={openDict}
-                  selectedColumns={selectedColumns}
-                  hiddenFields={hiddenFields}
-                  updateDataSource={updateDataSource}
-                  getDataSource={getDataSource}
-                  reading={reading}
-                  onKeyDown={onKeyDown}
-                  cellRef={cellRef}
-                  key={f.id}
-                  f={f}
-                  i={i}
-                  searchValue={searchValue}
-                  search={search}
-                  expand={expand}
-                  onMouseOver={onMouseOver}
-                  tempHeaders={tempHeaders}
-                  calcPosition={calcPosition}
-                  getClass={getClass(f)}
-                  tableRowClick={tableRowClick}
-                  disableDragRow={disableDragRow}
-                  checkboxComponents={checkboxComponents}
-                  onMouseDown={onMouseDown}
-                  currentPrefix={currentPrefix}
-                  onExpand={onExpand}
-                  selectedFields={selectedFields}
-                  expands={expands}
-                  dicts={dicts}
-                  setDict={setDict}
-                  updateTableDataByName={updateTableDataByName}
-                  freeze={freeze}
-                  cellClick={cellClick}
-                  defaultGroups={defaultGroups}
-                  getFieldProps={getFieldProps}
-                  domains={domains}
-                  mapping={mapping}
-                  uiHint={uiHint}
-                />
-              ))
-            }
-            </tbody>
-          </TableContent.Provider>
-        </table>
-      </div>
+      {
+        virtual && filterFields.length > 100 ? <Component.VirtualList
+          onScroll={onScroll}
+          ref={virtualRef}
+          containerHeight={filterFields.length * 30 + 25}
+          itemHeight={30}
+          offsetHeight={45}
+          length={12}
+        >
+          {renderTable()}
+        </Component.VirtualList>
+            : <div className={`${currentPrefix}-table-content`}>{renderTable()}</div>
+      }
     </div>
   );
 }));

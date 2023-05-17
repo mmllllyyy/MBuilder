@@ -2,7 +2,7 @@ import React, {useRef, useEffect, useMemo} from 'react';
 import * as _ from 'lodash/object';
 import { Table, openModal, Button, Checkbox, FormatMessage } from 'components';
 
-import { emptyIndex } from '../../../lib/datasource_util';
+import {emptyIndex, validate} from '../../../lib/datasource_util';
 import {getPrefix} from '../../../lib/prefixUtil';
 
 export default React.memo(({ prefix, data, dataChange }) => {
@@ -31,8 +31,7 @@ export default React.memo(({ prefix, data, dataChange }) => {
     stateData.current = groupData.map((g) => {
       return {
         ..._.omit(g, ['children']),
-        fields: (stateData.current.filter(f => f.id === g.id)[0]?.fields || [])
-          .map(f => _.omit(f, ['defKey', 'defName'])),
+        fields: (g.fields || []).map(f => _.omit(f, ['defKey', 'defName'])),
       };
     });
     dataChange && dataChange(stateData.current, 'indexes');
@@ -107,6 +106,7 @@ export default React.memo(({ prefix, data, dataChange }) => {
       ...d,
       children: <Table
         {...commonProps}
+        virtual={false}
         ready={table => ready(table, d.id)}
         className={`${currentPrefix}-entity-indexes-children-table`}
         tableDataChange={newData => _dataChange(newData, d)}
@@ -171,11 +171,16 @@ export default React.memo(({ prefix, data, dataChange }) => {
     headers,
     fields: (data?.indexes || []).map(d => getChildren(d)),
   }), []);
+  const itemValidate = (items) => {
+    return validate(items, emptyIndex, 'Indexes');
+  };
   return <div className={`${currentPrefix}-entity-indexes`}>
     <Table
       {...commonProps}
+      virtual={false}
       tableDataChange={tableDataGroupChange}
       hiddenHeader={false}
+      validate={itemValidate}
       onAdd={() => onAddIndex()}
       expand
       data={dataMemo}

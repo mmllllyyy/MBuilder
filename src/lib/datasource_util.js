@@ -556,14 +556,62 @@ export const emptyRelation = {
 };
 
 export const validateStandardFields = (data) => {
+  const calcData = (d, format) => {
+    const repeatData = d.reduce((p, n) => {
+      if(!p[n.defKey]) {
+        p[n.defKey] = [];
+      }
+      p[n.defKey] = p[n.defKey].concat(n);
+      return p;
+    }, {});
+    const repeatGroupArray = Object.keys(repeatData)
+        .map(k => {
+          if (repeatData[k].length > 1) {
+            return format(repeatData[k]);
+          }
+          return ''
+        }).filter(k => !!k);
+    if(repeatGroupArray.length > 0) {
+      return repeatGroupArray.join(';')
+    }
+    return '';
+  }
   // 分组名或字段名不能为空或重复
-  const groupKeys = data.map(d => d.defKey);
-  const fields = data.reduce((a, b) => a.concat(b.fields), []);
-  const fieldKeys = fields.map(d => d.defKey);
-  return (groupKeys.length === new Set(groupKeys).size)
-      && (groupKeys.length === groupKeys.filter(g => !!g).length)
-      && (fieldKeys.length === new Set(fieldKeys).size)
-      && (fieldKeys.length === fieldKeys.filter(g => !!g).length);
+  const fields = data.reduce((a, b) => a.concat((b.fields || [])
+      .map(f => ({...f, g: b.defKey}))), []);
+  if(data.some(d => !d.defKey)) {
+    return FormatMessage.string({id: 'standardFields.groupNotAllowEmpty'})
+  }
+  const emptyFields = fields.filter(f => !f.defKey);
+  if (emptyFields.length > 0) {
+    return emptyFields.map(f => {
+      return FormatMessage.string({
+        id: 'standardFields.standardFieldNotAllowEmpty',
+        data: {defKey: f.g}
+      })
+    }).join(';')
+  }
+  // 判断分组是否重复
+  const repeatGroup = calcData(data, (d) => {
+    return FormatMessage.string({
+      id: 'standardFields.groupNotAllowRepeat',
+      data: {defKey: d[0].defKey}
+    })
+  })
+  if(repeatGroup) {
+    return repeatGroup
+  }
+  // 判断字段是否重复
+  const repeatFields = calcData(fields, (d) => {
+    return FormatMessage.string({
+      id: 'standardFields.standardFieldNotAllowRepeat',
+      data: {data: d.map(f => `${f.g} => ${f.defKey}`).join('/')
+      }
+    })
+  })
+  if(repeatFields) {
+    return repeatFields
+  }
 }
 
 export const validateDictBase = (dict) => {

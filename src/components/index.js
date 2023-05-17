@@ -48,3 +48,4 @@ export { default as List } from './list';
 export { default as ColorPicker } from './colorpicker';
 export { default as Compare } from './compare';
 export { default as CompareList } from './compare/CompareList';
+export { default as VirtualList } from './virtuallist';

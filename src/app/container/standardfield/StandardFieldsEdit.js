@@ -8,7 +8,7 @@ import {getPrefix} from '../../../lib/prefixUtil';
 import {
   emptyStandardGroup,
   getStandardGroupColumns,
-  getFullColumns,
+  attNames, validate,
 } from '../../../lib/datasource_util';
 
 
@@ -44,7 +44,7 @@ export default React.memo(({prefix, dataChange, dataSource, twinkle, updateDataS
     newDataRef.current = groupData.map((g) => {
       return {
         ..._.omit(g, ['children']),
-        fields: newDataRef.current.filter(f => f.id === g.id)[0]?.fields || [],
+        fields: g.children ? g.fields || [] : [],
       };
     });
     dataChange && dataChange(newDataRef.current);
@@ -66,12 +66,15 @@ export default React.memo(({prefix, dataChange, dataSource, twinkle, updateDataS
       children: <div style={{width}}>
         <Table
           {...commonProps}
+          virtual={false}
           needHideInGraph={false}
           updateDataSource={updateDataSource}
           getDataSource={getDataSource}
+          customerHeaders={false}
           data={{
-              headers: getFullColumns(),
-              fields: g.fields,
+            headers: (dataSource.profile?.headers?.
+            filter(h => h.enabled !== false && !attNames.includes(h.refKey))),
+            fields: g.fields,
             }}
           dataSource={dataSource}
           tableDataChange={(tableData, type, data) => tableDataChange(g, tableData, data)}
@@ -107,15 +110,20 @@ export default React.memo(({prefix, dataChange, dataSource, twinkle, updateDataS
     }
     return reg.test(f.defName) || reg.test(f.defKey);
   }, []);
+  const itemValidate = (items) => {
+    return validate(items, emptyStandardGroup, 'StandardGroup');
+  };
   return <div className={`${currentPrefix}-standard-fields`} ref={resizeDomRef}>
     <Table
       {...commonProps}
       //updateDataSource={updateDataSource}
+      virtual={false}
       getDataSource={getDataSource}
       twinkle={twinkle}
       otherOpt={false}
       onAdd={onAdd}
       style={{width: '100%'}}
+      validate={itemValidate}
       tableDataChange={tableDataGroupChange}
       expand
       ready={ready}
