@@ -19,6 +19,7 @@ export default React.memo(({prefix, dataChange, dataSource, twinkle, updateDataS
   const newDataRef = useRef(standardFields);
   const [width, setWidth] = useState(0);
   const resizeDomRef = useRef(null);
+  const isTwinkleRef = useRef(false);
   useEffect(() => {
     addDomResize(resizeDomRef.current, id, () => {
       setWidth(resizeDomRef.current.clientWidth - 40);
@@ -99,6 +100,12 @@ export default React.memo(({prefix, dataChange, dataSource, twinkle, updateDataS
         fields: (temp.fields || []).map(g => getChildren(g)),
       };
     });
+    if (!isTwinkleRef.current) {
+      setTimeout(() => {
+        tableRef.current.twinkleTr(twinkle);
+        isTwinkleRef.current = true;
+      });
+    }
   }, [width]);
   const ready = (table) => {
     tableRef.current = table;
@@ -119,7 +126,6 @@ export default React.memo(({prefix, dataChange, dataSource, twinkle, updateDataS
       //updateDataSource={updateDataSource}
       virtual={false}
       getDataSource={getDataSource}
-      twinkle={twinkle}
       otherOpt={false}
       onAdd={onAdd}
       style={{width: '100%'}}

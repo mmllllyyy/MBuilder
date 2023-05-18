@@ -165,9 +165,9 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
   const saveProject = (saveAs, callback) => {
     const isSaveAs = saveAs || !projectInfoRef.current;
     const newData = updateAllData(dataSourceRef.current,
-        injectTempTabs.current.concat(tabsRef.current), () => {
+        injectTempTabs.current.concat(tabsRef.current), (active) => {
         // eslint-disable-next-line no-use-before-define
-        _openModal('config');
+        _openModal('config', active);
       });
     if (newData.result.status) {
       restProps.save(newData.dataSource, FormatMessage.string({id: 'saveProject'}), isSaveAs, (err) => {

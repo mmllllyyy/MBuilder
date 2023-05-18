@@ -126,7 +126,7 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
           size,
           entities: sizeError.join(','),
       }});
-    message = <div>{message}<a onClick={openConfig}>[{FormatMessage.string({id: 'modify'})}]</a></div>;
+    message = <div>{message}<a onClick={() => openConfig('SystemParameter')}>[{FormatMessage.string({id: 'modify'})}]</a></div>;
   }
   if (repeatError.length > 0) {
     // 字段重复显示超限

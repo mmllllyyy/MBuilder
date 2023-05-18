@@ -733,11 +733,6 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
     }
     return classData;
   };
-  useEffect(() => {
-    ready && ready({
-      updateTableData,
-    });
-  }, []);
   const finalTempHeaders = tempHeaders
       .filter(h => (!hiddenFields.includes(h.refKey)) && (h.enable !== false));
   const cellRef = (ref, row, cell) => {
@@ -875,7 +870,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
             .filter(t => t.getAttribute('data-key') === current?.id)[0];
         const trRect = currentTr.getBoundingClientRect();
         const optRect = optRef.current.getBoundingClientRect();
-        const offset = trRect.bottom - optRect.bottom - trRect.height - 20;
+        const offset = trRect.bottom - optRect.bottom - trRect.height - 25;
         container.scrollTop += offset;
       }
       setTimeout(() => {
@@ -895,13 +890,19 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
     if (twinkle) {
       twinkleTr(twinkle);
     }
-  }, [twinkle, fields]);
+  }, [twinkle]);
   useImperativeHandle(refInstance, () => {
     return {
       twinkleTr: (key) => {
         twinkleTr(key);
       },
     };
+  }, []);
+  useEffect(() => {
+    ready && ready({
+      updateTableData,
+      twinkleTr,
+    });
   }, []);
   const menuClick = (m) => {
     addField(m, createEmptyField(m.key));
