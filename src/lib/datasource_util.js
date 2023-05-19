@@ -53,7 +53,6 @@ export const updateAllData = (dataSource, tabs) => {
     entity: [],
     view: [],
   };
-  const size = _.get(dataSource, 'profile.relationFieldSize', 15);
   tabs.map(t => {
     const typeName = allType.filter(all => t.type === all.type)[0]?.name;
     const oldData = tempData[typeName].filter(e => e.id === t.tabKey.split(separator)[0])[0];
@@ -108,7 +107,6 @@ export const updateAllData = (dataSource, tabs) => {
     message += FormatMessage.string({
       id: 'entityUniqueDefKeyError',
       data: {
-        size,
         entities: entityRepeatError.join(','),
       }}) + ';';
   }
@@ -2486,8 +2484,6 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
     return v[name] || [];
   }
   const refactor = (d, type) => {
-    const maxCount = parseInt(oldDataSource.profile?.relationFieldSize || 15, 10) - 1;
-    let showInGraphCount = 0;
     const calcField = (f, names, namesData) => {
       return Object.keys(f).reduce((p, n) => {
         const nameIndex = names.findIndex(name => name === n);
@@ -2563,12 +2559,8 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
         }
       }) : indexes,
       fields: (d.fields || []).map((f) => {
-        if (!f.hideInGraph) {
-          showInGraphCount += 1;
-        }
         return {
           ...calcField(f, ['uiHint', 'refDict', 'domain'], [tempUiHint, tempUiHint, tempDomains]),
-          hideInGraph: maxCount > showInGraphCount ? f.hideInGraph : true
         }
       })
     }
