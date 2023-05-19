@@ -165,10 +165,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
   const saveProject = (saveAs, callback) => {
     const isSaveAs = saveAs || !projectInfoRef.current;
     const newData = updateAllData(dataSourceRef.current,
-        injectTempTabs.current.concat(tabsRef.current), (active) => {
-        // eslint-disable-next-line no-use-before-define
-        _openModal('config', active);
-      });
+        injectTempTabs.current.concat(tabsRef.current));
     if (newData.result.status) {
       restProps.save(newData.dataSource, FormatMessage.string({id: 'saveProject'}), isSaveAs, (err) => {
         if (!err) {
@@ -405,9 +402,9 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
       title: FormatMessage.string({id: 'toolbar.exportWord'}),
     });
   };
-  const exportImg = () => {
+  const exportImg = (type) => {
     const cavRef = getCurrentCav();
-    cavRef.exportImg();
+    cavRef.exportImg(type);
   };
   const calcDomain = (data = [], dbKey = null, finalDomains) => {
     const dataTypeSupports = _.get(dataSourceRef.current, 'profile.dataTypeSupports', []);
@@ -1452,7 +1449,8 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
       case 'importDicts': importDicts();break;
       case 'exportConfig': exportConfig();break;
       case 'exportDicts': exportDicts();break;
-      case 'img': exportImg(); break;
+      case 'png':
+      case 'svg': exportImg(key); break;
       case 'word': exportWord(); break;
       case 'html':
       case 'markdown': generateSimpleFile(key, dataSourceRef.current, projectInfoRef.current); break;

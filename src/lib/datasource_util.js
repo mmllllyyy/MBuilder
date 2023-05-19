@@ -4,7 +4,6 @@ import moment from 'moment';
 import { FormatMessage } from 'components';
 import {getAllTabData, getDataByTabId, getMemoryCache, replaceDataByTabId} from './cache';
 import emptyProjectTemplate from '../lib/template/empty.json';
-import empty from './template/empty';
 import { separator } from '../../profile';
 import {firstUp} from './string';
 import {compareVersion} from './update';
@@ -41,15 +40,13 @@ export const filterEdge = (allNodes, c) => {
   }).length === 2
 };
 
-export const updateAllData = (dataSource, tabs, openConfig) => {
+export const updateAllData = (dataSource, tabs) => {
   // 整理项目中所有的关系图数据 去除无效的关系图数据
   let tempData = {...dataSource};
   const allTabData = getAllTabData();
   let message = '';
   let flag = false;
   // 需要校验数据表是否有重复字段
-  // 需要校验数据表展示在关系图上的字段是否超过限制
-  let sizeError = [];
   let repeatError = [];
   let entityRepeatError = [];
   let currentDefKey = {
@@ -75,9 +72,6 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
         }});
     }
     if (t.type === 'entity' || t.type === 'view') {
-      if(!(t.data.fields.filter(f => !f.hideInGraph).length <= size)) {
-        sizeError.push(t.data.defKey);
-      }
       const fields = t.data?.fields || [];
       const repeat = fields.reduce((a, b) => {
         if (!b.defKey) {
@@ -117,16 +111,6 @@ export const updateAllData = (dataSource, tabs, openConfig) => {
         size,
         entities: entityRepeatError.join(','),
       }}) + ';';
-  }
-  if (sizeError.length > 0) {
-    // 字段关系图显示超限
-    message += FormatMessage.string({
-      id: 'entityHideInGraphSizeError',
-      data: {
-          size,
-          entities: sizeError.join(','),
-      }});
-    message = <div>{message}<a onClick={() => openConfig('SystemParameter')}>[{FormatMessage.string({id: 'modify'})}]</a></div>;
   }
   if (repeatError.length > 0) {
     // 字段重复显示超限

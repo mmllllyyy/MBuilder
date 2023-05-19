@@ -208,10 +208,15 @@ export default React.memo(forwardRef(({currentPrefix, close, iconClick, openModa
                    {key: 'sql', name: FormatMessage.string({id: 'toolbar.exportSql'})},
                    {key: 'dict', name: FormatMessage.string({id: 'toolbar.exportDict'})},
                    {
-                       key: 'img',
-                       name: FormatMessage.string({id: 'toolbar.exportImg'}),
+                       key: 'png',
+                       name: FormatMessage.string({id: 'toolbar.exportImgPng'}),
                        disable: activeTab?.type !== 'diagram',
                    },
+                  {
+                    key: 'svg',
+                    name: FormatMessage.string({id: 'toolbar.exportImgSvg'}),
+                    disable: activeTab?.type !== 'diagram',
+                  },
                    {
                        style: { borderTop: '1px solid #DFE3EB' },
                        key: 'exportDomains',

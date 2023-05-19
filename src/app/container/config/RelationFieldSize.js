@@ -1,5 +1,5 @@
 import React from 'react';
-import { NumberInput, FormatMessage } from 'components';
+import {NumberInput, FormatMessage, Icon, Tooltip} from 'components';
 import {getPrefix} from '../../../lib/prefixUtil';
 
 export default React.memo(({prefix, dataChange, dataSource}) => {
@@ -15,9 +15,15 @@ export default React.memo(({prefix, dataChange, dataSource}) => {
         title={FormatMessage.string({id: 'config.relationFieldSize'})}
       >
         <FormatMessage id='config.relationFieldSize'/>
+        <FormatMessage id='config.relationFieldSizeDiscard'/>
+        <Tooltip placement='left' title={<FormatMessage id='config.relationFieldSizeDiscardTitle'/>} force>
+              <span className={`${currentPrefix}-form-item-label-help`}>
+                <Icon type='icon-xinxi'/>
+              </span>
+        </Tooltip>
       </span>
       <span className={`${currentPrefix}-form-item-component`}>
-        <NumberInput onChange={onChange} defaultValue={relationFieldSize}/>
+        <NumberInput disable onChange={onChange} defaultValue={relationFieldSize}/>
       </span>
     </div>
   </div>

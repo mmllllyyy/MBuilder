@@ -1359,7 +1359,7 @@ export default class ER {
                     calcNodeData({data: node.data, size, needTransform: false},
                         node.data, this.getDataSource(), this.getTableGroup());
                 node.setData({maxWidth});
-                if (this.relationType === 'field') {
+                if (this.relationType !== 'entity') {
                     const sliceCount = Math.floor((size.height - 31) / 23) * 2;
                     const edges = this.filterErCell(this.graph.getEdges())
                         .filter(e => e.target.cell === node.id || e.source.cell === node.id);

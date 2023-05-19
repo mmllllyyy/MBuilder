@@ -2,9 +2,9 @@
   "name": "大学综合管理系统",
   "describe": "标准模板案例（分组主题模式）",
   "avatar": "",
-  "version": "4.5.0",
-  "createdTime": "2023-3-26 08:39:25",
-  "updatedTime": "2023-3-26 08:52:07",
+  "version": "4.5.1",
+  "createdTime": "2023-5-18 19:42:10",
+  "updatedTime": "2023-5-18 19:45:06",
   "dbConns": [],
   "profile": {
     "default": {
@@ -972,7 +972,24 @@
           "id": "1868F7F4-8F4D-403D-ABA0-60D89BE37066"
         }
       ],
-      "correlations": [],
+      "correlations": [
+        {
+          "myField": "9651B83A-2208-4F1E-A870-C3C4E1FAF103",
+          "refEntity": "C698249E-307D-4087-9EC4-3BABCFC00660",
+          "refField": "D793F097-1364-49FD-B02C-D4EBBA5A055A",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        },
+        {
+          "myField": "9651B83A-2208-4F1E-A870-C3C4E1FAF103",
+          "refEntity": "536B8B19-C2B3-45D1-ADA8-402C0083FC31",
+          "refField": "EFD22F94-E1D0-4CAD-947D-E856A997D7B5",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
       "id": "26B8D13E-BE37-4E20-8496-13A586E84581",
       "indexes": []
     },
@@ -1377,7 +1394,16 @@
           "id": "3B7186B6-989F-4C9F-B8ED-F36D20713363"
         }
       ],
-      "correlations": [],
+      "correlations": [
+        {
+          "myField": "8707AEB9-3EC5-4EEA-9E14-99BAF28B46B4",
+          "refEntity": "C698249E-307D-4087-9EC4-3BABCFC00660",
+          "refField": "63130D1B-63C8-491C-B36D-5603A30BFB37",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
       "id": "C2F51B91-7C24-4CB4-8406-706F4851EB0B",
       "indexes": []
     },
@@ -1756,7 +1782,24 @@
           "id": "1DAB3A13-B7D2-46AD-8DE1-89DA5ADDB3DE"
         }
       ],
-      "correlations": [],
+      "correlations": [
+        {
+          "myField": "6D6BC6AA-8114-4B91-8A2C-4B5FEACEB347",
+          "refEntity": "1A50AEEB-F956-4275-AE11-5D6F1F471FBE",
+          "refField": "A23704D2-7128-41A2-988C-D20CB984FA83",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        },
+        {
+          "myField": "6D6BC6AA-8114-4B91-8A2C-4B5FEACEB347",
+          "refEntity": "0FC9DB49-4FDB-437E-83E9-7EE803F1CC84",
+          "refField": "1BCE9672-14BA-4B2B-B8C6-222CC6CF0F61",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
       "id": "C698249E-307D-4087-9EC4-3BABCFC00660",
       "indexes": []
     },
@@ -2517,7 +2560,16 @@
           "id": "41AFEC1A-F0E0-4BD9-8F72-BF3DF29B7B7C"
         }
       ],
-      "correlations": [],
+      "correlations": [
+        {
+          "myField": "5FAE5CA5-B7A6-40C3-878D-1BB3D4A45B5C",
+          "refEntity": "6B1610FB-364F-4514-95D6-9DDA681BFC61",
+          "refField": "0C5A31BB-2855-4BB9-84D1-7E63B37A71E1",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
       "indexes": [
         {
           "defKey": "IDX_SMIS_STUDENT_01",
@@ -2985,7 +3037,16 @@
           "id": "7376A655-992A-4C94-BAFC-494DA519737D"
         }
       ],
-      "correlations": [],
+      "correlations": [
+        {
+          "myField": "C5916046-F140-4B0C-BF84-EBD7DDB38EAA",
+          "refEntity": "1A50AEEB-F956-4275-AE11-5D6F1F471FBE",
+          "refField": "AE73CBE3-577D-4457-8987-5BEFDECAEED9",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
       "id": "536B8B19-C2B3-45D1-ADA8-402C0083FC31",
       "indexes": [],
       "notes": {}
@@ -3314,7 +3375,16 @@
           "id": "DCD8E749-4B83-42DB-A65A-694C927E2824"
         }
       ],
-      "correlations": [],
+      "correlations": [
+        {
+          "myField": "3D337B5E-182D-45C7-9752-E2DD4D7CF2BD",
+          "refEntity": "1A50AEEB-F956-4275-AE11-5D6F1F471FBE",
+          "refField": "AE73CBE3-577D-4457-8987-5BEFDECAEED9",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
       "id": "9095C2A1-EF4C-4357-AAB2-26F99C1845CA",
       "indexes": []
     },
@@ -10813,33 +10883,6 @@
       "canvasData": {
         "cells": [
           {
-            "id": "de986735-cd84-4bd5-b50f-6b5a70df984d",
-            "shape": "group",
-            "position": {
-              "x": -100.00000000000011,
-              "y": -40.00000000000051
-            },
-            "label": "学院设置部分",
-            "size": {
-              "width": 970,
-              "height": 760
-            },
-            "children": [
-              "444bdcfa-cc31-4b36-892b-9caef73cc863",
-              "4a31fc9b-4f5a-4f2c-880b-409d433ba848",
-              "9972b579-d4c5-4520-9202-7a57bf539151",
-              "4bbe78ce-9511-471b-bea0-bcdfa333b636",
-              "b9e17f34-b032-4b33-b78b-618b7e046614",
-              "925b71be-5cf6-48d7-aea2-5c49e68a5d8b",
-              "6210b0eb-8566-4b64-885b-f1b00d6078d7",
-              "914c8f40-8cff-49ed-86a9-4dcad63ad668",
-              "56317816-819f-41ea-a6ef-bdcd0027fb68",
-              "979dfa9f-475a-4be8-8ddc-1f2500ff212b",
-              "f03ab359-7568-4402-bc56-4593bf5e1420",
-              "5428380e-8314-4f6f-9048-43eff1b48ee5"
-            ]
-          },
-          {
             "id": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd",
             "shape": "group",
             "position": {
@@ -10857,40 +10900,6 @@
               "8fad7c2e-d083-4589-b938-071541a6cea1",
               "60b8fc40-2b82-4b9a-8da2-5234582e31f6"
             ]
-          },
-          {
-            "id": "26b28925-27ed-488d-b20d-2abbcafa5057",
-            "shape": "table",
-            "position": {
-              "x": 1421,
-              "y": 19.99999999999801
-            },
-            "count": 0,
-            "originKey": "6B1610FB-364F-4514-95D6-9DDA681BFC61",
-            "fillColor": "#9acc98",
-            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd"
-          },
-          {
-            "id": "444bdcfa-cc31-4b36-892b-9caef73cc863",
-            "shape": "table",
-            "position": {
-              "x": 426,
-              "y": 405
-            },
-            "count": 0,
-            "originKey": "536B8B19-C2B3-45D1-ADA8-402C0083FC31",
-            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
-          },
-          {
-            "id": "4a31fc9b-4f5a-4f2c-880b-409d433ba848",
-            "shape": "table",
-            "position": {
-              "x": -29,
-              "y": 450
-            },
-            "count": 0,
-            "originKey": "9095C2A1-EF4C-4357-AAB2-26F99C1845CA",
-            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
           },
           {
             "id": "8fad7c2e-d083-4589-b938-071541a6cea1",
@@ -11035,6 +11044,53 @@
             }
           },
           {
+            "id": "60b8fc40-2b82-4b9a-8da2-5234582e31f6",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "9a5658de-7e28-4815-95c2-ccf5ff90e6c1",
+              "port": "5FAE5CA5-B7A6-40C3-878D-1BB3D4A45B5C%out"
+            },
+            "target": {
+              "cell": "26b28925-27ed-488d-b20d-2abbcafa5057",
+              "port": "0C5A31BB-2855-4BB9-84D1-7E63B37A71E1%in"
+            },
+            "relation": "1:n",
+            "fillColor": "#c00000",
+            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd",
+            "attrs": {
+              "line": {
+                "strokeDasharray": ""
+              }
+            }
+          },
+          {
+            "id": "de986735-cd84-4bd5-b50f-6b5a70df984d",
+            "shape": "group",
+            "position": {
+              "x": -130.00000000000023,
+              "y": -40
+            },
+            "label": "学院设置部分",
+            "size": {
+              "width": 1010,
+              "height": 760
+            },
+            "children": [
+              "444bdcfa-cc31-4b36-892b-9caef73cc863",
+              "4a31fc9b-4f5a-4f2c-880b-409d433ba848",
+              "9972b579-d4c5-4520-9202-7a57bf539151",
+              "4bbe78ce-9511-471b-bea0-bcdfa333b636",
+              "b9e17f34-b032-4b33-b78b-618b7e046614",
+              "925b71be-5cf6-48d7-aea2-5c49e68a5d8b",
+              "6210b0eb-8566-4b64-885b-f1b00d6078d7",
+              "914c8f40-8cff-49ed-86a9-4dcad63ad668",
+              "56317816-819f-41ea-a6ef-bdcd0027fb68",
+              "979dfa9f-475a-4be8-8ddc-1f2500ff212b",
+              "f03ab359-7568-4402-bc56-4593bf5e1420",
+              "5428380e-8314-4f6f-9048-43eff1b48ee5"
+            ]
+          },
+          {
             "id": "f03ab359-7568-4402-bc56-4593bf5e1420",
             "shape": "erdRelation",
             "source": {
@@ -11074,8 +11130,8 @@
             "relation": "1:n",
             "vertices": [
               {
-                "x": 430,
-                "y": 73
+                "x": 400,
+                "y": 73.00000000000045
               }
             ],
             "fillColor": "#ACDAFC",
@@ -11095,8 +11151,8 @@
             "relation": "1:n",
             "vertices": [
               {
-                "x": 401,
-                "y": 319
+                "x": 371,
+                "y": 319.00000000000045
               }
             ],
             "fillColor": "#ACDAFC",
@@ -11131,12 +11187,12 @@
             "relation": "1:n",
             "vertices": [
               {
-                "x": -49,
-                "y": 620
+                "x": -79,
+                "y": 620.0000000000005
               },
               {
-                "x": 411,
-                "y": 620
+                "x": 381,
+                "y": 620.0000000000005
               }
             ],
             "fillColor": "#ACDAFC",
@@ -11156,26 +11212,6 @@
             "relation": "1:n",
             "fillColor": "#ACDAFC",
             "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
-          },
-          {
-            "id": "60b8fc40-2b82-4b9a-8da2-5234582e31f6",
-            "shape": "erdRelation",
-            "source": {
-              "cell": "9a5658de-7e28-4815-95c2-ccf5ff90e6c1",
-              "port": "5FAE5CA5-B7A6-40C3-878D-1BB3D4A45B5C%out"
-            },
-            "target": {
-              "cell": "26b28925-27ed-488d-b20d-2abbcafa5057",
-              "port": "0C5A31BB-2855-4BB9-84D1-7E63B37A71E1%in"
-            },
-            "relation": "1:n",
-            "fillColor": "#c00000",
-            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd",
-            "attrs": {
-              "line": {
-                "strokeDasharray": ""
-              }
-            }
           },
           {
             "id": "47d951f9-c6b0-4407-b2e3-e66f4b2931ec",
@@ -11203,50 +11239,97 @@
             }
           },
           {
-            "id": "56317816-819f-41ea-a6ef-bdcd0027fb68",
+            "id": "26b28925-27ed-488d-b20d-2abbcafa5057",
             "shape": "table",
             "position": {
-              "x": -14.5,
-              "y": 10
+              "x": 1421,
+              "y": 19.99999999999801
             },
             "count": 0,
-            "originKey": "26B8D13E-BE37-4E20-8496-13A586E84581",
-            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
+            "originKey": "6B1610FB-364F-4514-95D6-9DDA681BFC61",
+            "fillColor": "#9acc98",
+            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd",
+            "size": {
+              "width": 362,
+              "height": 146
+            }
           },
           {
             "id": "6210b0eb-8566-4b64-885b-f1b00d6078d7",
             "shape": "table",
             "position": {
-              "x": 472,
-              "y": 10
+              "x": 442,
+              "y": 10.000000000000455
             },
             "count": 0,
             "originKey": "C698249E-307D-4087-9EC4-3BABCFC00660",
             "fontColor": "#555555",
             "fillColor": "#dce775",
-            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
+            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d",
+            "size": {
+              "width": 393,
+              "height": 192
+            }
+          },
+          {
+            "id": "56317816-819f-41ea-a6ef-bdcd0027fb68",
+            "shape": "table",
+            "position": {
+              "x": -44.5,
+              "y": 10.000000000000455
+            },
+            "count": 0,
+            "originKey": "26B8D13E-BE37-4E20-8496-13A586E84581",
+            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d",
+            "size": {
+              "width": 409,
+              "height": 192
+            }
           },
           {
             "id": "9972b579-d4c5-4520-9202-7a57bf539151",
             "shape": "table",
             "position": {
-              "x": -18.5,
-              "y": 233
+              "x": -48.5,
+              "y": 233.00000000000045
             },
             "count": 0,
             "originKey": "C2F51B91-7C24-4CB4-8406-706F4851EB0B",
-            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
+            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d",
+            "size": {
+              "width": 352,
+              "height": 169
+            }
           },
           {
-            "id": "4bbe78ce-9511-471b-bea0-bcdfa333b636",
+            "id": "4a31fc9b-4f5a-4f2c-880b-409d433ba848",
             "shape": "table",
             "position": {
-              "x": 502,
-              "y": 233
+              "x": -59,
+              "y": 450.00000000000045
             },
             "count": 0,
-            "originKey": "1A50AEEB-F956-4275-AE11-5D6F1F471FBE",
-            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
+            "originKey": "9095C2A1-EF4C-4357-AAB2-26F99C1845CA",
+            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d",
+            "size": {
+              "width": 355,
+              "height": 146
+            }
+          },
+          {
+            "id": "444bdcfa-cc31-4b36-892b-9caef73cc863",
+            "shape": "table",
+            "position": {
+              "x": 396,
+              "y": 405.00000000000045
+            },
+            "count": 0,
+            "originKey": "536B8B19-C2B3-45D1-ADA8-402C0083FC31",
+            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d",
+            "size": {
+              "width": 451,
+              "height": 284
+            }
           },
           {
             "id": "9a5658de-7e28-4815-95c2-ccf5ff90e6c1",
@@ -11259,7 +11342,26 @@
             "originKey": "0FC9DB49-4FDB-437E-83E9-7EE803F1CC84",
             "fontColor": "#0d0d0d",
             "fillColor": "#c00000",
-            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd"
+            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd",
+            "size": {
+              "width": 403,
+              "height": 330
+            }
+          },
+          {
+            "id": "4bbe78ce-9511-471b-bea0-bcdfa333b636",
+            "shape": "table",
+            "position": {
+              "x": 472,
+              "y": 233.00000000000045
+            },
+            "count": 0,
+            "originKey": "1A50AEEB-F956-4275-AE11-5D6F1F471FBE",
+            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d",
+            "size": {
+              "width": 334,
+              "height": 123
+            }
           }
         ]
       },
@@ -11563,319 +11665,6 @@
             "size": {
               "width": 130,
               "height": 110
-            },
-            "ports": {
-              "groups": {
-                "in": {
-                  "attrs": {
-                    "fo": {
-                      "width": 8,
-                      "height": 8,
-                      "x": -4,
-                      "y": -4,
-                      "magnet": "true",
-                      "style": {
-                        "visibility": "hidden"
-                      }
-                    }
-                  },
-                  "zIndex": 3,
-                  "position": {
-                    "name": "left"
-                  }
-                },
-                "out": {
-                  "attrs": {
-                    "fo": {
-                      "width": 8,
-                      "height": 8,
-                      "x": -4,
-                      "y": -4,
-                      "magnet": "true",
-                      "style": {
-                        "visibility": "hidden"
-                      }
-                    }
-                  },
-                  "zIndex": 3,
-                  "position": {
-                    "name": "right"
-                  }
-                },
-                "top": {
-                  "attrs": {
-                    "fo": {
-                      "width": 8,
-                      "height": 8,
-                      "x": -4,
-                      "y": -4,
-                      "magnet": "true",
-                      "style": {
-                        "visibility": "hidden"
-                      }
-                    }
-                  },
-                  "zIndex": 3,
-                  "position": {
-                    "name": "top"
-                  }
-                },
-                "bottom": {
-                  "attrs": {
-                    "fo": {
-                      "width": 8,
-                      "height": 8,
-                      "x": -4,
-                      "y": -4,
-                      "magnet": "true",
-                      "style": {
-                        "visibility": "hidden"
-                      }
-                    }
-                  },
-                  "zIndex": 3,
-                  "position": {
-                    "name": "bottom"
-                  }
-                }
-              },
-              "items": [
-                {
-                  "group": "in",
-                  "id": "in"
-                },
-                {
-                  "group": "in",
-                  "id": "in2"
-                },
-                {
-                  "group": "in",
-                  "id": "in3"
-                },
-                {
-                  "group": "out",
-                  "id": "out"
-                },
-                {
-                  "group": "out",
-                  "id": "out2"
-                },
-                {
-                  "group": "out",
-                  "id": "out3"
-                },
-                {
-                  "group": "top",
-                  "id": "top"
-                },
-                {
-                  "group": "top",
-                  "id": "top2"
-                },
-                {
-                  "group": "top",
-                  "id": "top3"
-                },
-                {
-                  "group": "bottom",
-                  "id": "bottom"
-                },
-                {
-                  "group": "bottom",
-                  "id": "bottom2"
-                },
-                {
-                  "group": "bottom",
-                  "id": "bottom3"
-                }
-              ]
-            }
-          },
-          {
-            "id": "ac8ecb2d-7944-414d-b6ea-e69d064255c1",
-            "shape": "erdRelation",
-            "source": {
-              "cell": "892b4b11-4750-4238-9c86-bb20192eb1bb",
-              "port": "out2"
-            },
-            "target": {
-              "cell": "563779f2-b18d-4158-b78b-36fa30b4b371",
-              "port": "in2"
-            },
-            "relation": "1:n",
-            "vertices": [
-              {
-                "x": 280,
-                "y": 110
-              }
-            ],
-            "labels": [
-              {
-                "attrs": {
-                  "text": {
-                    "text": ""
-                  },
-                  "rect": {}
-                }
-              }
-            ],
-            "fillColor": "#ACDAFC"
-          },
-          {
-            "id": "e726ad52-1294-45c1-9965-e3bccb6134ac",
-            "shape": "erdRelation",
-            "source": {
-              "cell": "02b5b284-86e8-413b-a2ce-d2c052e13c94",
-              "port": "bottom2"
-            },
-            "target": {
-              "cell": "e63e919b-f925-4dca-8d73-9279ab06d72c",
-              "port": "bottom2"
-            },
-            "relation": "1:n",
-            "vertices": [
-              {
-                "x": 749,
-                "y": 520
-              }
-            ],
-            "fillColor": "#ACDAFC"
-          },
-          {
-            "id": "2e2dc3ab-172a-4dfb-9711-c7be64fd2fcd",
-            "shape": "erdRelation",
-            "source": {
-              "cell": "892b4b11-4750-4238-9c86-bb20192eb1bb",
-              "port": "in2"
-            },
-            "target": {
-              "cell": "34f587ad-faf7-4fa9-948d-e623648d77b9",
-              "port": "bottom2"
-            },
-            "relation": "1:n",
-            "vertices": [
-              {
-                "x": 70,
-                "y": 540
-              }
-            ],
-            "fillColor": "#ACDAFC"
-          },
-          {
-            "id": "d0c269e7-1260-44df-b7df-631dd5d7754f",
-            "shape": "erdRelation",
-            "source": {
-              "cell": "563779f2-b18d-4158-b78b-36fa30b4b371",
-              "port": "bottom2"
-            },
-            "target": {
-              "cell": "dc34a8bc-62a9-4a97-bc60-7195d1aa66e8",
-              "port": "top2"
-            },
-            "relation": "1:n",
-            "fillColor": "#ACDAFC"
-          },
-          {
-            "id": "6e18b347-52cb-4e8f-a426-f2274a1e0581",
-            "shape": "erdRelation",
-            "source": {
-              "cell": "1380680e-72b6-42cc-b634-b92b155c38c5",
-              "port": "out"
-            },
-            "target": {
-              "cell": "563779f2-b18d-4158-b78b-36fa30b4b371",
-              "port": "in3"
-            },
-            "relation": "1:n",
-            "vertices": [
-              {
-                "x": 290,
-                "y": 177
-              }
-            ],
-            "fillColor": "#ACDAFC"
-          },
-          {
-            "id": "734f21dd-e215-4a14-90ab-f18b0df70d61",
-            "shape": "erdRelation",
-            "source": {
-              "cell": "02b5b284-86e8-413b-a2ce-d2c052e13c94",
-              "port": "out2"
-            },
-            "target": {
-              "cell": "dc34a8bc-62a9-4a97-bc60-7195d1aa66e8",
-              "port": "out2"
-            },
-            "relation": "1:n",
-            "vertices": [
-              {
-                "x": 470,
-                "y": 360
-              }
-            ],
-            "fillColor": "#ACDAFC"
-          },
-          {
-            "id": "3f42f177-a03f-4024-8470-5fe98923ac20",
-            "shape": "erdRelation",
-            "source": {
-              "cell": "1fcc5b1b-5a4e-4fc5-af7b-13e1eaff7133",
-              "port": "out2"
-            },
-            "target": {
-              "cell": "e63e919b-f925-4dca-8d73-9279ab06d72c",
-              "port": "top2"
-            },
-            "relation": "1:n",
-            "vertices": [],
-            "fillColor": "#ACDAFC"
-          },
-          {
-            "id": "ef8fc07c-b10b-4167-9760-1c46e2bb06d9",
-            "shape": "erdRelation",
-            "source": {
-              "cell": "563779f2-b18d-4158-b78b-36fa30b4b371",
-              "port": "out2"
-            },
-            "target": {
-              "cell": "1fcc5b1b-5a4e-4fc5-af7b-13e1eaff7133",
-              "port": "in2"
-            },
-            "relation": "1:n",
-            "vertices": [
-              {
-                "x": 490,
-                "y": 180
-              }
-            ],
-            "fillColor": "#ACDAFC"
-          },
-          {
-            "id": "a7446b72-6145-4f91-aa0a-59dbd0cdd07e",
-            "shape": "erdRelation",
-            "source": {
-              "cell": "34f587ad-faf7-4fa9-948d-e623648d77b9",
-              "port": "out2"
-            },
-            "target": {
-              "cell": "dc34a8bc-62a9-4a97-bc60-7195d1aa66e8",
-              "port": "in2"
-            },
-            "relation": "1:n",
-            "fillColor": "#ACDAFC"
-          },
-          {
-            "id": "892b4b11-4750-4238-9c86-bb20192eb1bb",
-            "shape": "edit-node-circle",
-            "position": {
-              "x": 145,
-              "y": 85
-            },
-            "label": "### 学院\n---\n<u>学院号</u>\n学院名\n院长",
-            "fillColor": "#acdafc",
-            "size": {
-              "width": 110,
-              "height": 100
             },
             "ports": {
               "groups": {
@@ -12438,6 +12227,319 @@
             "size": {
               "width": 120,
               "height": 120
+            },
+            "ports": {
+              "groups": {
+                "in": {
+                  "attrs": {
+                    "fo": {
+                      "width": 8,
+                      "height": 8,
+                      "x": -4,
+                      "y": -4,
+                      "magnet": "true",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  },
+                  "zIndex": 3,
+                  "position": {
+                    "name": "left"
+                  }
+                },
+                "out": {
+                  "attrs": {
+                    "fo": {
+                      "width": 8,
+                      "height": 8,
+                      "x": -4,
+                      "y": -4,
+                      "magnet": "true",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  },
+                  "zIndex": 3,
+                  "position": {
+                    "name": "right"
+                  }
+                },
+                "top": {
+                  "attrs": {
+                    "fo": {
+                      "width": 8,
+                      "height": 8,
+                      "x": -4,
+                      "y": -4,
+                      "magnet": "true",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  },
+                  "zIndex": 3,
+                  "position": {
+                    "name": "top"
+                  }
+                },
+                "bottom": {
+                  "attrs": {
+                    "fo": {
+                      "width": 8,
+                      "height": 8,
+                      "x": -4,
+                      "y": -4,
+                      "magnet": "true",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  },
+                  "zIndex": 3,
+                  "position": {
+                    "name": "bottom"
+                  }
+                }
+              },
+              "items": [
+                {
+                  "group": "in",
+                  "id": "in"
+                },
+                {
+                  "group": "in",
+                  "id": "in2"
+                },
+                {
+                  "group": "in",
+                  "id": "in3"
+                },
+                {
+                  "group": "out",
+                  "id": "out"
+                },
+                {
+                  "group": "out",
+                  "id": "out2"
+                },
+                {
+                  "group": "out",
+                  "id": "out3"
+                },
+                {
+                  "group": "top",
+                  "id": "top"
+                },
+                {
+                  "group": "top",
+                  "id": "top2"
+                },
+                {
+                  "group": "top",
+                  "id": "top3"
+                },
+                {
+                  "group": "bottom",
+                  "id": "bottom"
+                },
+                {
+                  "group": "bottom",
+                  "id": "bottom2"
+                },
+                {
+                  "group": "bottom",
+                  "id": "bottom3"
+                }
+              ]
+            }
+          },
+          {
+            "id": "ac8ecb2d-7944-414d-b6ea-e69d064255c1",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "892b4b11-4750-4238-9c86-bb20192eb1bb",
+              "port": "out2"
+            },
+            "target": {
+              "cell": "563779f2-b18d-4158-b78b-36fa30b4b371",
+              "port": "in2"
+            },
+            "relation": "1:n",
+            "vertices": [
+              {
+                "x": 280,
+                "y": 135
+              }
+            ],
+            "labels": [
+              {
+                "attrs": {
+                  "text": {
+                    "text": ""
+                  },
+                  "rect": {}
+                }
+              }
+            ],
+            "fillColor": "#ACDAFC"
+          },
+          {
+            "id": "e726ad52-1294-45c1-9965-e3bccb6134ac",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "02b5b284-86e8-413b-a2ce-d2c052e13c94",
+              "port": "bottom2"
+            },
+            "target": {
+              "cell": "e63e919b-f925-4dca-8d73-9279ab06d72c",
+              "port": "bottom2"
+            },
+            "relation": "1:n",
+            "vertices": [
+              {
+                "x": 749,
+                "y": 520
+              }
+            ],
+            "fillColor": "#ACDAFC"
+          },
+          {
+            "id": "2e2dc3ab-172a-4dfb-9711-c7be64fd2fcd",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "892b4b11-4750-4238-9c86-bb20192eb1bb",
+              "port": "in2"
+            },
+            "target": {
+              "cell": "34f587ad-faf7-4fa9-948d-e623648d77b9",
+              "port": "bottom2"
+            },
+            "relation": "1:n",
+            "vertices": [
+              {
+                "x": 70,
+                "y": 540
+              }
+            ],
+            "fillColor": "#ACDAFC"
+          },
+          {
+            "id": "d0c269e7-1260-44df-b7df-631dd5d7754f",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "563779f2-b18d-4158-b78b-36fa30b4b371",
+              "port": "bottom2"
+            },
+            "target": {
+              "cell": "dc34a8bc-62a9-4a97-bc60-7195d1aa66e8",
+              "port": "top2"
+            },
+            "relation": "1:n",
+            "fillColor": "#ACDAFC"
+          },
+          {
+            "id": "6e18b347-52cb-4e8f-a426-f2274a1e0581",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "1380680e-72b6-42cc-b634-b92b155c38c5",
+              "port": "out"
+            },
+            "target": {
+              "cell": "563779f2-b18d-4158-b78b-36fa30b4b371",
+              "port": "in3"
+            },
+            "relation": "1:n",
+            "vertices": [
+              {
+                "x": 290,
+                "y": 177
+              }
+            ],
+            "fillColor": "#ACDAFC"
+          },
+          {
+            "id": "734f21dd-e215-4a14-90ab-f18b0df70d61",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "02b5b284-86e8-413b-a2ce-d2c052e13c94",
+              "port": "out2"
+            },
+            "target": {
+              "cell": "dc34a8bc-62a9-4a97-bc60-7195d1aa66e8",
+              "port": "out2"
+            },
+            "relation": "1:n",
+            "vertices": [
+              {
+                "x": 470,
+                "y": 360
+              }
+            ],
+            "fillColor": "#ACDAFC"
+          },
+          {
+            "id": "3f42f177-a03f-4024-8470-5fe98923ac20",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "1fcc5b1b-5a4e-4fc5-af7b-13e1eaff7133",
+              "port": "out2"
+            },
+            "target": {
+              "cell": "e63e919b-f925-4dca-8d73-9279ab06d72c",
+              "port": "top2"
+            },
+            "relation": "1:n",
+            "vertices": [],
+            "fillColor": "#ACDAFC"
+          },
+          {
+            "id": "ef8fc07c-b10b-4167-9760-1c46e2bb06d9",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "563779f2-b18d-4158-b78b-36fa30b4b371",
+              "port": "out2"
+            },
+            "target": {
+              "cell": "1fcc5b1b-5a4e-4fc5-af7b-13e1eaff7133",
+              "port": "in2"
+            },
+            "relation": "1:n",
+            "vertices": [
+              {
+                "x": 490,
+                "y": 180
+              }
+            ],
+            "fillColor": "#ACDAFC"
+          },
+          {
+            "id": "a7446b72-6145-4f91-aa0a-59dbd0cdd07e",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "34f587ad-faf7-4fa9-948d-e623648d77b9",
+              "port": "out2"
+            },
+            "target": {
+              "cell": "dc34a8bc-62a9-4a97-bc60-7195d1aa66e8",
+              "port": "in2"
+            },
+            "relation": "1:n",
+            "fillColor": "#ACDAFC"
+          },
+          {
+            "id": "892b4b11-4750-4238-9c86-bb20192eb1bb",
+            "shape": "edit-node-circle",
+            "position": {
+              "x": 145,
+              "y": 85
+            },
+            "label": "### 学院\n---\n<u>学院号</u>\n学院名\n院长",
+            "fillColor": "#acdafc",
+            "size": {
+              "width": 110,
+              "height": 100
             },
             "ports": {
               "groups": {

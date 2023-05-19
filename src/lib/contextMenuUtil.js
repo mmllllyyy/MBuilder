@@ -39,7 +39,6 @@ import * as Component from 'components';
 import Note from '../app/container/tools/note';
 import {saveImages} from './middle';
 import moment from 'moment';
-import ExportImg from '../app/container/tools/exportimg';
 
 const opt = [{
   key: 'add',
@@ -78,7 +77,11 @@ const opt = [{
     icon: 'fa-tags'
   },
   {
-    key: 'img',
+    key: 'png',
+    icon: 'fa-image'
+  },
+  {
+    key: 'svg',
     icon: 'fa-file-image-o'
   }]; // 所有菜单操作的的KEY;
 
@@ -91,8 +94,8 @@ const menusType = {
   entity: normalOpt.concat('move', 'all', 'notes'),
   views: normalOpt.concat('all'),
   view: normalOpt.concat('move', 'all', 'notes'),
-  diagrams: normalOpt.concat('img'),
-  diagram: normalOpt.concat('move', 'edit', 'img'),
+  diagrams: normalOpt.concat('png', 'svg'),
+  diagram: normalOpt.concat('move', 'edit', 'png', 'svg'),
   dicts: normalOpt.concat('all'),
   dict: normalOpt.concat('move', 'all'),
   domains: domainNormalOpt,
@@ -179,12 +182,13 @@ export const dealMenuClick = (dataSource, menu, updateDataSource, tabClose, call
     case 'all': editAllOpt(dataSource, menu, updateDataSource); break;
     case 'reset': resetOpt(dataSource, menu, updateDataSource); break;
     case 'notes': notesOpt(dataSource, menu, updateDataSource); break;
-    case 'img': imgOpt(dataSource, menu, genImg); break;
+    case 'png':
+    case 'svg': imgOpt(dataSource, menu, genImg, key); break;
     default:break;
   }
 };
 
-const imgOpt = (dataSource, menu, genImg) => {
+const imgOpt = (dataSource, menu, genImg, imageType) => {
   const type = menu.dataType;
   const parentKey = menu.parentKey;
   const otherMenus = menu.otherMenus || [];
@@ -197,39 +201,22 @@ const imgOpt = (dataSource, menu, genImg) => {
       }
     })
   }
-  let modal = null;
-  let imageType = 'svg';
-  const onChange = (e) => {
-    imageType = e.target.value;
-  };
-  const onOk = () => {
-    modal && modal.close();
-    if (type === 'diagrams') {
-      if (parentKey) {
-        const keys = dataSource.viewGroups.filter(v => v.id === parentKey)[0]?.refDiagrams || [];
-        genImg(true, keys, imageType).then((images) => {
-          saveImages(refactorFileName(images), imageType)
-        });
-      } else {
-        genImg(true, [], imageType).then((images) => {
-          saveImages(refactorFileName(images), imageType)
-        });
-      }
+  if (type === 'diagrams') {
+    if (parentKey) {
+      const keys = dataSource.viewGroups.filter(v => v.id === parentKey)[0]?.refDiagrams || [];
+      genImg(true, keys, imageType).then((images) => {
+        saveImages(refactorFileName(images), imageType)
+      });
     } else {
-      genImg(true, otherMenus.filter(m => m.type === type).map(m => m.key), imageType).then((images) => {
+      genImg(true, [], imageType).then((images) => {
         saveImages(refactorFileName(images), imageType)
       });
     }
+  } else {
+    genImg(true, otherMenus.filter(m => m.type === type).map(m => m.key), imageType).then((images) => {
+      saveImages(refactorFileName(images), imageType)
+    });
   }
-  const onCancel = () => {
-    modal && modal.close();
-  };
-  modal = openModal(<ExportImg onChange={onChange} type={imageType}/>, {
-    buttons: [
-      <Button type='primary' key='ok' onClick={onOk}><FormatMessage id='button.ok'/></Button>,
-      <Button key='cancel' onClick={onCancel}><FormatMessage id='button.cancel'/></Button>],
-    title: FormatMessage.string({id: 'exportImg.typeSelect'}),
-  });
 }
 
 const notesOpt = (dataSource, menu, updateDataSource) => {

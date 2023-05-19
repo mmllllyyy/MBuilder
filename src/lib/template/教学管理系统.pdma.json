@@ -2,9 +2,9 @@
   "name": "教学管理系统-标准模板",
   "describe": "标准模板案例",
   "avatar": "",
-  "version": "4.4.0",
-  "createdTime": "2023-2-25 12:07:29",
-  "updatedTime": "2023-3-19 16:13:32",
+  "version": "4.5.1",
+  "createdTime": "2023-5-18 19:46:33",
+  "updatedTime": "2023-5-18 19:47:23",
   "dbConns": [],
   "profile": {
     "default": {
@@ -985,7 +985,24 @@
           "id": "1868F7F4-8F4D-403D-ABA0-60D89BE37066"
         }
       ],
-      "correlations": [],
+      "correlations": [
+        {
+          "myField": "9651B83A-2208-4F1E-A870-C3C4E1FAF103",
+          "refEntity": "C698249E-307D-4087-9EC4-3BABCFC00660",
+          "refField": "D793F097-1364-49FD-B02C-D4EBBA5A055A",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        },
+        {
+          "myField": "9651B83A-2208-4F1E-A870-C3C4E1FAF103",
+          "refEntity": "536B8B19-C2B3-45D1-ADA8-402C0083FC31",
+          "refField": "EFD22F94-E1D0-4CAD-947D-E856A997D7B5",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
       "id": "26B8D13E-BE37-4E20-8496-13A586E84581",
       "indexes": []
     },
@@ -1391,7 +1408,16 @@
           "id": "3B7186B6-989F-4C9F-B8ED-F36D20713363"
         }
       ],
-      "correlations": [],
+      "correlations": [
+        {
+          "myField": "8707AEB9-3EC5-4EEA-9E14-99BAF28B46B4",
+          "refEntity": "C698249E-307D-4087-9EC4-3BABCFC00660",
+          "refField": "63130D1B-63C8-491C-B36D-5603A30BFB37",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
       "id": "C2F51B91-7C24-4CB4-8406-706F4851EB0B",
       "indexes": [],
       "notes": {}
@@ -1772,7 +1798,24 @@
           "id": "1DAB3A13-B7D2-46AD-8DE1-89DA5ADDB3DE"
         }
       ],
-      "correlations": [],
+      "correlations": [
+        {
+          "myField": "6D6BC6AA-8114-4B91-8A2C-4B5FEACEB347",
+          "refEntity": "0FC9DB49-4FDB-437E-83E9-7EE803F1CC84",
+          "refField": "1BCE9672-14BA-4B2B-B8C6-222CC6CF0F61",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        },
+        {
+          "myField": "6D6BC6AA-8114-4B91-8A2C-4B5FEACEB347",
+          "refEntity": "1A50AEEB-F956-4275-AE11-5D6F1F471FBE",
+          "refField": "A23704D2-7128-41A2-988C-D20CB984FA83",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
       "id": "C698249E-307D-4087-9EC4-3BABCFC00660",
       "indexes": [],
       "notes": {}
@@ -2525,7 +2568,16 @@
           "id": "41AFEC1A-F0E0-4BD9-8F72-BF3DF29B7B7C"
         }
       ],
-      "correlations": [],
+      "correlations": [
+        {
+          "myField": "5FAE5CA5-B7A6-40C3-878D-1BB3D4A45B5C",
+          "refEntity": "6B1610FB-364F-4514-95D6-9DDA681BFC61",
+          "refField": "0C5A31BB-2855-4BB9-84D1-7E63B37A71E1",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
       "indexes": [
         {
           "defKey": "IDX_SMIS_STUDENT_01",
@@ -2993,7 +3045,16 @@
           "id": "7376A655-992A-4C94-BAFC-494DA519737D"
         }
       ],
-      "correlations": [],
+      "correlations": [
+        {
+          "myField": "C5916046-F140-4B0C-BF84-EBD7DDB38EAA",
+          "refEntity": "1A50AEEB-F956-4275-AE11-5D6F1F471FBE",
+          "refField": "AE73CBE3-577D-4457-8987-5BEFDECAEED9",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
       "id": "536B8B19-C2B3-45D1-ADA8-402C0083FC31",
       "indexes": [],
       "notes": {}
@@ -3323,7 +3384,16 @@
           "id": "DCD8E749-4B83-42DB-A65A-694C927E2824"
         }
       ],
-      "correlations": [],
+      "correlations": [
+        {
+          "myField": "3D337B5E-182D-45C7-9752-E2DD4D7CF2BD",
+          "refEntity": "1A50AEEB-F956-4275-AE11-5D6F1F471FBE",
+          "refField": "AE73CBE3-577D-4457-8987-5BEFDECAEED9",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
       "id": "9095C2A1-EF4C-4357-AAB2-26F99C1845CA",
       "indexes": [],
       "notes": {}
@@ -4350,7 +4420,8 @@
         "6B1610FB-364F-4514-95D6-9DDA681BFC61"
       ],
       "id": "DD60F248-86A6-450C-BA20-B4990DCCAF44",
-      "indexes": []
+      "indexes": [],
+      "notes": {}
     },
     {
       "defKey": "V_CLASS_STUDENT",
@@ -4680,7 +4751,8 @@
         "C698249E-307D-4087-9EC4-3BABCFC00660",
         "0FC9DB49-4FDB-437E-83E9-7EE803F1CC84"
       ],
-      "id": "81C7ED2A-2A19-4649-BB0F-B730BDF0D1EC"
+      "id": "81C7ED2A-2A19-4649-BB0F-B730BDF0D1EC",
+      "notes": {}
     }
   ],
   "dicts": [
@@ -6744,33 +6816,6 @@
       "canvasData": {
         "cells": [
           {
-            "id": "de986735-cd84-4bd5-b50f-6b5a70df984d",
-            "shape": "group",
-            "position": {
-              "x": -40,
-              "y": -40
-            },
-            "label": "学院设置部分",
-            "size": {
-              "width": 910,
-              "height": 760
-            },
-            "children": [
-              "444bdcfa-cc31-4b36-892b-9caef73cc863",
-              "4a31fc9b-4f5a-4f2c-880b-409d433ba848",
-              "9972b579-d4c5-4520-9202-7a57bf539151",
-              "4bbe78ce-9511-471b-bea0-bcdfa333b636",
-              "b9e17f34-b032-4b33-b78b-618b7e046614",
-              "925b71be-5cf6-48d7-aea2-5c49e68a5d8b",
-              "6210b0eb-8566-4b64-885b-f1b00d6078d7",
-              "914c8f40-8cff-49ed-86a9-4dcad63ad668",
-              "56317816-819f-41ea-a6ef-bdcd0027fb68",
-              "f03ab359-7568-4402-bc56-4593bf5e1420",
-              "5428380e-8314-4f6f-9048-43eff1b48ee5",
-              "979dfa9f-475a-4be8-8ddc-1f2500ff212b"
-            ]
-          },
-          {
             "id": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd",
             "shape": "group",
             "position": {
@@ -6779,7 +6824,7 @@
             },
             "label": "学生行为",
             "size": {
-              "width": 860,
+              "width": 950,
               "height": 760
             },
             "children": [
@@ -6787,89 +6832,75 @@
               "26b28925-27ed-488d-b20d-2abbcafa5057",
               "942a65c8-c294-4ea4-98ec-1df43daa3ff5",
               "8fad7c2e-d083-4589-b938-071541a6cea1",
-              "d6502944-49c1-4584-a595-c414134a8773",
-              "b9d16e42-dfdd-479f-8a39-79d6c3acc6a9"
+              "d6502944-49c1-4584-a595-c414134a8773"
             ]
           },
           {
-            "id": "4a31fc9b-4f5a-4f2c-880b-409d433ba848",
-            "shape": "table",
-            "position": {
-              "x": 20.00000000000165,
-              "y": 459.999999999998
+            "id": "d6502944-49c1-4584-a595-c414134a8773",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "9a5658de-7e28-4815-95c2-ccf5ff90e6c1",
+              "port": "5FAE5CA5-B7A6-40C3-878D-1BB3D4A45B5C%out"
             },
-            "count": 0,
-            "originKey": "9095C2A1-EF4C-4357-AAB2-26F99C1845CA",
-            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
+            "target": {
+              "cell": "26b28925-27ed-488d-b20d-2abbcafa5057",
+              "port": "0C5A31BB-2855-4BB9-84D1-7E63B37A71E1%in"
+            },
+            "relation": "1:n",
+            "vertices": [
+              {
+                "x": 1320,
+                "y": 106
+              },
+              {
+                "x": 1320,
+                "y": 83
+              }
+            ],
+            "fillColor": "#ACDAFC",
+            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd"
+          },
+          {
+            "id": "de986735-cd84-4bd5-b50f-6b5a70df984d",
+            "shape": "group",
+            "position": {
+              "x": -270.00000000000045,
+              "y": -40.00000000000057
+            },
+            "label": "学院设置部分",
+            "size": {
+              "width": 1130,
+              "height": 760
+            },
+            "children": [
+              "444bdcfa-cc31-4b36-892b-9caef73cc863",
+              "4a31fc9b-4f5a-4f2c-880b-409d433ba848",
+              "9972b579-d4c5-4520-9202-7a57bf539151",
+              "4bbe78ce-9511-471b-bea0-bcdfa333b636",
+              "925b71be-5cf6-48d7-aea2-5c49e68a5d8b",
+              "6210b0eb-8566-4b64-885b-f1b00d6078d7",
+              "914c8f40-8cff-49ed-86a9-4dcad63ad668",
+              "56317816-819f-41ea-a6ef-bdcd0027fb68",
+              "f03ab359-7568-4402-bc56-4593bf5e1420",
+              "5428380e-8314-4f6f-9048-43eff1b48ee5",
+              "979dfa9f-475a-4be8-8ddc-1f2500ff212b",
+              "b9e17f34-b032-4b33-b78b-618b7e046614"
+            ]
           },
           {
             "id": "444bdcfa-cc31-4b36-892b-9caef73cc863",
             "shape": "table",
             "position": {
-              "x": 475.00000000000165,
+              "x": 375.00000000000165,
               "y": 414.999999999998
             },
             "count": 0,
             "originKey": "536B8B19-C2B3-45D1-ADA8-402C0083FC31",
-            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
-          },
-          {
-            "id": "4bbe78ce-9511-471b-bea0-bcdfa333b636",
-            "shape": "table",
-            "position": {
-              "x": 551.0000000000016,
-              "y": 242.999999999998
-            },
-            "count": 0,
-            "originKey": "1A50AEEB-F956-4275-AE11-5D6F1F471FBE",
-            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
-          },
-          {
-            "id": "9972b579-d4c5-4520-9202-7a57bf539151",
-            "shape": "table",
-            "position": {
-              "x": 30.50000000000165,
-              "y": 242.999999999998
-            },
-            "count": 0,
-            "originKey": "C2F51B91-7C24-4CB4-8406-706F4851EB0B",
-            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
-          },
-          {
-            "id": "56317816-819f-41ea-a6ef-bdcd0027fb68",
-            "shape": "table",
-            "position": {
-              "x": 34.50000000000165,
-              "y": 19.99999999999801
-            },
-            "count": 0,
-            "originKey": "26B8D13E-BE37-4E20-8496-13A586E84581",
-            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
-          },
-          {
-            "id": "6210b0eb-8566-4b64-885b-f1b00d6078d7",
-            "shape": "table",
-            "position": {
-              "x": 521.0000000000016,
-              "y": 19.99999999999801
-            },
-            "count": 0,
-            "originKey": "C698249E-307D-4087-9EC4-3BABCFC00660",
-            "fontColor": "#555555",
-            "fillColor": "#dce775",
-            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
-          },
-          {
-            "id": "26b28925-27ed-488d-b20d-2abbcafa5057",
-            "shape": "table",
-            "position": {
-              "x": 1351,
-              "y": 19.99999999999801
-            },
-            "count": 0,
-            "originKey": "6B1610FB-364F-4514-95D6-9DDA681BFC61",
-            "fillColor": "#9acc98",
-            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd"
+            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d",
+            "size": {
+              "width": 451,
+              "height": 284
+            }
           },
           {
             "id": "f03ab359-7568-4402-bc56-4593bf5e1420",
@@ -6911,8 +6942,8 @@
             "relation": "1:n",
             "vertices": [
               {
-                "x": 880,
-                "y": 106
+                "x": 870,
+                "y": 104
               }
             ],
             "fillColor": "#ACDAFC"
@@ -6931,8 +6962,8 @@
             "relation": "1:n",
             "vertices": [
               {
-                "x": 450.00000000000165,
-                "y": 82.99999999999801
+                "x": 320,
+                "y": 81
               }
             ],
             "fillColor": "#ACDAFC",
@@ -6952,8 +6983,8 @@
             "relation": "1:n",
             "vertices": [
               {
-                "x": 450.00000000000165,
-                "y": 328.999999999998
+                "x": 320,
+                "y": 327
               }
             ],
             "fillColor": "#ACDAFC",
@@ -6975,37 +7006,6 @@
             "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
           },
           {
-            "id": "b9d16e42-dfdd-479f-8a39-79d6c3acc6a9",
-            "shape": "erdRelation",
-            "source": {
-              "cell": "942a65c8-c294-4ea4-98ec-1df43daa3ff5",
-              "port": "3D337B5E-182D-45C7-9752-E2DD4D7CF2BD%out"
-            },
-            "target": {
-              "cell": "26b28925-27ed-488d-b20d-2abbcafa5057",
-              "port": "F7FD7836-4E62-47EF-90FE-6B80674A2DDD%out"
-            },
-            "relation": "1:n",
-            "vertices": [
-              {
-                "x": 1710,
-                "y": 106
-              }
-            ],
-            "labels": [
-              {
-                "attrs": {
-                  "text": {
-                    "text": "考试课程"
-                  },
-                  "rect": {}
-                }
-              }
-            ],
-            "fillColor": "#ACDAFC",
-            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd"
-          },
-          {
             "id": "5428380e-8314-4f6f-9048-43eff1b48ee5",
             "shape": "erdRelation",
             "source": {
@@ -7019,41 +7019,16 @@
             "relation": "1:n",
             "vertices": [
               {
-                "x": 1.6484591469634324e-12,
+                "x": -99.99999999999835,
                 "y": 629.999999999998
               },
               {
-                "x": 460.00000000000165,
+                "x": 360.00000000000165,
                 "y": 629.999999999998
               }
             ],
             "fillColor": "#ACDAFC",
             "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
-          },
-          {
-            "id": "d6502944-49c1-4584-a595-c414134a8773",
-            "shape": "erdRelation",
-            "source": {
-              "cell": "9a5658de-7e28-4815-95c2-ccf5ff90e6c1",
-              "port": "5FAE5CA5-B7A6-40C3-878D-1BB3D4A45B5C%out"
-            },
-            "target": {
-              "cell": "26b28925-27ed-488d-b20d-2abbcafa5057",
-              "port": "0C5A31BB-2855-4BB9-84D1-7E63B37A71E1%in"
-            },
-            "relation": "1:n",
-            "vertices": [
-              {
-                "x": 1320,
-                "y": 106
-              },
-              {
-                "x": 1320,
-                "y": 83
-              }
-            ],
-            "fillColor": "#ACDAFC",
-            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd"
           },
           {
             "id": "914c8f40-8cff-49ed-86a9-4dcad63ad668",
@@ -7067,15 +7042,114 @@
               "port": "A23704D2-7128-41A2-988C-D20CB984FA83%in"
             },
             "relation": "1:n",
+            "vertices": [
+              {
+                "x": 370,
+                "y": 304
+              }
+            ],
             "fillColor": "#ACDAFC",
             "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d"
+          },
+          {
+            "id": "56317816-819f-41ea-a6ef-bdcd0027fb68",
+            "shape": "table",
+            "position": {
+              "x": -145.49999999999835,
+              "y": 19.99999999999801
+            },
+            "count": 0,
+            "originKey": "26B8D13E-BE37-4E20-8496-13A586E84581",
+            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d",
+            "size": {
+              "width": 409,
+              "height": 192
+            }
+          },
+          {
+            "id": "9972b579-d4c5-4520-9202-7a57bf539151",
+            "shape": "table",
+            "position": {
+              "x": -145.49999999999835,
+              "y": 245.999999999998
+            },
+            "count": 0,
+            "originKey": "C2F51B91-7C24-4CB4-8406-706F4851EB0B",
+            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d",
+            "size": {
+              "width": 352,
+              "height": 169
+            }
+          },
+          {
+            "id": "4a31fc9b-4f5a-4f2c-880b-409d433ba848",
+            "shape": "table",
+            "position": {
+              "x": -146.99999999999835,
+              "y": 459.99999999999795
+            },
+            "count": 0,
+            "originKey": "9095C2A1-EF4C-4357-AAB2-26F99C1845CA",
+            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d",
+            "size": {
+              "width": 355,
+              "height": 146
+            }
+          },
+          {
+            "id": "6210b0eb-8566-4b64-885b-f1b00d6078d7",
+            "shape": "table",
+            "position": {
+              "x": 421.0000000000016,
+              "y": 19.99999999999801
+            },
+            "count": 0,
+            "originKey": "C698249E-307D-4087-9EC4-3BABCFC00660",
+            "fontColor": "#555555",
+            "fillColor": "#dce775",
+            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d",
+            "size": {
+              "width": 393,
+              "height": 192
+            }
+          },
+          {
+            "id": "4bbe78ce-9511-471b-bea0-bcdfa333b636",
+            "shape": "table",
+            "position": {
+              "x": 451.0000000000016,
+              "y": 242.999999999998
+            },
+            "count": 0,
+            "originKey": "1A50AEEB-F956-4275-AE11-5D6F1F471FBE",
+            "parent": "de986735-cd84-4bd5-b50f-6b5a70df984d",
+            "size": {
+              "width": 334,
+              "height": 123
+            }
+          },
+          {
+            "id": "26b28925-27ed-488d-b20d-2abbcafa5057",
+            "shape": "table",
+            "position": {
+              "x": 1431,
+              "y": 19.99999999999801
+            },
+            "count": 0,
+            "originKey": "6B1610FB-364F-4514-95D6-9DDA681BFC61",
+            "fillColor": "#9acc98",
+            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd",
+            "size": {
+              "width": 373,
+              "height": 307
+            }
           },
           {
             "id": "8fad7c2e-d083-4589-b938-071541a6cea1",
             "shape": "edit-node",
             "position": {
-              "x": 1122,
-              "y": 459.999999999998
+              "x": 1290,
+              "y": 590
             },
             "label": "课程信息表为镜像，所以后面的“:1\"标识，是指第1个镜像副本，仅关系图需要",
             "fontColor": "#f62b07",
@@ -7213,6 +7287,21 @@
             }
           },
           {
+            "id": "942a65c8-c294-4ea4-98ec-1df43daa3ff5",
+            "shape": "table",
+            "position": {
+              "x": 935,
+              "y": 414.999999999998
+            },
+            "count": 1,
+            "originKey": "9095C2A1-EF4C-4357-AAB2-26F99C1845CA",
+            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd",
+            "size": {
+              "width": 355,
+              "height": 146
+            }
+          },
+          {
             "id": "9a5658de-7e28-4815-95c2-ccf5ff90e6c1",
             "shape": "table",
             "position": {
@@ -7223,22 +7312,16 @@
             "originKey": "0FC9DB49-4FDB-437E-83E9-7EE803F1CC84",
             "fontColor": "#0d0d0d",
             "fillColor": "#c00000",
-            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd"
-          },
-          {
-            "id": "942a65c8-c294-4ea4-98ec-1df43daa3ff5",
-            "shape": "table",
-            "position": {
-              "x": 1341,
-              "y": 231.499999999998
-            },
-            "count": 1,
-            "originKey": "9095C2A1-EF4C-4357-AAB2-26F99C1845CA",
-            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd"
+            "parent": "02b64cef-3ee3-48a5-9867-9dc4e9726bfd",
+            "size": {
+              "width": 403,
+              "height": 330
+            }
           }
         ]
       },
-      "id": "9427DD89-11C0-431F-9BB0-8353A2725174"
+      "id": "9427DD89-11C0-431F-9BB0-8353A2725174",
+      "comment": ""
     },
     {
       "defKey": "KeyEntities",
