@@ -2434,7 +2434,7 @@ export const mergeDataSource = (oldDataSource, newDataSource, selectEntity, igno
               },
               target: {
                 ...c.target,
-                port: targetPort ? `${sourcePort}${separator}in` : c.target.port
+                port: targetPort ? `${targetPort}${separator}in` : c.target.port
               },
             }
           }
