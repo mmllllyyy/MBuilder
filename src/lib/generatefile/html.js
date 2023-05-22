@@ -18,6 +18,7 @@ const code = '代码';
 const dataType = '数据类型';
 const length = '长度';
 const main = '主键';
+const defaultValue = '默认值';
 const remark = '备注';
 
 const generateHeader = (dataSource) => {
@@ -77,9 +78,10 @@ const generateTableColumnListTable = (dataSource, groupKey, tableKey, nameType) 
   | ------------ | ------------ |
   | 用户信息  | userManage  |
    */
-  const defaultDb = _object.get(dataSource, 'profile.default.dbs', '');
+  const dataTypeSupports = _object.get(dataSource, 'profile.dataTypeSupports', []);
+  const defaultDb = dataTypeSupports.filter(d => d.id = _object.get(dataSource, 'profile.default.db', ''))[0].defKey || '';
   let tableString = `<table border="1" cellspacing="0">\n`;
-  tableString += `<tr class="first-tr"><td>${code}</td><td>${name}</td>${nameType !== 'dicts' ? `<td>${dataType}${defaultDb}</td><td>${length}</td><td>${main}</td>` : ''}<td>${remark}</td></tr>\n`;
+  tableString += `<tr class="first-tr"><td>${code}</td><td>${name}</td>${nameType !== 'dicts' ? `<td>${dataType}(${defaultDb})</td><td>${length}</td><td>${main}</td><td>${defaultValue}</td>` : ''}<td>${remark}</td></tr>\n`;
   const viewGroups = _object.get(dataSource, 'viewGroups', []);
   viewGroups.forEach((group) => {
     if (group.id === groupKey) {
@@ -96,7 +98,7 @@ const generateTableColumnListTable = (dataSource, groupKey, tableKey, nameType) 
                 ...field,
                 ...transform(field, dataSource),
               };
-              tableString += `<tr><td>${field.defKey}</td><td>${field.defName || ''}</td><td>${fieldData.type}</td><td>${fieldData.len || ''}</td><td>${field.primaryKey && '√' || ''}</td><td>${field.comment || ''}</td></tr>\n`;
+              tableString += `<tr><td>${field.defKey}</td><td>${field.defName || ''}</td><td>${fieldData.type}</td><td>${fieldData.len || ''}</td><td>${field.primaryKey && '√' || ''}<td>${field.defaultValue}</td></td><td>${field.comment || ''}</td></tr>\n`;
             }
            });
         }
