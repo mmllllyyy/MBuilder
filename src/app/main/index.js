@@ -53,7 +53,7 @@ import {
   resetHeader,
   validateNeedSave,
   toggleCaseDataSource,
-  toggleCaseEntityOrView, calcUnGroupDefKey,
+  toggleCaseEntityOrView, getUnGroup,
 } from '../../lib/datasource_util';
 import {
   clearAllTabData,
@@ -1094,15 +1094,8 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
             }
             return null;
           }).filter(d => !!d), [restProps.dataSource, config]);
-  const defaultGroupMenu = {
-    refDiagrams: calcUnGroupDefKey(restProps.dataSource || {}, 'diagrams'),
-    refDicts: calcUnGroupDefKey(restProps.dataSource || {}, 'dicts'),
-    refEntities: calcUnGroupDefKey(restProps.dataSource || {},'entities'),
-    refViews: calcUnGroupDefKey(restProps.dataSource || {},'views'),
-    id: '__ungroup',
-    defKey: FormatMessage.string({id: 'exportSql.defaultGroup'}),
-    defName: '',
-  };
+  const defaultGroupMenu =
+      getUnGroup(restProps.dataSource, FormatMessage.string({id: 'exportSql.defaultGroup'}));
   const useDefaultGroupMenu = ['refDiagrams', 'refDicts', 'refEntities', 'refViews']
       .some(key => defaultGroupMenu[key].length > 0);
   const groupMenu = useMemo(() => restProps.dataSource?.viewGroups

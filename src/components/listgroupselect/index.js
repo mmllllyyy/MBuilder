@@ -28,6 +28,7 @@ export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
       .filter(f => newData.map(n => n.defKey).includes(f)), [data, groups]);
   const [checked, setChecked] = useState([...tempSelected]);
   const [type, setType] = useState('normal');
+  const groupDataRef = useRef({});
   const getType = (d) => {
     if(d.every(s => checked.includes(s.id))) {
       return 'all';
@@ -78,15 +79,21 @@ export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
     }
   };
   const _onGroupChange = (e, id) => {
-    const keys = [].concat(id);
+    const ids = [].concat(id);
+    ids.forEach((i) => {
+      groupDataRef.current[i] = e.target.value;
+    });
     importDataRef.current = importDataRef.current.map((f) => {
-      if (keys.includes(f.id)) {
+      if (f.id === id) {
         return {
           ...f,
           group: e.target.value,
         };
       }
-      return f;
+      return {
+        ...f,
+        group: groupDataRef.current[f.id],
+      };
     });
   };
   const onRemove = (keys) => {

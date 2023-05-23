@@ -30,7 +30,13 @@ import {
   defaultTemplate,
   validateItemInclude,
   emptyDataTypeSupport,
-  allType, validateEmptyOrRepeat, transformFieldType, resetHeader, transform,
+  allType,
+  validateEmptyOrRepeat,
+  transformFieldType,
+  resetHeader,
+  transform,
+  calcUnGroupDefKey,
+  getUnGroup,
 } from './datasource_util';
 // 专门处理左侧菜单 右键菜单数据
 import { separator } from '../../profile';
@@ -163,8 +169,8 @@ export const getMenus = (key, type, selectedMenu, parentKey, groupType) => {
       }
     }
     return getMenu(m, key, type, selectedMenu,
-        parentKey === '__ungroup' ? 'modalAll' : groupType,
-        parentKey === '__ungroup' ? '' : parentKey, tempType);
+        groupType,
+        parentKey, tempType);
   });
 };
 
@@ -366,7 +372,7 @@ const editAllOpt = (dataSource, m, updateDataSource) => {
   }
   let defaultDataSource = {...dataSource};
   if (m.parentKey) {
-    const viewGroup = (defaultDataSource.viewGroups || []).filter(v => v.id === m.parentKey)[0];
+    const viewGroup = (defaultDataSource.viewGroups || []).concat(getUnGroup(dataSource)).filter(v => v.id === m.parentKey)[0];
     if (viewGroup) {
       defaultDataSource = {
         ...defaultDataSource,
@@ -979,7 +985,7 @@ const copyOpt = (dataSource, menu, type = 'copy', cb) => {
       if (groupType === 'modalGroup') {
         // 如果是在分组模式下
         // 先计算每个分组的数据 然后合并所有的数据
-        tempTypeData = (dataSource?.viewGroups || []).reduce((a, b) => {
+        tempTypeData = (dataSource?.viewGroups || []).concat(getUnGroup(dataSource)).reduce((a, b) => {
           return a.concat(getResult((names) => {
             return getData(names, b[`ref${names.slice(0, 1).toUpperCase() + names.slice(1)}`]);
           }, b.id));
@@ -989,7 +995,7 @@ const copyOpt = (dataSource, menu, type = 'copy', cb) => {
       }
     }
     if (cb) {
-      cb({ type, data: tempTypeData });
+       cb({ type, data: tempTypeData });
     } else {
       // 如果是复制关系图，需要将关系图下的表也同时带上
       const other = {};
@@ -997,7 +1003,6 @@ const copyOpt = (dataSource, menu, type = 'copy', cb) => {
         other.otherData = getCopyRealData(dataSource, getEntityData(dataSource, tempTypeData));
       } else if (dataType === 'entities' || dataType === 'entity' || dataType === 'view' || dataType === 'views') {
         tempTypeData = getCopyRealData(dataSource, tempTypeData);
-        console.log(tempTypeData);
       }
       Copy({ type, data: tempTypeData, ...other }, FormatMessage.string({id: `${type}Success`}));
     }

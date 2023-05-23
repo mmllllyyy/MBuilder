@@ -2747,3 +2747,13 @@ export const calcUnGroupDefKey = (dataSource, name) => {
       .map(e => e.id);
 };
 
+export const getUnGroup = (dataSource, defKey) => {
+  return {
+    refDiagrams: calcUnGroupDefKey(dataSource || {}, 'diagrams'),
+    refDicts: calcUnGroupDefKey(dataSource || {}, 'dicts'),
+    refEntities: calcUnGroupDefKey(dataSource || {},'entities'),
+    refViews: calcUnGroupDefKey(dataSource || {},'views'),
+    id: '__ungroup',
+    defKey: defKey || '__ungroup',
+  }
+}
