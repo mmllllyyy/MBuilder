@@ -1201,7 +1201,8 @@ const updateFieldType = (d, mappings, db, old) => {
     }),
   }
 }
-const transformDataSource = (d, old, db) => {
+const transformDataSource = (d, old) => {
+  const db = d?.profile?.default?.db || '';
   if (db !== old) {
     const mappings = d?.dataTypeMapping?.mappings || [];
     return {
