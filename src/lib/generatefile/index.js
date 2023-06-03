@@ -2,7 +2,7 @@ import React from 'react';
 import { html } from './html';
 import { markdown } from './markdown';
 import { projectSuffix } from '../../../profile';
-import { Download} from 'components';
+import {Download, FormatMessage} from 'components';
 import moment from 'moment';
 
 export const generateFile = (fileType, dataSource, imgCallBack) => {
@@ -17,7 +17,7 @@ export const generateFile = (fileType, dataSource, imgCallBack) => {
   const tempGroup = {
     defKey: '__defaultGroup',
     id: '__defaultGroup',
-    defName: '默认分类',
+    defName: FormatMessage.string({id: 'exportSql.defaultGroup'}),
     refEntities: getNoGroupData('entities', 'refEntities'),
     refViews: getNoGroupData('views', 'refViews'),
     refDiagrams: getNoGroupData('diagrams', 'refDiagrams'),

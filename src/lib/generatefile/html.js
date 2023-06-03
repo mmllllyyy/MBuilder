@@ -174,7 +174,7 @@ const generateModuleBody = (dataSource, images = []) => {
     return renderString;
   }
   viewGroups.forEach((group, index) => {
-    groupsString += `<li class="first-li"><a class="group" id="group-${group.id}-to" href="#group-${group.id}-from">${index + 1} ${group.defName || group.id}</a><ul>\n`;
+    groupsString += `<li class="first-li"><a class="group" id="group-${group.id}-to" href="#group-${group.id}-from">${index + 1} ${group.defName || group.defKey || group.id}</a><ul>\n`;
     groupsString += `<li class="second-li"><a class="group-list" class="block" id="group-${group.id}-diagrams-to" href="#group-${group.id}-diagrams-from">${index + 1}.1 ${relationList}</a>\n`;
     groupsString += `${generateRelation(group, images)}\n`;
     groupsString += `</li><hr>\n`;
@@ -204,6 +204,9 @@ export const html = (dataSource, images, projectName, callBack) => {
           height: 100%;
           margin: 0;
           padding: 0;
+        }
+        body {
+          padding: 10px;
         }
         .left {
             display: inline-block;
