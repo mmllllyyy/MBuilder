@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import { Graph } from '@antv/x6';
 import '@antv/x6-react-shape';
+import {calcColor} from '../util';
 import { separator } from '../../../../../profile';
 import { getTitle } from '../../../../lib/datasource_util';
 
@@ -35,20 +36,21 @@ const Table = forwardRef(({node}, ref) => {
     <div
       style={{
         background: node.getProp('fillColor') || '#DDE5FF',
+        WebkitTextFillColor: node.getProp('fontColor') || 'rgba(0,0,0,.65)',
         textAlign: 'center',
         fontWeight: 'bold',
         fontSize: '12px',
         borderRadius: '5px 5px 0 0',
         padding: '4px 0',
         borderBottom: '1px solid #DFE3EB',
-        height: '25px',
+        height: '27px',
         boxSizing: 'border-box',
         overflowY: 'hidden',
       }}
     >
       {`${getTitle(data)}${store?.data.count > 0 ? `:${store?.data.count}` : ''}`}
     </div>
-    <div style={{ height: 'calc(100% - 27px)', background: 'rgba(221,229,255, 0.05)', boxSizing: 'border-box'}}>
+    <div style={{ height: 'calc(100% - 27px)', background:  calcColor(node.getProp('fillColor') || '#DDE5FF'), boxSizing: 'border-box'}}>
       {
           data.fields.slice(0, sliceCount).map((f) => {
           return <div

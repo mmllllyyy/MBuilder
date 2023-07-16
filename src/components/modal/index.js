@@ -13,7 +13,7 @@ import {getPrefix} from '../../lib/prefixUtil';
 export const Modal = DragCom(React.memo(React.forwardRef(({prefix, title, onClose, focusFirst,
                     children, small, status, buttons = [], closeable = true, onEnter,
                     fullScreen, bodyStyle = {}, modalStyle = {}, contentStyle = {},
-                                                          }, forwardRef) => {
+                    header }, forwardRef) => {
   const currentPrefix = getPrefix(prefix);
   const _iconClose = () => {
     onClose && onClose();
@@ -52,12 +52,12 @@ export const Modal = DragCom(React.memo(React.forwardRef(({prefix, title, onClos
         ref={forwardRef}
         style={{...fullScreenStyle, ...bodyStyle}}
         >
-        <div
+        {header || <div
           className={`${currentPrefix}-modal-header`}
           >
           <div className={`${currentPrefix}-modal-header-title ${small ? `${currentPrefix}-modal-content-small-${status}` : ''}`}>{title}</div>
           {closeable && <Icon className={`${currentPrefix}-modal-header-icon`} type='fa-times' onClick={_iconClose}/>}
-        </div>
+        </div>}
         <div
           className={`${currentPrefix}-modal-content ${small ? `${currentPrefix}-modal-content-small` : ''}`}
           style={contentStyle}
@@ -94,7 +94,7 @@ export const openModal = (com, params) => {
   }
   const ModalCompose = () => {
     const { title, small, buttons, status, fullScreen, bodyStyle,
-      modalStyle, contentStyle, closeable, focusFirst, onEnter } = params;
+      modalStyle, contentStyle, closeable, focusFirst, onEnter, header } = params;
     const _iconClose = () => {
       const { onClose } = params;
       onClose && onClose();
@@ -115,6 +115,7 @@ export const openModal = (com, params) => {
           onClose={_iconClose}
           buttons={buttons}
           focusFirst={focusFirst}
+          header={header}
           >
           {com}
         </Modal>

@@ -5,7 +5,7 @@ import { separator } from '../../../../../profile';
 import Tooltip from '../../../tooltip';
 import { getTitle } from '../../../../lib/datasource_util';
 import './style/index.less';
-import {hex2Rgba} from '../../../../lib/color';
+import {calcColor} from '../util';
 
 const Table = forwardRef(({node}, ref) => {
   const data = node.data;
@@ -47,17 +47,6 @@ const Table = forwardRef(({node}, ref) => {
       return '';
     }
     return f[h.refKey];
-  };
-  const calcColor = () => {
-    const color = node.getProp('fillColor') || '#DDE5FF';
-    if (color.startsWith('#')) {
-      return hex2Rgba(color, 0.05);
-    }
-    const tempColor = color.replace(/rgb?\(/, '')
-        .replace(/\)/, '')
-        .replace(/[\s+]/g, '')
-        .split(',');
-    return `rgba(${tempColor.join(',')}, 0.05)`;
   };
   const sliceCount = Math.floor((size.height - 31) / 23);
   const renderBody = (bodyData, calcWidth) => {
@@ -117,7 +106,7 @@ const Table = forwardRef(({node}, ref) => {
     </div>
     <div
       className='chiner-er-table-body'
-      style={{background: calcColor()}}
+      style={{background: calcColor(node.getProp('fillColor') || '#DDE5FF')}}
     >
       {
         renderBody(data.fields.slice(0, sliceCount), (key) => {

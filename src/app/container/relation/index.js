@@ -7,7 +7,7 @@ import {getHomeCover} from '../../../lib/datasource_util';
 
 const Relation = React.memo(({dataSource, renderReady, diagramKey, validateTableStatus,
                                tabDataChange, tabKey, activeKey, updateDataSource, openEntity,
-                               common, changes, versionsData, jumpEntity, closeLoading,
+                               common, changes, jumpEntity, closeLoading,
                                save, autoSave, getDataSource, openDict, selectionChanged,
                                openLoading}) => {
   const relationRef = useRef(null);
@@ -79,7 +79,6 @@ const Relation = React.memo(({dataSource, renderReady, diagramKey, validateTable
       common={common}
       tabDataChange={tabDataChange}
       changes={changes}
-      versionsData={versionsData}
       save={save}
       autoSave={autoSave}
       relationType={data?.relationType}

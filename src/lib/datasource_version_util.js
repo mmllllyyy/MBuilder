@@ -1,106 +1,10 @@
 // 删除表 表更名 增加字段 删除字段 修改字段
 
-import {getAllDataSQLByFilter, getDataByChanges, getTemplateString, getEmptyMessage } from './json2code_util';
 import _ from 'lodash/object';
-import {getDefaultTemplate, transform} from './datasource_util';
+import {_getDefaultTemplate, _transform, _getTemplateString, _getDataByChanges} from './utils';
 
-const compareField = (currentFields, preFields, names = [], type = 'field', refactor, inject = false) => {
-  const deleteId = [];
-  const addId = [];
-  const changedId = [];
-  currentFields.forEach((c, i) => {
-    if (preFields.findIndex(p => p.id === c.id) < 0) {
-      addId.push({opt: 'add', type: type === 'entity' ? c.type :  type, data: {
-          before: currentFields[i-1] || {},
-          current: c,
-          after: currentFields[i+1] || {}
-        }})
-    } else {
-      const preField = preFields.filter(p => p.id === c.id)[0];
-      const fieldChange = names.map((n) => {
-        if (preField[n] !== c[n]) {
-          const refactorData = refactor && refactor(n, preField[n], c[n], preField, c);
-          if (refactorData) {
-            if (inject && refactorData.length > 0) {
-              return {type: n, pre: preField[n], new: c[n], changes: refactorData};
-            } else {
-              changedId.push(...refactorData.map(r => ({...r, parent: [preField, c]})));
-              return null;
-            }
-          }
-          return {type: n, pre: preField[n], new: c[n]};
-        }
-        return null;
-      }).filter(f => !!f);
-      if (fieldChange.length > 0) {
-        changedId.push({opt: 'update', type: type === 'entity' ? c.type :  type, data: {
-            oldData: preField,
-            newData: c,
-            changes: fieldChange
-          }})
-      }
-    }
-  });
-  preFields.forEach(p => {
-    if (currentFields.findIndex(c => c.id === p.id) < 0) {
-      deleteId.push({opt: 'delete', type: type === 'entity' ? p.type :  type, data: p})
-    }
-  });
-  return deleteId.concat(addId).concat(changedId);
-}
-
-const getEntityAndViewId = (data) => {
-  return (data.entities || []).map(e => ({...e, type: 'entity'}))
-      .concat((data.views || []).map(v => ({...v, type: 'view'}))).map(d => ({...d, type: d.type}));
-}
-
-const refactorIndexField = (fieldChanges, preParent, curParent) => {
-  const getFieldName = (id, entity) => {
-    const currentField = (entity.fields || []).filter(f => f.id === id)[0];
-    return currentField?.defName || currentField?.defKey || id;
-  };
-  return fieldChanges.map(d => {
-    // 对ID等数据进行转换
-    if (d.opt === 'delete') {
-      return {
-        ...d,
-        data: {
-          ...d.data,
-          fieldDefKey: getFieldName(d.data.fieldDefKey, preParent),
-        }
-      }
-    } else if (d.opt === 'update') {
-      return {
-        ...d,
-        data: {
-          ...d.data,
-          newData: {
-            ...d.data.newData,
-            fieldDefKey: getFieldName(d.data?.newData?.fieldDefKey, curParent),
-          },
-          oldData: {
-            ...d.data.oldData,
-            fieldDefKey: getFieldName(d.data?.oldData?.fieldDefKey, preParent),
-          }
-        }
-      }
-    }
-    return {
-      ...d,
-      data: {
-        ...d.data,
-        current: {
-          ...d.data.current,
-          fieldDefKey: getFieldName(d.data.current?.fieldDefKey, curParent),
-        }
-      }
-    }
-  })
-}
-
-const refactorEntityFields = (fields, preDataSource, currentDataSource) => {
-  const code = _.get(currentDataSource, 'profile.default.db', currentDataSource.profile?.dataTypeSupports[0]?.id);
-  return fields.map(f => ({...f, ...transform(f, mergeDataSource(preDataSource, currentDataSource), code)}));
+const refactorEntityFields = (fields, currentDataSource, db) => {
+  return fields.map(f => ({...f, ..._transform(f, currentDataSource, db)}));
 }
 
 
@@ -158,18 +62,23 @@ const compareObj = (current, pre, names, omitNames = [], refactor) => {
 }
 
 const compareArray = (current = [], pre = [], type, names, omitNames, id = 'id', refactor) => {
-  return current.concat(pre).reduce((p, n) => {
-    if (current.findIndex(c => c[id] === n[id]) < 0) {
-      return p.concat({opt: 'delete', data: n, type});
-    } else if (pre.findIndex(c => c[id] === n[id]) < 0) {
+  const changes = pre.reduce((p, n) => {
+    if(current.findIndex(d => d[id] === n[id]) < 0) {
+      return p.concat({opt: 'delete', data: {...n, type}, type});
+    }
+    return p;
+  }, []);
+  return current.reduce((p, n) => {
+    if (pre.findIndex(c => c[id] === n[id]) < 0) {
       return p.concat({opt: 'add', data: n, type});
-    } else if (p.findIndex(c => c.data[id] === n[id]) < 0){
-      const cData = current.filter(c => c[id] === n[id])[0];
-      const pData = pre.filter(c => c[id] === n[id])[0];
+    } else {
+      const cData = n;
+      const pData = pre[pre.findIndex(c => c[id] === n[id])];
       let baseChanged;
       const baseChanges = compareObj(cData, pData, names, omitNames, refactor);
       if (baseChanges.length > 0) {
         baseChanged = {
+          changeNames: baseChanges.map(c => c.data),
           before: names ? _.pick(pData, names) : pData,
           after:  names ? _.pick(cData, names) : cData,
         }
@@ -186,45 +95,16 @@ const compareArray = (current = [], pre = [], type, names, omitNames, id = 'id',
       }
       return p;
     }
-    return p;
-  }, []);
-}
-
-const compareEntityAndView = (currentDataSource, preDataSource) => {
-  const preEntityAndView = getEntityAndViewId(preDataSource);
-  const currentEntityAndView = getEntityAndViewId(currentDataSource);
-  return compareField(currentEntityAndView, preEntityAndView, ['comment', 'defKey', 'defName', 'fields', 'indexes'], 'entity', (name, pre, curr, preParent, curParent) => {
-    if (name === 'fields') {
-      return compareField(refactorEntityFields(curr, currentDataSource, currentDataSource),
-          refactorEntityFields(pre, preDataSource, currentDataSource), ['autoIncrement', 'comment', 'defKey', 'defName',
-        'defaultValue', 'domain', 'len', 'notNull',
-        'primaryKey', 'refDict', 'scale', 'type', 'uiHint'], 'field');
-    } else if (name === 'indexes') {
-      return compareField(curr, pre, ['comment', 'defKey', 'defName', 'fields', 'unique'], 'index', (n, p, c) => {
-        if (n === 'fields') {
-          return refactorIndexField(compareField(c, p, ['ascOrDesc', 'fieldDefKey'], 'index.field'), preParent, curParent);
-        }
-      }, true);
-    } else if (name === 'correlations') {
-      return compareField(curr.map(p => ({id: p.refEntity})), pre.map(c => ({id: c.refEntity})), [], 'correlation');
-    } else if (name === 'properties') {
-      return compareObj(curr, pre).map(d => ({...d, type: 'properties'}))
-    }
-  });
-}
-
-// 判断当前是否有变更
-export const checkUpdate = (dataSource, preDataSource = dataSource) => {
-  return compareEntityAndView(dataSource, preDataSource);
+  }, [...changes]);
 }
 
 // 根据变更信息生成SQL
-export const getChanges = (changes, currentDataSource) => {
-  return getDataByChanges(changes, currentDataSource);
+export const getChanges = (changes, currentDataSource, lang) => {
+  return _getDataByChanges(changes, currentDataSource, lang);
 }
 
 // 根据变更信息生成提示信息
-export const getMessageByChanges = (changes, dataSource) => {
+export const getMessageByChanges = (changes, dataSource, lang) => {
   // const getLangString = (type, name) => {
   //   if (type === 'entity' || type === 'view') {
   //     return `tableBase.${name}`;
@@ -272,15 +152,14 @@ export const getMessageByChanges = (changes, dataSource) => {
     const allTemplate = _.get(dataSource, 'profile.codeTemplates', []);
     const codeTemplate = allTemplate.filter(t => t.applyFor === code)[0] || {};
     const sqlSeparator = _.get(dataSource, 'profile.sql.delimiter', ';');
-    const sqlString = getTemplateString(codeTemplate.message || getDefaultTemplate(code, 'message', dataSource), {
-      changes,
-      separator: sqlSeparator,
-    }, false, dataSource, code);
     // const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
     // if (DDLToggleCase) {
     //   return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
     // }
-    return sqlString;
+    return _getTemplateString(codeTemplate.message || _getDefaultTemplate(code, 'message', dataSource, lang), {
+      changes,
+      separator: sqlSeparator,
+    }, false, dataSource, code);
   } catch (e) {
     return JSON.stringify(e.message, null, 2);
   }
@@ -326,7 +205,7 @@ export const simplePackageChanges = (currentDataSource, preDataSource, db, needR
     return {
       ...e,
       fields: (e.fields || [])
-          .map(f => ({...f, ...transform(f, mergeDataSource(preDataSource, currentDataSource), currentDb)}))
+          .map(f => ({...f, ..._transform(f, currentDataSource, currentDb)}))
     }
   }));
   const currentDbData = currentDataSource.profile?.dataTypeSupports?.filter(d => d.id === currentDb)[0];
@@ -336,25 +215,29 @@ export const simplePackageChanges = (currentDataSource, preDataSource, db, needR
     return {
       ...e,
       fields: (e.fields || [])
-          .map(f => ({...f, ...transform(f, mergeDataSource(preDataSource, currentDataSource),  preDb)}))
+          .map(f => ({...f, ..._transform(f, preDataSource,  preDb)}))
     }
   }) : preDataSource.entities);
-  const allData = currentData.concat(preData);
   const type = 'entity';
-  return allData.reduce((p, n) => {
-    if (currentData.findIndex(c => c.defKey === n.defKey) < 0) {
-      return p.concat({opt: 'delete', data: {...n, type}, type});
-    } else if (preData.findIndex(c => c.defKey === n.defKey) < 0) {
+  const changes = [];
+   preData.forEach((p) => {
+    if(currentData.findIndex(d => d.defKey === p.defKey) < 0) {
+      changes.push({opt: 'delete', data: {...p, type}, type});
+    }
+  });
+  return currentData.reduce((p, n) => {
+    if (preData.findIndex(c => c.defKey === n.defKey) < 0) {
       return p.concat({opt: 'add', data: {...n, type}, type});
-    } else if (p.findIndex(c => c.data.baseInfo?.defKey === n.defKey) < 0){
-      const cData = currentData.filter(c => c.defKey === n.defKey)[0];
-      const pData = preData.filter(c => c.defKey === n.defKey)[0];
+    } else {
+      const cData = n;
+      const pData = preData[preData.findIndex(c => c.defKey === n.defKey)];
       // 1.比较基础信息
       let baseChanged, fieldChanged;
       const baseNames = ['defKey', 'defName', 'comment'];
       const baseChanges = compareObj(cData, pData, baseNames);
       if (baseChanges.length > 0) {
         baseChanged = {
+          changeNames: baseChanges.map(c => c.data),
           before: _.pick({
             ...pData,
             defKey: pData.originDefKey,
@@ -387,8 +270,10 @@ export const simplePackageChanges = (currentDataSource, preDataSource, db, needR
             type: c.data.originType,
           }))),
           fieldModified: setNull(fieldsChange.filter(c => c.opt === 'update').map(c => {
-            const cF = (cData.fields || []).filter(f => f.defKey === c.data.defKey)[0];
-            const pF = (pData.fields || []).filter(f => f.defKey === c.data.defKey)[0];
+            const cFIndex = (cData.fields || []).findIndex(f => f.defKey === c.data.defKey);
+            const cF = (cData.fields || [])[cFIndex];
+            const pFIndex = (pData.fields || []).findIndex(f => f.defKey === c.data.defKey);
+            const pF =  (pData.fields || [])[pFIndex];
             return {
               ...c.data,
               defKey: cF.originDefKey || c.defKey,
@@ -437,8 +322,7 @@ export const simplePackageChanges = (currentDataSource, preDataSource, db, needR
       }
       return p;
     }
-    return p;
-  }, []).map(d => {
+  }, changes).map(d => {
     if (d.opt !== 'update') {
       return {
         ...d,
@@ -459,7 +343,7 @@ export const simplePackageChanges = (currentDataSource, preDataSource, db, needR
   });
 };
 
-export const packageChanges = (currentDataSource, preDataSource) => {
+export const packageChanges = (currentDataSource, preDataSource, db) => {
   const assembling = (current = [], pre = [], type) => {
     const setNull = (data) => {
       if (data.length > 0) {
@@ -467,8 +351,8 @@ export const packageChanges = (currentDataSource, preDataSource) => {
       }
       return null;
     };
-    const refactorData = (d, p, c) => {
-      const fields = refactorEntityFields(d.fields || [], p, c);
+    const refactorData = (d, c) => {
+      const fields = refactorEntityFields(d.fields || [], c, db);
       const viewData = {};
       if (d.refEntities && d.refEntities.length > 0) {
         viewData.refEntities = (c.entities || [])
@@ -481,27 +365,36 @@ export const packageChanges = (currentDataSource, preDataSource) => {
           return {
             ...i,
             fields: (i.fields || []).map(f => {
-              return {
-                ...f,
-                fieldDefKey: fields.filter(field => field.id === f.fieldDefKey)[0]?.defKey,
-              };
+              const refFieldIndex = fields.findIndex(field => field.id === f.fieldDefKey);
+              if(refFieldIndex > -1) {
+                return {
+                  ...f,
+                  fieldDefKey: fields[refFieldIndex].defKey,
+                };
+              }
+              return f;
             }),
           }
         }),
         ...viewData,
       }
     }
-    const currentData = current.map(d => refactorData(d, currentDataSource, currentDataSource));
-    const preData = pre.map(d => refactorData(d, preDataSource, currentDataSource))
-    const allData = currentData.concat(preData);
-    return allData.reduce((p, n) => {
-      if (currentData.findIndex(c => c.id === n.id) < 0) {
-        return p.concat({opt: 'delete', data: {...n, type}, type});
-      } else if (preData.findIndex(c => c.id === n.id) < 0) {
+    const currentData = current.map(d => refactorData(d, currentDataSource));
+    const preData = pre.map(d => refactorData(d, preDataSource));
+    const changes = [];
+    const allData = preData.reduce((p, n) => {
+      if(p.findIndex(d => d.id === n.id) < 0) {
+        changes.push({opt: 'delete', data: {...n, type}, type});
+        return p.concat(n);
+      }
+      return p;
+    }, [...currentData]);
+    return currentData.reduce((p, n) => {
+      if (preData.findIndex(c => c.id === n.id) < 0) {
         return p.concat({opt: 'add', data: {...n, type}, type});
-      } else if (p.findIndex(c => c.data.id === n.id) < 0){
-        const cData = currentData.filter(c => c.id === n.id)[0];
-        const pData = preData.filter(c => c.id === n.id)[0];
+      } else {
+        const cData = n;
+        const pData = preData[preData.findIndex(c => c.id === n.id)];
         // 1.比较基础信息
         // 'comment', 'defKey', 'defName'
         let baseChanged, propChanged, fieldChanged, refEntityChanged, indexChanged;
@@ -514,7 +407,8 @@ export const packageChanges = (currentDataSource, preDataSource) => {
           }
         }
         // 2.字段调整
-        const fieldsChange = compareArray(cData.fields, pData.fields, 'field', null, ['refDictData', 'extProps', 'domainData', 'uiHintData', 'notes']);
+        const fieldsChange = compareArray(cData.fields, pData.fields, 'field', null, ['refDictData', 'extProps', 'domainData', 'uiHintData', 'notes',
+          'attr1', 'attr2', 'attr3', 'attr4', 'attr5', 'attr6', 'attr7', 'attr8', 'attr9']);
         if (fieldsChange.length > 0) {
           fieldChanged = {
             fieldAdded: setNull(fieldsChange.filter(c => c.opt === 'add').map(c => {
@@ -565,17 +459,18 @@ export const packageChanges = (currentDataSource, preDataSource) => {
         if (refEntityChange.length > 0) {
           refEntityChanged = {
             refEntityAdd: setNull(refEntityChange.filter(c => c.opt === 'add').map(c => {
-              const data = allData.filter(d => d.id === c.data.refEntity)[0];
+              const data = allData[allData.findIndex(d => d.id === c.data.refEntity)];
               return _.pick(data, baseNames);
             })),
             refEntityRemoved: setNull(refEntityChange.filter(c => c.opt === 'delete').map(c => {
-              const data = allData.filter(d => d.id === c.data.refEntity)[0];
+              const data = allData[allData.findIndex(d => d.id === c.data.refEntity)];
               return _.pick(data, baseNames);
             })),
           }
         }
         // 5. 索引调整indexes: Array(1)
-        const indexChange = compareArray(cData.indexes || [], pData.indexes || [], type, baseNames.concat(['unique', 'fields']), [], 'id', (c, p) => {
+        const indexChange = compareArray(cData.indexes || [],
+            pData.indexes || [], type, baseNames.concat(['unique', 'fields']), [], 'id', (c, p) => {
           return compareArray(c, p, type);
         });
         if (indexChange.length > 0) {
@@ -585,33 +480,45 @@ export const packageChanges = (currentDataSource, preDataSource) => {
               if (c.opt !== 'update') {
                 return {
                   ...c.data,
-                  fields: (c.data?.fields || []).map(f => {
-                    return {
-                      ...f,
-                      fieldDefKey: allFields.filter(a => a.id === f.fieldDefKey)[0]?.defkey
+                  fields: allFields.map(a => {
+                    const fI = c.data?.fields?.findIndex(f => a.id === f.fieldDefKey);
+                    if(fI > -1) {
+                      return {
+                        ...c.data.fields[fI],
+                        fieldDefKey: a.defKey
+                      }
                     }
-                  })
+                    return null;
+                  }).filter((f) => !!f)
                 }
               }
               return {
                 ...c.data,
                 after: {
                   ...c.data.after,
-                  fields: (c.data?.after?.fields || []).map(f => {
-                    return {
-                      ...f,
-                      fieldDefKey: allFields.filter(a => a.id === f.fieldDefKey)[0]?.defKey
+                  fields: allFields.map(a => {
+                    const fI = c.data?.after?.fields?.findIndex(f => a.id === f.fieldDefKey);
+                    if(fI > -1) {
+                      return {
+                        ...c.data.after.fields[fI],
+                        fieldDefKey: a.defKey
+                      }
                     }
-                  })
+                    return null;
+                  }).filter((f) => !!f)
                 },
                 before: {
                   ...c.data.before,
-                  fields: (c.data?.before?.fields || []).map(f => {
-                    return {
-                      ...f,
-                      fieldDefKey: allFields.filter(a => a.id === f.fieldDefKey)[0]?.defKey
+                  fields: allFields.map(a => {
+                    const fI = c.data?.before?.fields?.findIndex(f => a.id === f.fieldDefKey);
+                    if(fI > -1) {
+                      return {
+                        ...c.data.before.fields[fI],
+                        fieldDefKey: a.defKey
+                      }
                     }
-                  })
+                    return null;
+                  }).filter((f) => !!f)
                 },
               }
             })
@@ -653,8 +560,7 @@ export const packageChanges = (currentDataSource, preDataSource) => {
         }
         return p;
       }
-      return p;
-    }, []);
+    }, [...changes]);
   };
   return assembling(currentDataSource.entities, preDataSource.entities, 'entity')
       .concat(assembling(currentDataSource.views, preDataSource.views, 'view'))
@@ -671,31 +577,4 @@ export const getMaxVersion = (sortData) => {
     }
     return v;
   }).join('.');
-}
-
-export const mergeDataSource = (oldDataSource, newDataSource) => {
-  // applyFor
-  const mergeArray = (aOld = [], bNew = [], key = 'id') => {
-    return aOld.reduce((p, n) => {
-      if (p.findIndex((d) => d[key] === n[key]) < 0) {
-        return p.concat(n);
-      }
-      return p;
-    }, [...bNew]);
-  }
-  return {
-    ...oldDataSource,
-    domains: mergeArray(oldDataSource.domains, newDataSource.domains, 'applyFor'),
-    profile: {
-      ...oldDataSource.profile,
-      default: {
-        ...oldDataSource.profile?.default,
-        db: _.get(newDataSource, 'profile.default.db'),
-      },
-    },
-    dataTypeMapping: {
-      ...oldDataSource.dataTypeMapping,
-      mappings: mergeArray(oldDataSource.dataTypeMapping.mappings, newDataSource.dataTypeMapping.mappings),
-    },
-  }
 }

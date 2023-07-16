@@ -6,18 +6,25 @@ import {getPrefix} from '../../lib/prefixUtil';
 
 import MetaEdit from './MetaEdit';
 
-export default React.memo(({style, prefix, dataSource, onSelected, menuType, updateDataSource}) => {
+export default React.memo(({style, prefix, dataSource, onSelected, menuType,
+                               versionType, updateDataSource}) => {
     const [selected, setSelected] = useState('');
     const _setSelected = (m, isCustomer) => {
         setSelected(m);
         onSelected && onSelected(m, isCustomer);
     };
     useEffect(() => {
-        if (menuType === '4') {
+        if (menuType === '4' && versionType === '2') {
             setSelected('');
             onSelected && onSelected('');
         }
     }, [menuType]);
+    useEffect(() => {
+        if (versionType === '1') {
+            // 重置选中
+            setSelected('');
+        }
+    }, [versionType]);
     const currentPrefix = getPrefix(prefix);
     const dataTypeSupports = dataSource.profile?.dataTypeSupports || [];
     const metaData = dataSource.profile.metaData || [];

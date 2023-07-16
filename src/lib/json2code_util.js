@@ -8,6 +8,13 @@ import { separator } from '../../profile';
 import {firstUp} from './string';
 import {getDefaultTemplate, transform} from './datasource_util';
 import {platform} from './middle';
+import {
+  _camel,
+  _getDataByChanges,
+  _getDefaultEnv,
+  _getEmptyMessage,
+  _getTemplateString
+} from './utils';
 
 const demoGroup = [{defKey: "DEFAULT_GROUP", defName: "默认分组"}];
 const demoTable = {
@@ -1077,205 +1084,14 @@ export const openUrl = (url) => {
 };
 
 export const camel = (str, firstUpper) => {
-  let ret = str.toLowerCase();
-  ret = ret.replace( /_([\w+])/g, function( all, letter ) {
-    return letter.toUpperCase();
-  });
-  if(firstUpper){
-    ret = ret.replace(/\b(\w)(\w*)/g, function($0, $1, $2) {
-      return $1.toUpperCase() + $2;
-    });
-  }
-  return ret;
+  return _camel(str, firstUpper)
 };
 export const getDefaultEnv = (e) => {
-  return {
-    ...(e.env || {}),
-    base: {
-      ...(e.env?.base || {}),
-      nameSpace: e.env?.base?.nameSpace || '',
-      codeRoot: e.env?.base?.codeRoot || camel(e.defKey, true),
-    }
-  }
+  return _getDefaultEnv(e);
 }
 // 根据模板数据生成代码
-export const getTemplateString = (template, templateData, isDemo, dataSource , code) => {
-  const underline = (str, upper) => {
-    const ret = str.replace(/([A-Z])/g,"_$1");
-    if(upper){
-      return ret.toUpperCase();
-    }else{
-      return ret.toLowerCase();
-    }
-  };
-  const upperCase = (str) => {
-    return str.toLocaleUpperCase();
-  };
-  const lowerCase = (str) => {
-    return str.toLocaleLowerCase();
-  };
-  const join = (...args) => {
-    if(args.length<=2)return args[0];
-    const datas = [];
-    const delimter = args[args.length-1];
-    for(let i=0;i<args.length-1;i++){
-      if(/^\s*$/.test(args[i]))continue;
-      datas.push(args[i]);
-    }
-    return datas.join(delimter);
-  };
-  const objectkit = {
-    isJSON: function(obj) {
-      var isjson = typeof(obj) == "object" && Object.prototype.toString.call(obj).toLowerCase() == "[object object]" && !obj.length;
-      return isjson;
-    },
-    deepClone: function(obj) {
-      return JSON.parse(JSON.stringify(obj));
-    },
-    equals: function(v1, v2) {
-      if (typeof(v1) === "object" && objectkit.isJSON(v1) && typeof(v2) === "object" && objectkit.isJSON(v2)) {
-        return JSON.stringify(v1) == JSON.stringify(v2);
-      } else {
-        return v1 == v2;
-      }
-
-    }
-  };
-  const getIndex = (array, arg, n) => {
-    var i = isNaN(n) || n < 0 ? 0 : n;
-    for (; i < array.length; i++) {
-      if (array[i] == arg) {
-        return i;
-      } else if (typeof(array[i]) === "object" && objectkit.equals(array[i], arg)) {
-        return i;
-      }
-    }
-    return -1;
-  };
-  const contains = (array, obj) => {
-    return getIndex(array, obj) >= 0;
-  };
-  const uniquelize = (array) => {
-    var copy = clone(array);
-    const temp = [];
-    for (var i = 0; i < copy.length; i++) {
-      if (!contains(temp, copy[i])) {
-        temp.push(copy[i]);
-      }
-    }
-    return temp;
-  };
-  const clone = (array) => {
-    var cloneList = Array();
-    for (var i = 0, a = 0; i < array.length; i++) {
-      cloneList.push(array[i]);
-    }
-    return cloneList;
-  };
-  const each = (array, fn) => {
-    fn = fn || Function.K;
-    var a = [];
-    var args = Array.prototype.slice.call(arguments, 1);
-    for (var i = 0; i < array.length; i++) {
-      var res = fn.apply(array, [array[i], i].concat(args));
-      if (res != null) a.push(res);
-    }
-    return a;
-  };
-  const intersect = (array1, array2) => {
-    // 交集
-    const copy = clone(array1);
-    const r = each(uniquelize(copy), function(o) { return contains(array2, o) ? o : null });
-    return [].concat(r);
-  };
-  const union = (array1, array2) => {
-    var copy = clone(array1);
-    var r = uniquelize(copy.concat(array2));
-    return [].concat(r);
-  };
-  const minus = (array1, array2) => {
-    var copy = clone(array1);
-    var r = each(uniquelize(copy), function(o) { return contains(array2, o) ? null : o });
-    return [].concat(r);
-  };
-  const tplText = template.replace(/(^\s*)|(\s*$)/g, "");
-  const getCode = () => {
-    return code || _.get(dataSource, 'profile.default.db', dataSource.profile?.dataTypeSupports[0]?.id);
-  }
-  const getTemplate = () => {
-    const allTemplate = _.get(dataSource, 'profile.codeTemplates', []);
-    return allTemplate.filter(t => t.applyFor === getCode())[0] || {};
-  };
-  const currentEntityIndexRebuildDDL = (baseInfo, newIndexes = [], fields = [], type = 'entity') => {
-    const codeTemplate = getTemplate();
-    const data = isDemo ? demoTable.entity : {...baseInfo, fields, indexes: newIndexes};
-    return `${getTemplateString(codeTemplate.deleteIndex || getEmptyMessage('deleteIndex', dataSource, getCode()), {
-      [type]: {
-        ...data,
-        env: getDefaultEnv(data),
-      },
-      separator: templateData.sqlSeparator,
-    })}${getTemplateString(codeTemplate.createIndex || getEmptyMessage('createIndex', dataSource, getCode()), {
-      [type]: {
-        ...data,
-        env: getDefaultEnv(data),
-      },
-      separator: templateData.sqlSeparator,
-    })}`
-  }
-  const currentEntityDropDDL = (data, type = 'entity') => {
-    const codeTemplate = getTemplate();
-    return getTemplateString(codeTemplate.deleteTable || getEmptyMessage('deleteTable', dataSource, getCode()), {
-      [type]: { defKey: isDemo ? demoTable.entity.defKey : data.defKey },
-      type,
-      separator: templateData.sqlSeparator,
-    });
-  };
-  const currentEntityCreateDDL = (data, type = 'entity') => {
-    const codeTemplate = getTemplate();
-    const name = type === 'entity' ? 'createTable' : 'createView';
-    return getTemplateString(codeTemplate[name] || getEmptyMessage(name, dataSource, getCode()), {
-      [type]: isDemo ? demoTable.entity : {
-        ...data,
-        env: getDefaultEnv(data),
-      },
-      separator: templateData.sqlSeparator,
-    });
-  }
-  const conf = {
-    evaluate:    /\{\{([\s\S]+?)\}\}/g,
-    interpolate: /\{\{=([\s\S]+?)\}\}/g,
-    encode:      /\{\{!([\s\S]+?)\}\}/g,
-    use:         /\{\{#([\s\S]+?)\}\}/g,
-    define:      /\{\{##\s*([\w\.$]+)\s*(\:|=)([\s\S]+?)#\}\}/g,
-    conditional: /\{\{\?(\?)?\s*([\s\S]*?)\s*\}\}/g,
-    iterate:     /\{\{~\s*(?:\}\}|([\s\S]+?)\s*\:\s*([\w$]+)\s*(?:\:\s*([\w$]+))?\s*\}\})/g,
-    varname: 'it',
-    strip: false,
-    append: true,
-    doNotSkipEncoded:false,
-    selfcontained: false
-  };
-  let resultText = doT.template(tplText, conf)({
-    ...templateData,
-    func: {
-      camel: camel,
-      underline: underline,
-      upperCase: upperCase,
-      lowerCase: lowerCase,
-      join: join,
-      intersect: intersect,
-      union: union,
-      minus: minus,
-      indexRebuildDDL: currentEntityIndexRebuildDDL,
-      dropDDL: currentEntityDropDDL,
-      createDDL: currentEntityCreateDDL,
-    }
-  });
-  resultText = resultText.replace(/\n(\n)*( )*(\n)*\n/g,"\n");  //删除空行
-  resultText = resultText.replace(/\r\n(\r\n)*( )*(\r\n)*\r\n/g,"\r\n"); //(不同操作系统换行符有区别)删除空行
-  resultText = resultText.replace(/\$blankline/g,'');              //单独处理需要空行的情况
-  return resultText;
+export const getTemplateString = (...args) => {
+  return _getTemplateString(...args);
 };
 // 生成增量代码数据
 const generateIncreaseSql = (dataSource, group, dataTable, code, templateShow) => {
@@ -1582,128 +1398,10 @@ export const getAllDataSQLByFilter = (data, code, filterTemplate, filterDefKey) 
   // }
   return sqlString;
 };
-export const getEmptyMessage = (name, dataSource, code) => {
-  // 数据库[MySQL]的版本模板[增加字段]没有维护
-  const support = _.get(dataSource, 'profile.dataTypeSupports', []).filter(s => s.id === code)[0];
-  return `# ${FormatMessage.string({
-    id: 'versionData.templateEmpty',
-    data: {
-      name: support?.defKey || code,
-      type: FormatMessage.string({id: `tableTemplate.${name}`})
-    }
-  })}`;
+export const getEmptyMessage = (...args) => {
+  return _getEmptyMessage(...args)
 };
 // 根据变更信息生成代码
 export const getDataByChanges = (changes, dataSource) => {
-  try {
-    const code = _.get(dataSource, 'profile.default.db', dataSource.profile?.dataTypeSupports[0]?.id);
-    const allTemplate = _.get(dataSource, 'profile.codeTemplates', []);
-    const codeTemplate = allTemplate.filter(t => t.applyFor === code)[0] || {};
-    const sqlSeparator = _.get(dataSource, 'profile.sql.delimiter', ';');
-    let sqlString = getTemplateString(codeTemplate.update || getDefaultTemplate(code, 'update', dataSource), {
-      changes,
-      separator: sqlSeparator,
-    }, false, dataSource, code);
-    // const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
-    // if (DDLToggleCase) {
-    //   return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
-    // }
-    return sqlString;
-    // return changes.map(c => {
-    //   if (c.type === 'entity' || c.type === 'view') {
-    //     if (c.opt === 'delete') {
-    //       return getTemplateString(codeTemplate.deleteTable || getEmptyMessage('deleteTable', dataSource, code), {
-    //         defKey: c.data.defKey,
-    //         type: c.type,
-    //         separator: sqlSeparator,
-    //       });
-    //     } else if (c.opt === 'update') {
-    //       return getTemplateString(codeTemplate.update || getEmptyMessage('update', dataSource, code), {
-    //         ...c.data,
-    //         type: c.type,
-    //         separator: sqlSeparator,
-    //       }, false, dataSource, code);
-    //     } else if (c.opt === 'add') {
-    //       const name = c.type === 'entity' ? 'createTable' : 'createView';
-    //       return getTemplateString(codeTemplate[name] || getEmptyMessage(name, dataSource, code), {
-    //         [c.type]: {
-    //           ...c.data,
-    //           env: getDefaultEnv(c.data),
-    //           fields: (c.data.fields || []).map(f => ({...f, ...transform(f, dataSource, code)})),
-    //           indexes: (c.data.indexes || []).map(i => {
-    //             return {
-    //               ...i,
-    //               fields: (i.fields || []).map(f => {
-    //                 const field = (c.data.fields || []).filter(ie => f.fieldDefKey === ie.id)[0];
-    //                 return {
-    //                   ...f,
-    //                   fieldDefKey: field?.defKey || '',
-    //                 };
-    //               })
-    //             }
-    //           }),
-    //         },
-    //         separator: sqlSeparator,
-    //       });
-    //     }
-    //     return '';
-    //   }
-    //   // else if (c.type === 'field') {
-    //   //   if (c.opt === 'add') {
-    //   //     const parent = c.parent?.[1] || {};
-    //   //     return getTemplateString(codeTemplate.addField || getEmptyMessage('addField', dataSource, code), {
-    //   //       [parent.type]: parent,
-    //   //       newField: {
-    //   //         ...c.data.current,
-    //   //         beforeDefKey: c.data.before.defKey,
-    //   //         afterDefKey: c.data.after.defKey,
-    //   //         fieldIndex: (parent.fields || []).findIndex(f => f.id === c.data.current.id)
-    //   //       },
-    //   //       separator: sqlSeparator,
-    //   //     });
-    //   //   } else if (c.opt === 'delete') {
-    //   //     return getTemplateString(codeTemplate.deleteField || getEmptyMessage('deleteField', dataSource, code), {
-    //   //       field: c.data,
-    //   //       separator: sqlSeparator,
-    //   //     });
-    //   //   } else if (c.opt === 'update') {
-    //   //     return getTemplateString(codeTemplate.updateField || getEmptyMessage('updateField', dataSource, code), {
-    //   //       old: c.data.oldData,
-    //   //       new: c.data.newData,
-    //   //       separator: sqlSeparator,
-    //   //     });
-    //   //   }
-    //   // } else if (c.type === 'index') {
-    //   //   // 先删除再创建
-    //   //   const [o, p] = c.parent || [];
-    //   //   return `${getTemplateString(codeTemplate.deleteIndex || getEmptyMessage('deleteIndex', dataSource, code), {
-    //   //     [o.type === 'entity' ? 'entity' : 'view']: {
-    //   //       ...o,
-    //   //     },
-    //   //     separator: sqlSeparator,
-    //   //   })}${getTemplateString(codeTemplate.createIndex || getEmptyMessage('createIndex', dataSource, code), {
-    //   //     [p.type === 'entity' ? 'entity' : 'view']: {
-    //   //       ...p,
-    //   //       env: getDefaultEnv(p),
-    //   //       indexes: (p.indexes || []).map(i => {
-    //   //         return {
-    //   //           ...i,
-    //   //           fields: (i.fields || []).map(f => {
-    //   //             const field = (p.fields || []).filter(ie => f.fieldDefKey === ie.id)[0];
-    //   //             return {
-    //   //               ...f,
-    //   //               fieldDefKey: field?.defKey || '',
-    //   //             };
-    //   //           })
-    //   //         }
-    //   //       }),
-    //   //     },
-    //   //     separator: sqlSeparator,
-    //   //   })}`;
-    //   // }
-    // }).join('\n');
-  } catch (e) {
-    console.log(e);
-    return JSON.stringify(e.message, null, 2);
-  }
+  return _getDataByChanges(changes, dataSource)
 };

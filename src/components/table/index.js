@@ -40,7 +40,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                                className, expand, otherOpt = true, disableHeaderReset,
                                updateDataSource, disableAddStandard, ready, twinkle, getDataSource,
                                disableDragRow = true, freeze = false, reading = false,
-                               fixHeader = true, openDict, defaultGroups, updateAllVersion,
+                               fixHeader = true, openDict, defaultGroups,
                                openConfig, isEntity, needHideInGraph, virtual = true},
                                      refInstance) => {
   const { lang } = useContext(ConfigContent);
@@ -1016,7 +1016,7 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                db: changeValue,
              },
            },
-         }, dataSource.profile?.default?.db, updateAllVersion),
+         }, dataSource.profile?.default?.db),
        });
       }
       Component.Message.success({title: FormatMessage.string({id: 'optSuccess'})});
@@ -1228,18 +1228,16 @@ const Table = React.memo(forwardRef(({ prefix, data = {}, disableHeaderSort, sea
                 <Component.SearchInput onChange={onFilterChange}/>
               </div>
             }
-            {
-                updateAllVersion && <div className={`${currentPrefix}-table-opt-config`}>
-                  <div>
-                    <span>
-                      {Component.FormatMessage.string({id: 'tableEdit.database'})}
-                    </span>
-                    <span onClick={jumpDb}>{dbData.defKey}</span>
-                  </div>
-                </div>
-            }
+            <div className={`${currentPrefix}-table-opt-config`}>
+              <div>
+                <span>
+                  {Component.FormatMessage.string({id: 'tableEdit.database'})}
+                </span>
+                <span onClick={jumpDb}>{dbData.defKey}</span>
+              </div>
+            </div>
           </span>
-            {!isView && updateAllVersion && <span className={`${currentPrefix}-table-opt-setting`} onClick={jumpEdit}>{Component.FormatMessage.string({id: 'tableEdit.columnSetting'})}</span>}
+            {!isView && <span className={`${currentPrefix}-table-opt-setting`} onClick={jumpEdit}>{Component.FormatMessage.string({id: 'tableEdit.columnSetting'})}</span>}
           </span>
         }
       {

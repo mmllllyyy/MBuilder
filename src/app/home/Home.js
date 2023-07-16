@@ -280,9 +280,9 @@ export default React.memo(({prefix, importProject, createProject, openTemplate,
               </div>
               <div className={`${currentPrefix}-home-container-body-right-list-tab-content`}>
                 {
-                  config?.data[0]?.projectHistories?.
-                  filter(p => reg.test(p.describe || '') || reg.test(p.name || '')).
-                  map((p) => {
+                  config?.data[0]?.projectHistories?.filter(p => reg.test(p.describe || '')
+                      || reg.test(p.name || ''))
+                  .map((p) => {
                     return <Tooltip
                       offsetLeft={-18}
                       offsetTop={-2}

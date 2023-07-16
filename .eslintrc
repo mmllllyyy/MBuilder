@@ -7,6 +7,7 @@
     "es6": true
   },
   "rules": {
+    "template-curly-spacing": "off",
     "indent": ["off"],//关闭缩进检查
     "react/jsx-indent": ["warn", 2],
     "react/jsx-indent-props": ["warn", 2],

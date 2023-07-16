@@ -1,9 +1,16 @@
 @import "~style";
 
 .@{prefix}-history {
-  max-height: 80vh;
+  height: 80vh;
   padding: 5px 10px;
   overflow: auto;
+  &-empty {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+  }
   &-log {
     max-height: 80vh;
     padding: 5px 10px;

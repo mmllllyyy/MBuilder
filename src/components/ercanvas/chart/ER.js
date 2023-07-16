@@ -209,7 +209,7 @@ export default class ER {
     };
     constructor({validateTableStatus, updateDataSource, relationType, graph, changeTab,
                     dnd, dataChange, tabDataChange, isView, save, openDict, jumpEntity,
-                    openTab, closeTab, getDataSource, common, changes, versionsData,
+                    openTab, closeTab, getDataSource, common, changes,
                     currentPrefix, container, tabKey}) {
         this.validateTableStatus = validateTableStatus;
         this.updateDataSource = updateDataSource;
@@ -228,7 +228,6 @@ export default class ER {
         this.getDataSource = getDataSource;
         this.common = common;
         this.changes = changes;
-        this.versionsData = versionsData;
         this.currentPrefix = currentPrefix;
         this.container = container;
         this.tabKey = tabKey;
@@ -641,8 +640,8 @@ export default class ER {
             if (cell.shape === 'table') {
                 const cellData = cell.getData();
                 const key = cell.getProp('originKey');
-                const group = dataSource?.viewGroups?.
-                filter(v => v.refEntities?.some(r => r === key))[0]?.id || '';
+                const group = dataSource?.viewGroups?.filter(v => v.refEntities?.some(r => r ===
+                    key))[0]?.id || '';
                 const entityTabKey = `${key + separator}entity`;
                 if (!this.validateTableStatus(entityTabKey)) {
                     let drawer;
@@ -697,7 +696,6 @@ export default class ER {
                       group={group}
                       tabDataChange={entityChange}
                       changes={this.changes}
-                      versionsData={this.versionsData}
                     />, {
                         beforeClose,
                         maskClosable: false,

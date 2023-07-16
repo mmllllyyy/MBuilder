@@ -14,8 +14,8 @@ import {getPrefix} from '../../../lib/prefixUtil';
 
 
 export default React.memo(({prefix, data = {}, dataChange, dataSource}) => {
-  const dataTypeSupport = dataSource?.profile?.dataTypeSupports?.
-  filter(d => d.id === data.applyFor)[0]?.defKey;
+  const dataTypeSupport = dataSource?.profile?.dataTypeSupports?.filter(d => d.id ===
+      data.applyFor)[0]?.defKey;
   const getCodeTemplate = (type) => {
     const current = type || 'dbDDL';
     if (current === 'dbDDL') {

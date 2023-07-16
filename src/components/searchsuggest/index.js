@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import ReactDom from 'react-dom';
+import {FixedSizeTree as Tree} from 'react-vtree';
+import AutoSizer from 'react-virtualized-auto-sizer';
 
 import SearchInput from '../searchinput';
 import FormatMessage from '../formatmessage';
@@ -9,6 +11,7 @@ import {getPrefix} from '../../lib/prefixUtil';
 import {addBodyClick, removeBodyClick} from '../../lib/listener';
 import './style/index.less';
 import MoreList from './MoreList';
+import {postWorkerFuc} from '../../lib/event_tool';
 
 export default React.memo(({placeholder, prefix, dataSource,
                              jumpPosition, jumpDetail}) => {
@@ -19,8 +22,28 @@ export default React.memo(({placeholder, prefix, dataSource,
   const suggestRef = useRef(null);
   const searchRef = useRef(null);
   const [searchValue, setSearchValue] = useState('');
+  const [allData, setAllData] = useState([]);
+  const sourceChangeRef = useRef(false);
+  const dataSourceRef = useRef({});
+  dataSourceRef.current = {...dataSource};
+
   const onChange = (e) => {
-    setSearchValue(e.target.value);
+    return new Promise((resolve, reject) => {
+      setSearchValue(e.target.value);
+      if(sourceChangeRef.current && e.target.value) {
+        postWorkerFuc('utils.getAllData', true, [
+          {dataSource: dataSourceRef.current},
+        ]).then((data) => {
+          resolve();
+          setAllData(data);
+          sourceChangeRef.current = false;
+        }).catch(() => {
+          reject();
+        });
+      } else {
+        resolve();
+      }
+    });
   };
   useEffect(() => {
     addBodyClick(id, (e) => {
@@ -32,99 +55,10 @@ export default React.memo(({placeholder, prefix, dataSource,
       removeBodyClick(id);
     };
   }, []);
-  const allData = useMemo(() => {
-    const getGroup = (type, d) => {
-      return (dataSource.viewGroups || [])
-          .filter(g => (g[type] || []).includes(d.id))
-          .map(g => ({
-            name: g.defName || g.defKey || '',
-            defKey: g.defKey,
-            id: g.id,
-          }));
-    };
-    const entityData = (dataSource.entities || [])
-        .map(e => ({...e, type: 'refEntities'}))
-        .concat((dataSource.views || []).map(v => ({...v, type: 'refViews'})))
-        .map((b) => {
-          return {
-            ...b,
-            groups: getGroup(b.type, b),
-          };
-        });
-    const dictData = (dataSource.dicts || []).map((d) => {
-      const groups = getGroup('refDicts', d);
-      return {
-        ...d,
-        type: 'refDicts',
-        groups,
-      };
-    });
-    return [
-      {
-        key: 'entities',
-        data: entityData.map((e) => {
-          const groups = e.groups.map(g => g.name).join('|');
-          return {
-            ...e,
-            suggest: `${e.defKey}-${e.defName}${groups ? `@${groups}` : ''}`,
-          };
-        }),
-      },
-      {
-        key: 'fields',
-        data: entityData.reduce((a, b) => {
-          return a.concat((b.fields || []).map((f) => {
-            // 模块名（没有则省略）/表(视图）代码[表显示名] /字段代码[字段显示名]
-            const groups = b.groups.map(g => g.name).join('|');
-            return {
-              ...f,
-              type: b.type,
-              groups: b.groups,
-              entity: b.id,
-              suggest: `${f.defKey}-${f.defName}@${b.defKey}-${b.defName}${groups ? `@${groups}` : ''}`,
-            };
-          }));
-        }, []),
-      },
-      {
-        key: 'dicts',
-        data: dictData.map((d) => {
-          const groups = d.groups.map(g => g.name).join('|');
-          return {
-            ...d,
-            suggest: `${d.defKey}-${d.defName}${groups ? `@${groups}` : ''}`,
-          };
-        }),
-      },
-      {
-        key: 'dictItems',
-        data: dictData.reduce((a, b) => {
-          return a.concat(b.items.map((i) => {
-            const groups = b.groups.map(g => g.name).join('|');
-            return {
-              ...i,
-              type: b.type,
-              groups: b.groups,
-              dict: b.id,
-              suggest: `${i.defKey}-${i.defName}@${b.defKey}-${b.defName}${groups ? `@${groups}` : ''}`,
-            };
-          }));
-        }, []),
-      },
-      {
-        key: 'standardFields',
-        data: (dataSource.standardFields || []).reduce((a, b) => {
-          return a.concat(b.fields.map((f) => {
-            return {
-              ...f,
-              groups: [{id: b.id, name: b.id}],
-              suggest: `${f.defKey}-${f.defName}@${b.defKey}-${b.defName}`,
-            };
-          }));
-        }, []),
-      },
-    ];
-  }, [dataSource]);
+  useEffect(() => {
+    sourceChangeRef.current = true;
+  }, [dataSource.entities, dataSource.views,
+    dataSource.dicts, dataSource.viewGroups, dataSource.standardFields]);
   const calcSuggest = (suggest, search) => {
     const reg = new RegExp((search || '').replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'ig');
     const str = `<span class=${currentPrefix}-search-suggest-list-search>$&</span>`;
@@ -175,26 +109,78 @@ export default React.memo(({placeholder, prefix, dataSource,
     }
     return opt;
   };
-  const getItemList = (data, aData, search) => {
-    return data.filter(d => d.data.length > 0).map((d) => {
-      return <div key={d.key} className={`${currentPrefix}-search-suggest-list-group`}>
-        <span>
-          <FormatMessage id={`components.searchSuggest.${d.key}`}/>
+  const Node = useMemo(() => ({data: {aData, node, parent, search}, style}) => {
+    if(parent) {
+      return <div style={style} className={`${currentPrefix}-search-suggest-list-item`}>
+        <span>{calcSuggest(node.suggest, search)}</span>
+        <span>{getOpt(node, parent.key)}</span>
+      </div>;
+    }
+    return <div style={style} className={`${currentPrefix}-search-suggest-list-group`}>
+      <span>
+        <FormatMessage id={`components.searchSuggest.${node.key}`}/>
           (<FormatMessage
             id='components.searchSuggest.length'
-            data={{count: aData.filter(ad => ad.key === d.key)[0]?.data?.length}}
+            data={{count: aData.find(ad => ad.key === node.key)?.data?.length}}
         />)
-        </span>
-        <div className={`${currentPrefix}-search-suggest-list-children`}>
-          {d.data.map((c) => {
-            return <div key={c.suggest} className={`${currentPrefix}-search-suggest-list-item`}>
-              <span>{calcSuggest(c.suggest, search)}</span>
-              <span>{getOpt(c, d.key)}</span>
-            </div>;
-          })}
-        </div>
+      </span>
+    </div>;
+  }, []);
+  const getItemList = (data, aData, search, isMore) => {
+    const suggestRect = suggestRef.current.getBoundingClientRect();
+    const finalData = data.filter(d => d.data.length > 0);
+    const currentLength = finalData.reduce((p, n) => p + (n.data?.length || 0), finalData.length);
+    const getNodeData = (node, nestingLevel, parent) => {
+      return ({
+        data: {
+          aData,
+          search,
+          id: node.id || node.key,
+          node,
+          nestingLevel,
+          isOpenByDefault: true,
+          parent,
+        },
+        nestingLevel,
+        node,
+      });
+    };
+    function* treeWalker() {
+      for (let i = 0; i < finalData.length; i += 1) {
+        yield getNodeData(finalData[i], 0);
+      }
+
+      while (true) {
+        const parent = yield;
+        for (let i = 0; i < parent.node.data?.length; i += 1) {
+          yield getNodeData(parent.node.data[i], parent.nestingLevel + 1, parent.node);
+        }
+      }
+    }
+    const calcHeight = window.innerHeight - suggestRect.bottom - 10 - (isMore ? 26 : 0);
+    if(isMore === undefined) {
+      return <div>
+        <AutoSizer>
+          {({width, height}) => {
+            return <Tree
+              treeWalker={treeWalker}
+              itemSize={26}
+              width={width}
+              height={height}
+            >
+              {Node}
+            </Tree>;
+          }}
+        </AutoSizer>
       </div>;
-    });
+    }
+    return <Tree
+      treeWalker={treeWalker}
+      itemSize={26}
+      height={currentLength * 26 <= calcHeight ? currentLength * 26 : calcHeight}
+    >
+      {Node}
+    </Tree>;
   };
   const getFilterData = (data = [], value) => {
     const reg = new RegExp((value || '').replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
@@ -242,20 +228,21 @@ export default React.memo(({placeholder, prefix, dataSource,
         ...d,
         data: d.data.slice(4, d.data.length),
       }));
+      const isMore = moreFilterData.some(d => d.data.length > 0);
       return <div
         className={`${currentPrefix}-search-suggest-list`}
         ref={listRef}
         style={{
             maxWidth: 'calc(100% - 10px)',
-            maxHeight: window.innerHeight - suggestRect.bottom - 2,
             right: 5,
             top: suggestRect.bottom + 2,
             width: suggestRect.width * 2,
           }}
       >
         {
-          simpleFilterData.length > 0 ? <>{getItemList(simpleFilterData, filterData, searchValue)}{
-            moreFilterData.some(d => d.data.length > 0) ?
+          simpleFilterData.length > 0 ? <>{getItemList(simpleFilterData, filterData,
+              searchValue, isMore)}{
+            isMore ?
               <div
                 className={`${currentPrefix}-search-suggest-more`}
                 onClick={() => moreClick(filterData)}
@@ -269,7 +256,7 @@ export default React.memo(({placeholder, prefix, dataSource,
       </div>;
     }
     return '';
-  }, [searchValue, dataSource]);
+  }, [searchValue, allData]);
   return <div className={`${currentPrefix}-search-suggest`} ref={suggestRef}>
     <SearchInput ref={searchRef} value={searchValue} placeholder={placeholder} onChange={onChange}/>
     {

@@ -9,21 +9,21 @@ import Welcome from './app/welcome';
 import reducers from './reducers';
 import './style/detault.less';
 import { writeLog, showErrorLogFolder } from './lib/middle';
-import { sendMessage } from './lib/electron-window-opt';
+//import { sendMessage } from './lib/electron-window-opt';
 
 const store = createStore(reducers,
   {},
   applyMiddleware(
     thunkMiddleware,
     logger,
-({getState}) => {
+() => {
       return next => (action) => {
         // 发送上一次的数据
-        const preData = getState();
+        //const preData = getState();
         next(action);
-        const nextData = getState();
+        //const nextData = getState();
         // 发送当前的数据
-        sendMessage(preData, nextData);
+        //sendMessage(preData, nextData);
       };
     },
   ));

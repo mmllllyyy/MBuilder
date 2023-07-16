@@ -1,16 +1,15 @@
-import React, {useState, useMemo, useRef, useEffect} from 'react';
-import {Step, Button, FormatMessage, Modal, Terminal} from 'components';
+import React, {useState, useMemo, useRef} from 'react';
+import {Step, Button, FormatMessage, openModal} from 'components';
 
 import DbSelect from './DbSelect';
 import ParseDb from './ParseDb';
 import DealData from './DealData';
+import DealProgress from './DealProgress';
 import './style/index.less';
 import {getPrefix} from '../../../../lib/prefixUtil';
-import {connectDB, getLogPath, showItemInFolder} from '../../../../lib/middle';
 
 export default React.memo(({prefix, dataSource, dataChange, config, onClose, onOk}) => {
   const dealDataRef = useRef(null);
-  const parserRef = useRef(null);
   const [currentKey, updateCurrentKey] = useState(1);
   const parseDbRef = useRef(null);
   const dbConn = dataSource?.dbConn || [];
@@ -46,98 +45,28 @@ export default React.memo(({prefix, dataSource, dataChange, config, onClose, onO
   const pre = () => {
     updateCurrentKey(1);
   };
-  const onOK = (e, {updateStatus}) => {
-    updateStatus('loading');
+  const onOK = async () => {
+    let modal;
+    const onCloseModal = () => {
+      modal && modal.close();
+      onClose && onClose();
+    };
     const selectedTable = dealDataRef.current.getData()
         .reduce((a, b) => a.concat(b.fields.map(f => ({...f, group: b.id}))), []);
-    if (selectedTable?.length > 0) {
-      const properties = (dbConn.filter(d => d.defKey === dbData.defKey)[0] || {})?.properties
-        || {};
-      parserRef.current = connectDB(dataSource, config, {
-        ...properties,
-        tables: selectedTable.map(t => t.originDefKey).join(','),
-      }, 'DBReverseGetTableDDL', (data) => {
-        updateStatus('normal');
-        if (data.status === 'FAILED') {
-          const termReady = (term) => {
-            term.write(data.body || '');
-          };
-          Modal.error({
-            bodyStyle: {width: '80%'},
-            contentStyle: {width: '100%', height: '100%'},
-            title: FormatMessage.string({id: 'dbReverseParse.parseDbError'}),
-            message: <div>
-              <div style={{textAlign: 'center'}}><FormatMessage id='dbConnect.log'/><a onClick={showItemInFolder}>{getLogPath()}</a></div>
-              <Terminal termReady={termReady}/>
-            </div>,
-          });
-        } else {
-          let tempData = data.body.map((d) => {
-            const currentTable = selectedTable.filter(t => t.originDefKey === d.defKey)[0];
-            const group = currentTable?.group;
-            if (dbData.flag === 'LOWCASE') {
-              return {
-                ...d,
-                defName: currentTable?.defName?.split(';')[0] || '',
-                comment: currentTable?.comment || currentTable?.defName?.split(';')[1] || '',
-                group,
-                fields: (d.fields || []).map(f => ({
-                  ...f,
-                  defKey: f.defKey?.toLocaleLowerCase(),
-                  defName: f?.defName?.split(';')[0] || '',
-                  comment: f.comment || f?.defName?.split(';')[1] || '',
-                  primaryKey: !!f.primaryKey,
-                  notNull: !!f.notNull,
-                })),
-                defKey: d.defKey.toLocaleLowerCase(),
-              };
-            } else if (dbData.flag === 'UPPERCASE') {
-              return {
-                ...d,
-                defName: currentTable?.defName?.split(';')[0] || '',
-                comment: currentTable?.comment || currentTable?.defName?.split(';')[1] || '',
-                group,
-                fields: (d.fields || []).map(f => ({
-                  ...f,
-                  defKey: f.defKey?.toLocaleUpperCase(),
-                  defName: f?.defName?.split(';')[0] || '',
-                  comment: f.comment || f?.defName?.split(';')[1] || '',
-                  primaryKey: !!f.primaryKey,
-                  notNull: !!f.notNull,
-                })),
-                defKey: d.defKey.toLocaleUpperCase(),
-              };
-            }
-            return {
-              ...d,
-              defName: currentTable?.defName?.split(';')[0] || '',
-              comment: currentTable?.comment || currentTable?.defName?.split(';')[1] || '',
-              group,
-              fields: (d.fields || []).map(f => ({
-                ...f,
-                defName: f?.defName?.split(';')[0] || '',
-                comment: f.comment || f?.defName?.split(';')[1] || '',
-                primaryKey: !!f.primaryKey,
-                notNull: !!f.notNull,
-              })),
-            };
-          });
-          onOk(tempData.map(t => ({
-            ...t,
-            id: Math.uuid(),
-            fields: (t.fields || []).map(f => ({...f, id: Math.uuid()})),
-          })), dbData.defKey);
-        }
-      });
-    } else {
-      onOk([], dbData.defKey);
-    }
+    modal = openModal(<DealProgress
+      currentDb={dbConn.filter(d => d.defKey === dbData.defKey)[0]}
+      dataSource={dataSource}
+      config={config}
+      selectedTable={selectedTable}
+      onOk={data => onOk(data, dbData.defKey)}
+      onClose={onCloseModal}
+    />,  {
+      header: <div />,
+      closeable: false,
+      bodyStyle: { width: '85%' },
+      title: FormatMessage.string({id: 'toolbar.exportWord'}),
+    });
   };
-  useEffect(() => {
-    return () => {
-      parserRef.current?.kill(0);
-    };
-  }, []);
   const currentPrefix = getPrefix(prefix);
   return <div className={`${currentPrefix}-dbreverseparse-db`}>
     <Step

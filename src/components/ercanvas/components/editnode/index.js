@@ -90,7 +90,9 @@ const EditNode = forwardRef(({node}, ref) => {
   const getHtml = (str) => {
     marked.use({ renderer });
     const reg = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
-    return marked(str).replace(reg, '');
+    return marked(str, {
+      breaks: true,
+    }).replace(reg, '');
   };
   return <div
     ref={ref}

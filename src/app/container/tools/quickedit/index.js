@@ -1,5 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {FormatMessage, IconTitle, Input} from 'components';
+import AutoSizer from 'react-virtualized-auto-sizer';
+import {FixedSizeList as List} from 'react-window';
 
 import {getPrefix} from '../../../../lib/prefixUtil';
 import SelectGroup from '../../group/SelectGroup';
@@ -7,7 +9,7 @@ import {separator} from '../../../../../profile';
 import './style/index.less';
 import {moveArrayPositionByArray} from '../../../../lib/array_util';
 
-export default React.memo(({ prefix, dataSource, dataChange, name }) => {
+export default React.memo(({ prefix, dataSource, dataChange, name, parentKey }) => {
     const [selected, setSelected] = useState([]);
     const [,setSortKey] = useState('');
     const [currentSort, setCurrentSort] = useState('');
@@ -25,9 +27,7 @@ export default React.memo(({ prefix, dataSource, dataChange, name }) => {
                 return firstSort;
             });
         }
-        return dataSource[name].map((d) => {
-            return data.filter(c => c.id === d.id)[0];
-        });
+        return data;
     };
     const dataSourceRef = useRef({...dataSource, [name]: sortData(dataSource[name])});
     const originRef = useRef(dataSourceRef.current[name]);
@@ -67,8 +67,13 @@ export default React.memo(({ prefix, dataSource, dataChange, name }) => {
               ...dataSourceRef.current,
               [name]: (dataSourceRef.current[name] || []).map((d) => {
                   if (d.id === id) {
+                      const otherData = {};
+                      if(parentKey) {
+                          otherData.isChange = true;
+                      }
                       return {
                           ...d,
+                          ...otherData,
                           [fieldName]: value,
                       };
                   }
@@ -139,80 +144,90 @@ export default React.memo(({ prefix, dataSource, dataChange, name }) => {
         <IconTitle disable={selected.length === 0} title={FormatMessage.string({id: 'tableEdit.moveDown'})} onClick={() => sortEntity('down')} type='fa-arrow-down'/>
       </div>
       <div className={`${currentPrefix}-quick-edit-table`}>
-        <table>
-          <thead>
-            <tr><th>{}</th>
-              <th>
-                <span>
-                  <span>
-                    {FormatMessage.string({id: 'tableBase.defKey'})}
-                  </span>
-                  <span
-                    className={`${currentPrefix}-quick-edit-sort`}
+        <div className={`${currentPrefix}-quick-edit-table-header`}>
+          <span>{}</span>
+          <span>
+            <span>
+              <span>
+                {FormatMessage.string({id: 'tableBase.defKey'})}
+              </span>
+              <span
+                className={`${currentPrefix}-quick-edit-sort`}
                 >
-                    <span
-                      className={sort.defKey === 'asc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
-                      onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'asc' ? '' : 'asc'}), 'defKey')}
+                <span
+                  className={sort.defKey === 'asc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                  onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'asc' ? '' : 'asc'}), 'defKey')}
                   />
-                    <span
-                      className={sort.defKey === 'desc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
-                      onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'desc' ? '' : 'desc'}), 'defKey')}
+                <span
+                  className={sort.defKey === 'desc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                  onClick={() => _setSort(pre => ({...pre, defKey: pre.defKey === 'desc' ? '' : 'desc'}), 'defKey')}
                   />
-                  </span>
-                </span>
-              </th>
-              <th>
-                <span>
-                  <span>
-                    {FormatMessage.string({id: 'tableBase.defName'})}
-                  </span>
-                  <span
-                    className={`${currentPrefix}-quick-edit-sort`}
+              </span>
+            </span>
+          </span>
+          <span>
+            <span>
+              <span>
+                {FormatMessage.string({id: 'tableBase.defName'})}
+              </span>
+              <span
+                className={`${currentPrefix}-quick-edit-sort`}
                 >
-                    <span
-                      className={sort.defName === 'asc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
-                      onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'asc' ? '' : 'asc'}), 'defName')}
+                <span
+                  className={sort.defName === 'asc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                  onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'asc' ? '' : 'asc'}), 'defName')}
                   />
-                    <span
-                      className={sort.defName === 'desc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
-                      onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'desc' ? '' : 'desc'}), 'defName')}
+                <span
+                  className={sort.defName === 'desc' ? `${currentPrefix}-quick-edit-sort-picker` : ''}
+                  onClick={() => _setSort(pre => ({...pre, defName: pre.defName === 'desc' ? '' : 'desc'}), 'defName')}
                   />
-                  </span>
-                </span>
-              </th>
-              <th>{FormatMessage.string({id: 'tableBase.comment'})}</th>
-              <th>{FormatMessage.string({id: 'tableBase.group'})}</th></tr>
-          </thead>
-          <tbody>
-            {
-                    dataSourceRef.current[name]
-                        .map((d, i) => {
-                            const group = getGroup(d.id);
-                            return <tr key={d.id} className={`${currentPrefix}-quick-edit-item ${selected.includes(d.id) ? `${currentPrefix}-table-selected` : ''}`}>
-                              <td onClick={e => onNoClick(e, d.id, i)}>{i + 1}</td>
-                              <td>
-                                <Input placeholder={FormatMessage.string({id: 'tableBase.defKey'})} defaultValue={d.defKey} onChange={e => _dataChange(e.target.value, 'defKey', d.id)}/>
-                              </td>
-                              <td>
-                                <Input defaultValue={d.defName} onChange={e => _dataChange(e.target.value, 'defName', d.id)}/>
-                              </td>
-                              <td>
-                                <Input defaultValue={d[name === 'dicts' ? 'intro' : 'comment']} onChange={e => _dataChange(e.target.value, name === 'dicts' ? 'intro' : 'comment', d.id)}/>
-                              </td>
-                              <td>
-                                <SelectGroup
-                                  key={group.join(separator)}
-                                  hiddenLabel
-                                  dataSource={dataSource}
-                                  dataChange={(...args) => _dataChange(...args, d.id)}
-                                  data={group}
-                                    />
-                              </td>
-                            </tr>;
-                        })
-                }
-          </tbody>
-        </table>
+              </span>
+            </span>
+          </span>
+          <span>{FormatMessage.string({id: 'tableBase.comment'})}</span>
+          <span>{FormatMessage.string({id: 'tableBase.group'})}</span>
+        </div>
+        <div className={`${currentPrefix}-quick-edit-table-body`}>
+          <AutoSizer>
+            {({height, width}) => {
+                      return <List
+                        height={height}
+                        itemCount={dataSourceRef.current[name].length}
+                        itemSize={29}
+                        width={width}
+                      >
+                        {
+                              ({ index, style }) => {
+                                  const d = dataSourceRef.current[name][index];
+                                  const group = getGroup(d.id);
+                                  return <div style={style} className={`${currentPrefix}-quick-edit-item ${selected.includes(d.id) ? `${currentPrefix}-table-selected` : ''}`}>
+                                    {/* eslint-disable-next-line max-len */}
+                                    <span onClick={e => onNoClick(e, d.id, index)}>{index + 1}</span>
+                                    <span>
+                                      <Input placeholder={FormatMessage.string({id: 'tableBase.defKey'})} defaultValue={d.defKey} onChange={e => _dataChange(e.target.value, 'defKey', d.id)}/>
+                                    </span>
+                                    <span>
+                                      <Input defaultValue={d.defName} onChange={e => _dataChange(e.target.value, 'defName', d.id)}/>
+                                    </span>
+                                    <span>
+                                      <Input defaultValue={d[name === 'dicts' ? 'intro' : 'comment']} onChange={e => _dataChange(e.target.value, name === 'dicts' ? 'intro' : 'comment', d.id)}/>
+                                    </span>
+                                    <span>
+                                      <SelectGroup
+                                        key={group.join(separator)}
+                                        hiddenLabel
+                                        dataSource={dataSource}
+                                        dataChange={(...args) => _dataChange(...args, d.id)}
+                                        data={group}
+                                        />
+                                    </span>
+                                  </div>;
+                              }
+                          }
+                      </List>;
+                  }}
+          </AutoSizer>
+        </div>
       </div>
     </div>;
 });

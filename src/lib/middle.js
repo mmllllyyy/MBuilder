@@ -13,6 +13,8 @@ const getPathStep = json.getPathStep;
 const openProjectFilePath = json.openProjectFilePath;
 const openFileOrDirPath = json.openFileOrDirPath;
 const getAllVersionProject = json.getAllVersionProject;
+const getAllVersionFile = json.getAllVersionFile;
+const getOneVersion = json.getOneVersion;
 const removeAllVersionProject = json.removeAllVersionProject;
 const connectDB = json.connectDB;
 const ensureDirectoryExistence = json.ensureDirectoryExistence;
@@ -34,7 +36,6 @@ const saveVersion = json.saveVersion;
 const deleteVersion = json.deleteVersion;
 const renameVersion = json.renameVersion;
 const saveAllTemplate = json.saveAllTemplate;
-const updateAllVersion = json.updateAllVersion;
 const saveImages = json.saveImages;
 const extractFile = json.extractFile;
 const renameBackupAllFile = json.renameBackupAllFile;
@@ -53,6 +54,8 @@ export {
   getPathStep,
   openProjectFilePath,
   getAllVersionProject,
+  getAllVersionFile,
+  getOneVersion,
   removeAllVersionProject,
   connectDB,
   ensureDirectoryExistence,
@@ -74,7 +77,6 @@ export {
   deleteVersion,
   renameVersion,
   saveAllTemplate,
-  updateAllVersion,
   saveImages,
   extractFile,
   renameBackupAllFile,

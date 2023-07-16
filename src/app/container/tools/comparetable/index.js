@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     Button,
     FormatMessage,
@@ -8,7 +8,7 @@ import {
     Icon,
     Download,
     Upload,
-    Modal, Message,
+    Modal, Message, Loading,
 } from 'components';
 import moment from 'moment';
 import CompareList from 'components/compare/CompareList';
@@ -17,104 +17,188 @@ import {calcUnGroupDefKey, mergeDataSource} from '../../../../lib/datasource_uti
 import './style/index.less';
 import { separator } from '../../../../../profile';
 import {getPrefix} from '../../../../lib/prefixUtil';
-import {simplePackageChanges} from '../../../../lib/datasource_version_util';
+import {postWorkerFuc} from '../../../../lib/event_tool';
 
-export default React.memo(({dataSource, getDataSource, prefix,
+export default React.memo(({dataSource, prefix,
                                openLoading, closeLoading, updateProject}) => {
-    const tempDataSource = useMemo(() => new Proxy({...dataSource}, {
-        get(target, property){
-            return getDataSource()[property];
-        },
-    }), []);
+    const [loading, setLoading] = useState(false);
+    const [currentDataSource, setCurrentDataSource] = useState({...dataSource});
     const compareListRef = useRef(null);
     const currentPrefix = getPrefix(prefix);
-    const [entitiesKeys, setEntitiesKeys] = useState([]);
-    const [checked, setChecked] = useState([]);
-    const checkedRef = useRef([]);
-    checkedRef.current = [...checked];
-    const entitiesKeysRef = useRef([]);
-    entitiesKeysRef.current = entitiesKeys;
-    const mergeFromMeta = (d, callback) => {
-        const entities = tempDataSource.entities || [];
-        const leftData = entities.filter(e => e.defKey === d.left)[0];
-        const rightData = entities.filter(e => e.defKey === d.right)[0];
-        const currentDataSource = {
-            ...dataSource,
-            entities,
-        };
-        const mergeData = {
-            ...mergeDataSource(currentDataSource, {
-                entities,
-            }, [{
-                ...leftData,
-                fields: (rightData.fields || []),
-            }], true),
-        };
-        callback(mergeData.entities);
+    const packageChanges = (leftEntities, rightEntities, treeData, isMerge = false) => {
+        setLoading(true);
+        postWorkerFuc('dataSourceVersion.simplePackageChanges', true, [
+            {
+                ...dataSource,
+                entities: leftEntities,
+            },
+            {
+                ...dataSource,
+                entities: rightEntities,
+            },
+            null, true])
+            .then((newChanges) => {
+                const getChildren = (p, sourceEntity, metaEntityData) => {
+                  return [{
+                      id: `${p.id}_headerField1`,
+                  }, {
+                      id: `${p.id}_headerField2`,
+                  }]
+                      .concat((sourceEntity?.fields || [])
+                          .concat(
+                              (metaEntityData?.fields || []).filter(f =>
+                                  (sourceEntity?.fields || [] || [])
+                                      .findIndex(aF => aF.defKey?.toLocaleLowerCase()
+                                          === f.defKey?.toLocaleLowerCase()) < 0))
+                          .map(f => ({
+                              id: `${p.id}_${f.defKey}`,
+                              key: f.defKey?.toLocaleLowerCase(),
+                          })));
+                };
+                const removeChanges = [];
+                compareListRef.current.setTreeData((pre) => {
+                    return pre.map((p) => {
+                        if(treeData.includes(p.id)) {
+                            const sourceEntity = {
+                                ...p.sourceEntity,
+                                fields: leftEntities
+                                    .find(e => e.originDefKey
+                                        === p.sourceEntity.defKey)?.fields || [],
+                            };
+                            const metaEntityData = {
+                                ...p.metaEntityData,
+                                fields: rightEntities
+                                .find(e => e.originDefKey
+                                    === p.metaEntityData.defKey)?.fields || [],
+                            };
+                            return {
+                                ...p,
+                                sourceEntity,
+                                metaEntityData,
+                                metaFieldsData: metaEntityData,
+                                children: getChildren(p, sourceEntity, metaEntityData),
+                            };
+                        } else if(isMerge) {
+                            const dataProps = {};
+                            if(p.sourceEntity?.defKey) {
+                                // 更新树下面所有的源数据表
+                                const newSourceEntity = leftEntities
+                                    .find(e => e.originDefKey
+                                        === p.sourceEntity.defKey);
+                                if(newSourceEntity) {
+                                    dataProps.sourceEntity = {
+                                        ...p.sourceEntity,
+                                        fields: newSourceEntity.fields,
+                                    };
+                                }
+                            }
+                            if(p.metaEntityData) {
+                                const metaEntityData = leftEntities
+                                    .find(e => e.originDefKey
+                                        === p.metaEntityData.defKey);
+                                if(metaEntityData) {
+                                    // 更新树下面所有的比较数据表
+                                    dataProps.metaEntityData = {
+                                        ...p.metaEntityData,
+                                        fields: metaEntityData.fields,
+                                    };
+                                }
+                            }
+                            if(dataProps.metaEntityData || dataProps.sourceEntity) {
+                                removeChanges.push(p.id);
+                                // 重置比较详细数据表
+                                dataProps.children = [];
+                                return {
+                                    ..._.omit(p, 'metaFieldsData'),
+                                    ...dataProps,
+                                };
+                            }
+                            return p;
+                        }
+                        return p;
+                    });
+                });
+                // 合并变更信息
+                compareListRef.current.setChanges((pre) => {
+                    return pre.filter((p) => {
+                        return !removeChanges.concat(treeData)
+                            .includes(p.data.baseInfo?.defKey?.toLocaleLowerCase());
+                    }).concat(newChanges);
+                });
+            }).finally(() => {
+            setLoading(false);
+        });
+    };
+    const scanTable = (node) => {
+        const treeData = [].concat(node);
+        const allTreeData = compareListRef.current.getTreeData();
+        const selectedTreeData = allTreeData.filter(t => treeData.includes(t.key));
+
+        const leftEntities = [];
+        const rightEntities = [];
+        // 构造数据 只比较字段
+        selectedTreeData.forEach((d) => {
+            leftEntities.push({
+                ...d.sourceEntity,
+                defKey: d.key,
+                originDefKey: d.sourceEntity.defKey,
+            });
+            rightEntities.push({
+                ...d.sourceEntity,
+                fields: d.metaEntityData.fields || [],
+                defKey: d.key,
+                originDefKey: d.metaEntityData.defKey,
+            });
+        });
+        packageChanges(leftEntities, rightEntities, treeData);
+    };
+    const mergeFromMeta = (meteKey, sourceKey, dataKey) => {
+        const entities = currentDataSource.entities || [];
+        const metaData = entities
+            .find(e => e.defKey?.toLocaleLowerCase() === meteKey.toLocaleLowerCase());
+        const sourceData = entities
+            .find(e => e.defKey?.toLocaleLowerCase() === sourceKey.toLocaleLowerCase());
+        const mergeData = mergeDataSource(currentDataSource,
+            {}, [{
+            ...sourceData,
+            fields: (metaData.fields || []),
+        }], true);
+        const newSource = (mergeData.entities || [])
+            .find(e => e.defKey?.toLocaleLowerCase() === sourceKey.toLocaleLowerCase());
+        packageChanges([{
+            ...newSource,
+            defKey: dataKey,
+            originDefKey: newSource.defKey,
+        }], [{
+            ...newSource,
+            defKey: dataKey,
+            fields: metaData.fields || [],
+            originDefKey: metaData.defKey,
+        }], [dataKey], true);
+        setCurrentDataSource(mergeData);
         updateProject(mergeData);
     };
-    const onCheck = (values) => {
-        setChecked(values);
-    };
     const addRow = () => {
-        setEntitiesKeys(pre => pre.concat({
-            key: Math.uuid(),
-            left: '',
-            right: '',
-        }));
-    };
-    const scanFields = () => {
-        const data = (tempDataSource.entities || [])
-            .filter(c => checked.map(k => k.right).includes(c.defKey));
-        compareListRef.current.setMetaDataFields((pre) => {
-            return pre.filter(p => data.findIndex(b => b.defKey === p.defKey) < 0)
-                .concat(data.map((d) => {
-                    return d;
-                }));
-        });
-        const checkKeys = checkedRef.current.map(c => c.key);
-        const selectedData = entitiesKeysRef.current
-            .filter(k => checkKeys.includes(k.key));
-        const entities = tempDataSource.entities || [];
-        const compareData = selectedData.map((k) => {
-            const leftData = entities.filter(e => e.defKey === k.left)[0] || {};
-            const rightData = entities.filter(e => e.defKey === k.right)[0] || {};
-            return {
-                ...k,
-                left: {
-                    ...leftData,
-                    defKey: k.key,
-                },
-                right: {
-                    ...rightData,
-                    defKey: k.key,
-                },
+        compareListRef.current.setTreeData((p) => {
+            const id = Math.uuid().toLocaleLowerCase();
+            const newData = {
+                id,
+                key: id,
+                sourceEntity: {},
+                children : [],
             };
-        });
-        const newChanges = simplePackageChanges({
-                ...dataSource,
-                entities: compareData.map(c => c.left),
-            }, {
-                ...dataSource,
-                entities: compareData.map(c => c.right),
-            },
-            null, true);
-        compareListRef.current.setChanges((pre) => {
-            return pre
-                .filter(p => compareData
-                    .findIndex(c => c.key.toLocaleLowerCase() === p.data?.baseInfo?.defKey) < 0)
-                .concat(newChanges.concat(selectedData
-                    .filter(s => newChanges
-                        .findIndex(c => c.data.baseInfo.defKey === s.key.toLocaleLowerCase()) < 0)
-                    .map((s) => {
-                        return {
-                            data: {
-                                baseInfo: {
-                                    defKey: s.key.toLocaleLowerCase(),
-                                },
-                            },
-                        };
-                    })));
+            if(p.length === 0) {
+                // 头部两个固定数据
+                const treeHeader = [{
+                    id: 'header1',
+                    children: [],
+                }, {
+                    id: 'header2',
+                    children: [],
+                }];
+                return treeHeader.concat(newData);
+            }
+            return p.concat(newData);
         });
     };
     const loadList = () => {
@@ -127,38 +211,52 @@ export default React.memo(({dataSource, getDataSource, prefix,
                 });
             } else {
                 const mergeList = (compareTableList) => {
-                    const compareTableListKeys = compareTableList
-                        .map(c => c.right?.toLocaleLowerCase()).filter(c => !!c);
-                    const meta = (tempDataSource.entities || [])
-                        .filter(e => compareTableListKeys.includes(e.defKey?.toLocaleLowerCase()));
-                    setEntitiesKeys((pre) => {
-                        return pre.concat(compareTableList.map((c) => {
+                    const addData = [];
+                    compareListRef.current.setTreeData((pre) => {
+                        const tempPre = pre.length === 0 ? [{
+                            id: 'header1',
+                            children: [],
+                        }, {
+                            id: 'header2',
+                            children: [],
+                        }] : pre;
+                        return tempPre.concat(compareTableList.map((c) => {
+                            const id = Math.uuid().toLocaleLowerCase();
+                            const otherProps = {};
+                            if(c.right) {
+                                otherProps.metaEntityData = c.right;
+                            }
+                            if(c.left && c.right) {
+                                addData.push({defKey: id});
+                            }
                             return {
-                                key: Math.uuid(),
-                                left: c.leftLose ? '' : c.left,
-                                right: c.rightLose ? '' : c.right,
+                                id,
+                                key: id,
+                                sourceEntity: c.left || {},
+                                children : [],
+                                ...otherProps,
                             };
                         }));
                     });
                     compareListRef.current.setMetaData((pre) => {
-                        return pre.concat(meta.filter(m => pre.findIndex(p => p.id === m.id) < 0));
+                        return pre.concat(addData);
                     });
                     Message.success({title: FormatMessage.string({id: 'optSuccess'})});
                 };
-                const entities = tempDataSource.entities || [];
+                const entities = currentDataSource.entities || [];
                 const currentCompareTableList = data.compareTableList.map((c) => {
                     const left = entities
-                        .filter(e => e.defKey?.toLocaleLowerCase()
-                            === c.left?.toLocaleLowerCase())[0];
+                        .find(e => e.defKey?.toLocaleLowerCase()
+                            === c.left?.toLocaleLowerCase());
                     const right = entities
-                        .filter(e => e.defKey?.toLocaleLowerCase()
-                            === c.right?.toLocaleLowerCase())[0];
+                        .find(e => e.defKey?.toLocaleLowerCase()
+                            === c.right?.toLocaleLowerCase());
                     return {
                         ...c,
-                        left: left ? left.defKey : c.left,
-                        leftLose: !!(!left && c.left),
-                        right: right ? right.defKey : c.right,
-                        rightLose: !!(!right && c.right),
+                        left,
+                        leftLose: c.left && !left,
+                        right,
+                        rightLose: c.right && !right,
                     };
                 });
                 if (currentCompareTableList.some(c => c.leftLose || c.rightLose)) {
@@ -185,50 +283,74 @@ export default React.memo(({dataSource, getDataSource, prefix,
         });
     };
     const saveList = () => {
+        const allTreeData = compareListRef.current.getTreeData();
         Download(
             [JSON.stringify({
-                compareTableList: entitiesKeysRef.current.filter((e) => {
-                    return e.left || e.right;
-                }),
+                compareTableList: allTreeData.filter((e) => {
+                    return e.sourceEntity?.defKey || e.metaEntityData?.defKey;
+                }).map(e => ({
+                    key: e.id,
+                    left: e.sourceEntity?.defKey || '',
+                    right: e.metaEntityData?.defKey || '',
+                })),
             }, null, 2)],
             'application/json',
             `${dataSource.name}-${FormatMessage.string({id: 'components.compare.compareList'})}-${moment().format('YYYYMDHHmmss')}.json`);
     };
     const onRemove = (d) => {
-        setEntitiesKeys(pre => pre.filter(p => p.key !== d.key));
+       // 清除变更
         compareListRef.current.setChanges((pre) => {
-            return pre.filter(p => p.data.baseInfo.defKey !== d.key?.toLocaleLowerCase());
+            return pre.filter(p => p.data.baseInfo.defKey !== d);
+        });
+        // 清除数据
+        compareListRef.current.setTreeData((pre) => {
+            return pre.filter(p => p.id !== d);
+        });
+        // 清除meta数据
+        compareListRef.current.setMetaData((pre) => {
+            return pre.filter(p => p !== d);
+        });
+        // 清除选中
+        compareListRef.current.setEntitiesKeyChecked((pre) => {
+            return pre.filter(p => p !== d);
         });
     };
     const onPicker = (key, position) => {
+        console.log(key, position);
         let modal, value;
         const onCancel = () => {
             modal && modal.close();
         };
         const onOk = () => {
             if (value?.length > 0) {
-                const entity = (tempDataSource.entities || [])
-                    .filter(e => e.id === value[0].split(separator)[1])[0] || {};
-                setEntitiesKeys((pre) => {
-                    return pre.map((p) => {
-                        if (p.key === key) {
+                const entity = (currentDataSource.entities || [])
+                    .find(e => e.id === value[0].split(separator)[1]) || {};
+                let updateMetaData = false;
+                compareListRef.current.setTreeData((p) => {
+                    return p.map((c) => {
+                        if(c.key === key) {
+                            if(position === 'right') {
+                                updateMetaData = !!c.sourceEntity?.defKey;
+                                return {
+                                    ...c,
+                                    metaEntityData: entity,
+                                };
+                            }
+                            updateMetaData = !!c.metaEntityData;
                             return {
-                                ...p,
-                                [position]: entity.defKey,
+                                ...c,
+                                sourceEntity: entity,
                             };
                         }
-                        return p;
+                        return c;
                     });
                 });
-                compareListRef.current.setChanges((pre) => {
-                    return pre.filter(p => p.data.baseInfo.defKey !== key.toLocaleLowerCase());
-                });
-                if (position === 'right') {
-                    compareListRef.current.setMetaData((pre) => {
-                        if (pre.findIndex(p => p.id === entity.id) < 0) {
-                            return pre.concat(entity);
+                if(updateMetaData) {
+                    compareListRef.current.setMetaData((p) => {
+                        if(p.findIndex(m => m.defKey === key) < 0) {
+                            return p.concat({defKey: key});
                         }
-                        return pre;
+                        return p;
                     });
                 }
             }
@@ -238,17 +360,17 @@ export default React.memo(({dataSource, getDataSource, prefix,
             value = values;
         };
         const getData = () => {
-          return (tempDataSource.viewGroups || [])
+          return (currentDataSource.viewGroups || [])
               .concat({
                   id: '__ungroup',
                   defKey: '__ungroup',
                   defName: FormatMessage.string({id: 'exportSql.defaultGroup'}),
-                  refEntities: calcUnGroupDefKey(tempDataSource, 'entities'),
+                  refEntities: calcUnGroupDefKey(currentDataSource, 'entities'),
               }).map((g) => {
                   return {
                       key: g.id,
                       value: g.defName || g.defKey,
-                      children: (tempDataSource.entities || [])
+                      children: (currentDataSource.entities || [])
                           .filter(e => g.refEntities.includes(e.id)).map((e) => {
                               return {
                                   key: `${g.id}${separator}${e.id}`,
@@ -274,44 +396,51 @@ export default React.memo(({dataSource, getDataSource, prefix,
         });
     };
     return <div className={`${currentPrefix}-compare-table`}>
-      <CompareList
-        onCheck={onCheck}
-        entitiesKeys={entitiesKeys}
-        ref={compareListRef}
-        defaultMeta={Math.uuid()}
-        empty={<FormatMessage id='components.compare.tableListEmpty'/>}
-        header={<div className={`${currentPrefix}-compare-table-header`}>
-          <Tooltip placement='top' force title={<div style={{width: 180}}><FormatMessage id='components.compare.addRowTips'/></div>}>
-            <span>
-              <Button type="primary" onClick={addRow}>
-                <Icon type='fa-plus'/><span> <FormatMessage id='components.compare.addRow'/></span>
-              </Button>
-            </span>
-          </Tooltip>
-          <Button type="primary" onClick={scanFields} disable={checked.length === 0}>
-            <FormatMessage id='components.compare.scanFieldDiff'/>
-          </Button>
-          <Button
-            onClick={loadList}
-            type="primary"
-          >
-            <FormatMessage id='components.compare.loadTableList'/>
-          </Button>
-          <Button
-            onClick={saveList}
-            type="primary"
-          >
-            <FormatMessage id='components.compare.saveTableList'/>
-          </Button>
-        </div>}
-        onRemove={onRemove}
-        onPicker={onPicker}
-        dataSource={tempDataSource}
-        openLoading={openLoading}
-        closeLoading={closeLoading}
-        mergeFromMeta={mergeFromMeta}
-        leftTitle={<span style={{color: '#000000'}}><FormatMessage id='components.compare.checkTable'/></span>}
-        rightTitle={<span style={{color: 'red'}}><FormatMessage id='components.compare.diffTable'/></span>}
-      />
+      <Loading visible={loading} isFull={false}>
+        <CompareList
+          onCheck={onCheck}
+          ref={compareListRef}
+          defaultMeta
+          empty={<FormatMessage id='components.compare.tableListEmpty'/>}
+          header={(entitiesKeyChecked) => {
+              return <div className={`${currentPrefix}-compare-table-header`}>
+                <Tooltip placement='top' force title={<div style={{width: 180}}><FormatMessage id='components.compare.addRowTips'/></div>}>
+                  <span>
+                    <Button type="primary" onClick={addRow}>
+                      <Icon type='fa-plus'/><span> <FormatMessage id='components.compare.addRow'/></span>
+                    </Button>
+                  </span>
+                </Tooltip>
+                <Button
+                  type="primary"
+                  onClick={() => scanTable(entitiesKeyChecked)}
+                  disable={entitiesKeyChecked.length === 0}>
+                  <FormatMessage id='components.compare.scanFieldDiff'/>
+                </Button>
+                <Button
+                  onClick={loadList}
+                  type="primary"
+                  >
+                  <FormatMessage id='components.compare.loadTableList'/>
+                </Button>
+                <Button
+                  onClick={saveList}
+                  type="primary"
+                  >
+                  <FormatMessage id='components.compare.saveTableList'/>
+                </Button>
+              </div>;
+          }}
+          scanTable={scanTable}
+          onRemove={onRemove}
+          onPicker={onPicker}
+          dataSource={currentDataSource}
+          openLoading={openLoading}
+          closeLoading={closeLoading}
+          mergeFromMeta={mergeFromMeta}
+          leftTitle={<span style={{color: '#000000'}}><FormatMessage id='components.compare.checkTable'/></span>}
+          rightTitle={<span style={{color: 'red'}}><FormatMessage id='components.compare.diffTable'/></span>}
+            />
+      </Loading>
     </div>;
 });

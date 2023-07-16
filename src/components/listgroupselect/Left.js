@@ -1,38 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {Checkbox, FormatMessage, SearchInput} from 'components';
+import AutoSizer from 'react-virtualized-auto-sizer';
+import { FixedSizeList as List } from 'react-window';
+import {postWorkerFuc} from '../../lib/event_tool';
 
-const Item = React.memo(({prefix, repeatData, checkBoxChange, checked, d, i, defaultSelected}) => {
-  return <tr
-    className={`${prefix}-listselect-left-item ${prefix}-listselect-left-item-${repeatData.includes(d.defKey) ? 'repeat' : 'normal'}`}
+const Item = React.memo(({prefix, repeatData, checkBoxChange, checked, d, i,
+                           defaultSelected, style}) => {
+  const bgClass = `${prefix}-listselect-left-item-bg`;
+  return <div
+    className={`${prefix}-listselect-left-item ${i % 2 === 0 ? bgClass : ''} ${prefix}-listselect-left-item-${repeatData.includes(d.defKey) ? 'repeat' : 'normal'}`}
     key={d.id}
+    style={style}
   >
-    <td>{i + 1}</td>
-    <td>
+    <span>{i + 1}</span>
+    <span>
       <Checkbox
+        className={`${prefix}-listselect-right-item-checkbox`}
         disable={(defaultSelected || []).includes(d.id)}
         onChange={e => checkBoxChange(e, d.id)}
         checked={checked.includes(d.id)}
     >
         {`${d.defKey}[${d.defName || d.defKey}]`}{repeatData.includes(d.defKey) ? <div>[{FormatMessage.string({id: 'components.listSelect.repeatMessage'})}]</div> : ''}
-      </Checkbox></td>
-  </tr>;
-}, (pre, next) => {
-  return (pre.checked.includes(pre.d.id) && next.checked.includes(next.d.id)) ||
-      (!pre.checked.includes(pre.d.id) && !next.checked.includes(next.d.id));
+      </Checkbox></span>
+  </div>;
 });
 
 export default React.memo(({prefix, newData, checkBoxChange,
                              repeatData, checked, defaultSelected, onSearch, header}) => {
   const [filterData, setFilterData] = useState([]);
+  const newDataRef = useRef([]);
+  newDataRef.current = newData;
   useEffect(() => {
     setFilterData(newData);
   }, [newData]);
   const _onChange = (e) => {
-    const value = e.target.value || '';
-    setFilterData(() => {
-      const reg = new RegExp((value).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
-      return newData.filter(d => (!!d.defKey)
-          && (reg.test(d.defKey || '') || reg.test(d.defName || '')));
+    return new Promise((resolve, reject) => {
+      const value = e.target.value || '';
+      postWorkerFuc((params) => {
+        const reg = new RegExp((params.value).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
+        return params.data.filter(d => (!!d.defKey)
+            && (reg.test(d.defKey || '') || reg.test(d.defName || '')));
+      }, false, {
+        value,
+        data: newDataRef.current,
+      }).then((data) => {
+        resolve();
+        setFilterData(() => {
+          return data;
+        });
+      }).catch(() => {
+        reject();
+      });
     });
   };
   useEffect(() => {
@@ -50,24 +68,33 @@ export default React.memo(({prefix, newData, checkBoxChange,
       <span><FormatMessage id='components.listSelect.all'/></span>
     </div>
     <div className={`${prefix}-listselect-left-container`}>
-      <table>
-        <tbody>
-          {
-            filterData.map((d, i) => {
-            return <Item
-              defaultSelected={defaultSelected}
-              i={i}
-              prefix={prefix}
-              key={`${d.id}${i}`}
-              d={d}
-              checkBoxChange={checkBoxChange}
-              repeatData={repeatData}
-              checked={checked}
-            />;
-          })
-        }
-        </tbody>
-      </table>
+      <AutoSizer>
+        {({height, width}) => {
+          return <List
+            height={height}
+            itemCount={filterData.length}
+            itemSize={32}
+            width={width}
+          >
+            {
+              ({ index, style }) => {
+                const data = filterData[index];
+                return <Item
+                  style={style}
+                  defaultSelected={defaultSelected}
+                  i={index}
+                  prefix={prefix}
+                  key={`${data.id}${index}`}
+                  d={data}
+                  checkBoxChange={checkBoxChange}
+                  repeatData={repeatData}
+                  checked={checked}
+                />;
+              }
+            }
+          </List>;
+        }}
+      </AutoSizer>
     </div>
   </div>;
 });

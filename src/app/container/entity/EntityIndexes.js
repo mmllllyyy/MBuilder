@@ -29,9 +29,16 @@ export default React.memo(({ prefix, data, dataChange }) => {
   const stateData = useRef(data?.indexes || []);
   const tableDataGroupChange = (groupData) => {
     stateData.current = groupData.map((g) => {
+      const preData = stateData.current.filter(p => p.id === g.id)[0];
+      if(preData) {
+        return {
+          ..._.omit(g, ['children']),
+          fields: preData.fields || [],
+        };
+      }
       return {
         ..._.omit(g, ['children']),
-        fields: (g.fields || []).map(f => _.omit(f, ['defKey', 'defName'])),
+        fields: [],
       };
     });
     dataChange && dataChange(stateData.current, 'indexes');
@@ -120,8 +127,8 @@ export default React.memo(({ prefix, data, dataChange }) => {
           ],
           fields: (d.fields || [])
             .map((k) => {
-              const entityField = data?.fields?.
-              filter(f => f.id === k.fieldDefKey)[0];
+              const entityField = data?.fields?.find(f => f.id ===
+                  k.fieldDefKey);
               if (entityField) {
                 return {
                   ...k,
@@ -151,8 +158,8 @@ export default React.memo(({ prefix, data, dataChange }) => {
           ...pre,
           fields: (pre.fields || [])
             .map((k) => {
-              const entityField = data?.fields?.
-              filter(f => f.id === k.fieldDefKey)[0];
+              const entityField = data?.fields
+              .filter(f => f.id === k.fieldDefKey)[0];
               if (entityField) {
                 return {
                   ...k,

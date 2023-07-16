@@ -6,8 +6,8 @@ import {platform} from '../../../lib/middle';
 
 export default ({prefix, onChange, value, templateShow,
                              templateType, dataTypeSupport, dataSource, ...restProps}) => {
-  const codeType = dataSource?.profile?.dataTypeSupports?.
-  filter(d => d.id === dataTypeSupport)[0];
+  const codeType = dataSource?.profile?.dataTypeSupports?.filter(d => d.id ===
+      dataTypeSupport)[0];
   const [codeData, updateCodeData] = useState(value);
   const codeChange = (e) => {
     onChange && onChange(e);

@@ -7,6 +7,8 @@ import * as _ from 'lodash/object';
 import { projectSuffix } from '../../profile';
 import {defaultJVM, transform} from './datasource_util';
 import { FormatMessage } from 'components';
+import {postWorkerFuc} from './event_tool';
+import {compareVersion} from './update';
 const { execFile } = require('child_process');
 
 const { ipcRenderer, shell } = require('electron');
@@ -97,19 +99,34 @@ export const readNormalFile = (filePath) => {
   })
 };
 
-export const saveJsonPromise = (filePath, data) => {
-  return new Promise((res, rej) => {
-    const tempData = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-    const tempFilePath = filePath.endsWith('.json') ? filePath : `${filePath}.json`;
-    if (!tempData) {
-      rej(new Error('error'));
+const parseJson = (data, closeSpace = false) => {
+  return new Promise((resolve, reject) => {
+    if(typeof data === 'string') {
+      resolve(data);
     } else {
-      saveNormalFile(tempFilePath, tempData).then((data) => {
-        res(data);
+      postWorkerFuc('json2string', true, [data, closeSpace]).then((d) => {
+        resolve(d);
       }).catch((err) => {
-        rej(err);
-      });
+        reject(err);
+      })
     }
+  });
+}
+
+export const saveJsonPromise = (filePath, data, closeSpace = false) => {
+  return new Promise((res, rej) => {
+    parseJson(data, closeSpace).then((tempData) => {
+      const tempFilePath = filePath.endsWith('.json') ? filePath : `${filePath}.json`;
+      if (!tempData) {
+        rej(new Error('error'));
+      } else {
+        saveNormalFile(tempFilePath, tempData).then((data) => {
+          res(data);
+        }).catch((err) => {
+          rej(err);
+        });
+      }
+    })
   });
 };
 
@@ -117,7 +134,11 @@ export const readJsonPromise = (filePath) => {
   return new Promise((res, rej) => {
     const tempFilePath = filePath.endsWith('.json') ? filePath : `${filePath}.json`;
     readNormalFile(tempFilePath).then((data) => {
-      res(JSON.parse(data.toString().replace(/^\uFEFF/, '')));
+      postWorkerFuc('string2json', true, [data.toString()]).then((d) => {
+        res(d);
+      }).catch((err) => {
+        rej(err);
+      })
     }).catch((err) => {
       rej(err);
     });
@@ -186,8 +207,8 @@ export const getUserConfig = () => {
 
 export const saveUserConfig = (data = []) => {
   return new Promise((res, rej) => {
-    Promise.all([saveJsonPromise(userConfigPath, data[0] || {}),
-      saveJsonPromise(projectConfigPath, data[1] || {})]).then((result) => {
+    Promise.all([saveJsonPromise(userConfigPath, data[0] || {}, true),
+      saveJsonPromise(projectConfigPath, data[1] || {}, true)]).then((result) => {
       setTimeout(() => {
         res(result);
       }, 100);
@@ -290,31 +311,52 @@ const getProject = (project, type) => {
   return tempArray.splice(0, tempArray.length - 1).join(path.sep);
 };
 
-export const getAllVersionProject = (p, data) => {
+
+export const getAllVersionFile = (p, data) => {
   // 获取当前项目的所有版本数据
   const versionDir = path.join(path.dirname(p), `.version_${data.name}`);
   if (!fs.existsSync(versionDir)) {
     return Promise.resolve([]);
   }
   return new Promise((res, rej) => {
-    fs.readdir(versionDir, (err, files) => {
+    fs.readdir(versionDir, async (err, files) => {
       if (!err) {
         // 读取所有的文件信息 此处需要过滤其他无效的文件(目前先过滤非json文件，以.开头的文件)
-        Promise.all(files
-          .filter(f => f.endsWith('.json') && !f.startsWith('.'))
-          .map(f => readJsonPromise(path.join(versionDir, f)))).
-        then((results) => {
-          // 返回的项目信息需要以时间顺序进行排序 最近的放在最前面
-          res(results);
-        }).catch(() => {
-          res([]);
-        });
+        const allFiles = files.filter(f => f.endsWith('.json') && !f.startsWith('.'));
+        res(allFiles.map(f => f.replace(/.json$/, '')).sort((a, b) => {
+          if(compareVersion(a, b.split('.'))) {
+            return -1;
+          }
+          return 1;
+        }))
       } else {
         res([]);
       }
     })
   });
+}
+
+export const getAllVersionProject = (p, data, names) => {
+  // 获取当前项目的所有版本数据
+  const versionDir = path.join(path.dirname(p), `.version_${data.name}`);
+  if (!fs.existsSync(versionDir)) {
+    return Promise.resolve([]);
+  }
+  return Promise.all(names.map(f => {
+    return new Promise((resolve, reject) => {
+      readJsonPromise(path.join(versionDir, `${f}.json`)).then((version) => {
+        resolve(_.omit(version, ['data']));
+      }).catch((err) => {
+        reject(err);
+      })
+    })
+  }));
 };
+
+export const getOneVersion = (p, data, version) => {
+  const versionDir = path.join(path.dirname(p), `.version_${data.name}`);
+  return readJsonPromise(path.join(versionDir, `${version.name}.json`));
+}
 
 export const removeAllVersionProject = (project) => {
   // 获取当前项目的所有版本数据
@@ -404,7 +446,7 @@ export const connectDB = (dataSource, config, params = {}, cmd, cb) => {
       }
       if (params.imgDir) {
         // 删除临时文件夹
-        deleteDirectoryFile(params.imgDir);
+        // deleteDirectoryFile(params.imgDir);
       }
       if (error) {
         let tempError = error.message || stderr || stdout;
@@ -456,13 +498,16 @@ export const copyFile = (defaultPath, filters) => {
   });
 };
 
-export const saveTempImages = (images) => {
+export const saveTempImages = (images, imageType) => {
   // 创建临时目录
   const userConfigPath = basePath + path.sep + 'temp_img';
+  // 删除临时文件夹
+  deleteDirectoryFile(userConfigPath);
+  // 重新创建临时文件夹
   ensureDirectoryExistence(userConfigPath);
   return new Promise((res, rej) => {
     Promise.all(images.map(i => {
-      const filePath = userConfigPath + path.sep + (i.group ? `${i.group}-${i.fileName}` : i.fileName) + '.png';
+      const filePath = userConfigPath + path.sep + (i.group ? `${i.group}-${i.fileName}` : i.fileName) + `.${imageType}`;
       return saveNormalFile(filePath, i.data);
     })).then(() => {
       res(userConfigPath);
@@ -559,7 +604,7 @@ export const getBackupAllFile = ({info, data}, callback) => {
               }
             }
             const fileName = `T${moment().format('YYYYMMDDHHmmss')}.pdma.json`;
-            fs.writeFileSync(path.join(dir, fileName), JSON.stringify(data, null, 2));
+            fs.writeFileSync(path.join(dir, fileName), JSON.stringify(data));
             callback && callback();
           } catch (e) {
             callback && callback(e);
@@ -625,16 +670,8 @@ export const saveVersion = (versionData, oldVersion, info, dataSource) => {
     deleteVersion(oldVersion, dataSource, info);
   }
   const filePath = path.join(versionDir, `${versionData.name}.json`);
-  return saveJsonPromise(filePath, versionData);
+  return saveJsonPromise(filePath, versionData, true);
 };
-
-export const updateAllVersion = (versionData, info, dataSource) => {
-  const versionDir = path.join(path.dirname(info), `.version_${dataSource.name}`);
-  return Promise.all(versionData.map(v => {
-    const filePath = path.join(versionDir, `${v.name}.json`);
-    return saveJsonPromise(filePath, v);
-  }));
-}
 
 export const renameVersion = (oldFilePath, newFilePath, oldData, newData) => {
   const oldVersionDir = path.join(path.dirname(oldFilePath), `.version_${oldData.name}`);
@@ -643,12 +680,7 @@ export const renameVersion = (oldFilePath, newFilePath, oldData, newData) => {
     if (oldVersionDir) {
       ensureDirectoryExistence(newVersionDir);
     }
-    fs.readdirSync(oldVersionDir)
-        .filter(f => f.endsWith('.json') && !f.startsWith('.'))
-        .forEach(f => {
-          fs.renameSync(path.join(oldVersionDir, f), path.join(newVersionDir , f));
-        });
-    deleteDirectoryFile(oldVersionDir);
+    fs.renameSync(oldVersionDir, newVersionDir);
   }
 };
 
@@ -659,12 +691,7 @@ export const renameBackupAllFile = (oldFilePath, newFilePath, oldData, newData) 
     if (oldBackupDir) {
       ensureDirectoryExistence(newBackupDir);
     }
-    fs.readdirSync(oldBackupDir)
-        .filter(f => f.endsWith('.json') && !f.startsWith('.'))
-        .forEach(f => {
-          fs.renameSync(path.join(oldBackupDir, f), path.join(newBackupDir , f));
-        });
-    deleteDirectoryFile(oldBackupDir);
+    fs.renameSync(oldBackupDir, newBackupDir);
   }
 }
 

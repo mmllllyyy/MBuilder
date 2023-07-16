@@ -59,6 +59,9 @@ const Input = React.memo(forwardRef(({ prefix ,defaultValue, suffix, placeholder
       onChange && onChange(e);
     }
     onKeyDown && onKeyDown(e);
+    if(e.key === 'Enter' && composition.current) {
+      e.stopPropagation();
+    }
   };
   return (<span className={`${currentPrefix}-input ${suffix ? `${currentPrefix}-input-suffix-container` : ''}`}>
     <input

@@ -21,9 +21,6 @@ import {
   saveProject,
   autoSaveProject,
   openDemoProject,
-  saveVersionData,
-  removeVersionData,
-  updateAllVersionData,
 } from '../../actions/core';
 import { openLoading, closeLoading } from '../../actions/common';
 import {ConfigContent} from '../../lib/context';
@@ -146,7 +143,6 @@ const mapStateToProps = (state) => {
   return {
     projectInfo: state.core.info,
     dataSource: state.core.data,
-    versionsData: state.core.versionsData,
     config: state.config,
     common: state.common,
     mode: state.core.mode,
@@ -179,7 +175,7 @@ const mapDispatchToProps = (dispatch) => {
       dispatch(removeProject(data, title));
     },
     save: (data, title, saveAs, callback) => {
-      dispatch(saveProject(data, saveAs, callback));
+      dispatch(saveProject(data, title, saveAs, callback));
     },
     autoSave: (data) => {
       // 静悄悄保存 无需任何提示
@@ -199,15 +195,6 @@ const mapDispatchToProps = (dispatch) => {
         case 'remove': dispatch(removeHistory(...data));break;
         default: break;
       }
-    },
-    saveVersion: (versionData, version, dataSource, title) => {
-      return dispatch(saveVersionData(versionData, version, dataSource, title));
-    },
-    removeVersion: (title, version) => {
-      dispatch(removeVersionData(title, version));
-    },
-    updateAllVersion: (versionData, title, dataSource) => {
-      return dispatch(updateAllVersionData(versionData, title, dataSource));
     },
   };
 };

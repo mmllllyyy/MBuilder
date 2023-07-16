@@ -79,7 +79,7 @@ const generateTableColumnListTable = (dataSource, groupKey, tableKey, nameType) 
   | 用户信息  | userManage  |
    */
   const dataTypeSupports = _object.get(dataSource, 'profile.dataTypeSupports', []);
-  const defaultDb = dataTypeSupports.filter(d => d.id = _object.get(dataSource, 'profile.default.db', ''))[0].defKey || '';
+  const defaultDb = dataTypeSupports.filter(d => d.id === _object.get(dataSource, 'profile.default.db', ''))[0].defKey || '';
   let tableString = `<table border="1" cellspacing="0">\n`;
   tableString += `<tr class="first-tr"><td>${code}</td><td>${name}</td>${nameType !== 'dicts' ? `<td>${dataType}(${defaultDb})</td><td>${length}</td><td>${main}</td><td>${defaultValue}</td>` : ''}<td>${remark}</td></tr>\n`;
   const viewGroups = _object.get(dataSource, 'viewGroups', []);

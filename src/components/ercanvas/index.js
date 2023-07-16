@@ -1,15 +1,13 @@
 import moment from 'moment';
-import html2canvas from 'html2canvas';
 import React, {useEffect, useRef, useMemo} from 'react';
 import { Graph, Addon, DataUri } from '@antv/x6';
 import {Download, FormatMessage} from 'components';
 import './components';
 import {getPrefix} from '../../lib/prefixUtil';
-import {html2svg, img} from '../../lib/generatefile/img';
+import {html2svg, img, svg2png} from '../../lib/generatefile/img';
 import FindEntity from './FindEntity';
 import ToolBar from './ToolBar';
 import CommentEditor from './CommentEditor';
-import clipCanvasEmptyPadding from './_util/clip_canvas';
 import * as align from '../../lib/position';
 import ER from './chart/ER';
 import Mind from './chart/Mind';
@@ -19,7 +17,7 @@ const { Dnd } = Addon;
 
 export default ({data, dataSource, renderReady, updateDataSource, validateTableStatus, prefix,
                   dataChange, openEntity, tabKey, activeKey, common, tabDataChange, commentChange,
-                  changes, versionsData, save, getDataSource, openDict, selectionChanged,
+                  changes, save, getDataSource, openDict, selectionChanged,
                   jumpEntity, diagramKey, relationType,changeTab, openTab, closeTab,
                   ...restProps}) => {
   const isView = false;
@@ -244,7 +242,7 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
     const eR = new ER(
         {
           // eslint-disable-next-line max-len
-      validateTableStatus, updateDataSource, tabKey, relationType, graph, changeTab, dnd, dataChange, tabDataChange, isView, save, openDict, jumpEntity, openTab, closeTab, container, getDataSource, common, changes, versionsData, currentPrefix,
+      validateTableStatus, updateDataSource, tabKey, relationType, graph, changeTab, dnd, dataChange, tabDataChange, isView, save, openDict, jumpEntity, openTab, closeTab, container, getDataSource, common, changes, currentPrefix,
     });
     const mind = new Mind({
       graph,
@@ -584,11 +582,10 @@ export default ({data, dataSource, renderReady, updateDataSource, validateTableS
             document.body.removeChild(dom.parentElement.parentElement);
             restProps.closeLoading();
           } else {
-            html2canvas(dom).then((canvas) => {
+            svg2png(html2svg(cells, dom)).then((canvas) => {
               document.body.removeChild(dom.parentElement.parentElement);
-              const clippedCanvas = clipCanvasEmptyPadding(canvas, 30);
               restProps.closeLoading();
-              DataUri.downloadDataUri(clippedCanvas.toDataURL('image/png'),
+              DataUri.downloadDataUri(canvas.toDataURL('image/png'),
                   `${dataSourceRef.current.name}-${diagram.defKey}[${diagram.defName || diagram.defKey}]-${moment().format('YYYYMDHHmmss')}.png`);
             });
           }

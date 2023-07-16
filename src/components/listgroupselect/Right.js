@@ -1,57 +1,63 @@
 import React, {useEffect, useState} from 'react';
-import {Select, FormatMessage, Checkbox, IconTitle, openModal, Button, Modal, Icon} from 'components';
+import {Select, FormatMessage, Checkbox, IconTitle, openModal, Button, Modal, Icon, Tooltip} from 'components';
+import AutoSizer from 'react-virtualized-auto-sizer';
+import { VariableSizeGrid as Grid } from 'react-window';
 
 const Option = Select.Option;
 
 const Item = React.memo(({prefix, d, onGroupChange, defaultSelected,
                            allowClear, notAllowEmpty, currentGroup, i, checked,
-                           checkBoxChange, group, batchSelection}) => {
-  return <tr
-    className={`${prefix}-listselect-right-item`}
-    key={d.id}
-  >
-    <td>{i + 1}</td>
-    <td>
+                           checkBoxChange, group, batchSelection, style, columnIndex}) => {
+  const bgClass = `${prefix}-listselect-right-item-bg`;
+  if(columnIndex === 0) {
+    return <span className={i % 2 === 0 ? bgClass : ''} style={style}>{i + 1}</span>;
+  } else if(columnIndex === 1) {
+    return <span
+      style={style}
+      className={`${prefix}-listselect-right-item-2 ${i % 2 === 0 ? bgClass : ''}`}
+    >
       {defaultSelected.includes(d.id) &&
-      <Icon
-        className={`${prefix}-listselect-right-item-disable`}
-        title={FormatMessage.string({id: 'components.listSelect.disable'})}
-        type='icon-xinxi'
-      />}
+        <Icon
+          className={`${prefix}-listselect-right-item-disable`}
+          title={FormatMessage.string({id: 'components.listSelect.disable'})}
+          type='icon-xinxi'
+            />}
       {
         batchSelection ? <Checkbox
+          className={`${prefix}-listselect-right-item-checkbox`}
           onChange={e => checkBoxChange(e, d.id)}
           checked={checked.includes(d.id)}
-          >
-          <span>
+            >
+          <Tooltip placement='top' title={`${d.defKey}[${d.defName || d.defKey}]`}>
+            <span className={`${prefix}-listselect-right-item-name`}>
+              {`${d.defKey}[${d.defName || d.defKey}]`}
+            </span>
+          </Tooltip>
+        </Checkbox> :
+        <Tooltip placement='top' title={`${d.defKey}[${d.defName || d.defKey}]`}>
+          <span className={`${prefix}-listselect-right-item-name`}>
             {`${d.defKey}[${d.defName || d.defKey}]`}
           </span>
-        </Checkbox> : <span>
-          {`${d.defKey}[${d.defName || d.defKey}]`}
-        </span>
+        </Tooltip>
       }
-    </td>
-    <td>
-      <Select
-        allowClear={allowClear}
-        value={group}
-        notAllowEmpty={notAllowEmpty}
-        onChange={e => onGroupChange(e, d.id)}
+    </span>;
+  }
+  return <span style={style} className={i % 2 === 0 ? bgClass : ''}>
+    <Select
+      allowClear={allowClear}
+      value={group}
+      notAllowEmpty={notAllowEmpty}
+      onChange={e => onGroupChange(e, d.id)}
       >
-        {
+      {
           currentGroup.map((g) => {
             return <Option value={g.id} key={g.id}>
               {`${g.defName}${g.defKey ? `(${g.defKey})` : ''}`}
             </Option>;
           })
         }
-      </Select>
-    </td>
-  </tr>;
-}, (pre, next) => {
-  return (((pre.checked.includes(pre.d.id) && next.checked.includes(next.d.id)) ||
-    (!pre.checked.includes(pre.d.id) && !next.checked.includes(next.d.id))) &&
-    (pre.group === next.group)) && (pre.batchSelection === next.batchSelection);
+    </Select>
+  </span>;
 });
 
 export default React.memo(({prefix, newData, onRemove, allowClear,
@@ -148,11 +154,11 @@ export default React.memo(({prefix, newData, onRemove, allowClear,
   useEffect(() => {
     setDataGroup((pre) => {
       return newData.map((f) => {
-        const current = pre.filter(p => p.id === f.id)[0];
-        if (current) {
+        const currentIndex = pre.findIndex(p => p.id === f.id);
+        if (currentIndex > 0) {
           return {
             ...f,
-            group: current.group,
+            group: pre[currentIndex].group,
           };
         }
         return f;
@@ -177,6 +183,8 @@ export default React.memo(({prefix, newData, onRemove, allowClear,
     return 'ind';
   };
   const finalType = calcType();
+  const columnWidth = [50, 250, 200];
+  const finalData = newData.filter(d => !!d.defKey);
   return <div className={`${prefix}-listselect-right`}>
     <div className={`${prefix}-listselect-right-opt`}>
       <span className={`${prefix}-listselect-right-opt-batch`}>
@@ -222,35 +230,57 @@ export default React.memo(({prefix, newData, onRemove, allowClear,
               {FormatMessage.string({id: 'components.listSelect.empty'})}
             </span>
           </div>
-              : <table>
-                <thead>
-                  <tr>
-                    <td>{}</td>
-                    <td>{FormatMessage.string({id: 'components.listSelect.tableName'})}</td>
-                    <td>{FormatMessage.string({id: 'components.listSelect.useGroup'})}</td>
-                  </tr>
-                </thead>
-                <tbody>
-                  {newData.filter(d => !!d.defKey).map((d, i) => {
-                const group = dataGroup.filter(dg => dg.id === d.id)[0]?.group || '';
-                return <Item
-                  batchSelection={batchSelection}
-                  checkBoxChange={checkBoxChange}
-                  checked={checked}
-                  defaultSelected={defaultSelected}
-                  i={i}
-                  allowClear={allowClear}
-                  notAllowEmpty={notAllowEmpty}
-                  onGroupChange={_onGroupChange}
-                  prefix={prefix}
-                  key={`${d.id}${i}`}
-                  d={d}
-                  currentGroup={currentGroup}
-                  onRemove={onRemove}
-                  group={group}
-                />;
-              })}
-                </tbody></table>
+              : <>
+                <div style={{height: '100%'}}>
+                  <AutoSizer>
+                    {({height, width }) => {
+                      return <>
+                        <div style={{width}} className={`${prefix}-listselect-right-header`}>
+                          <span style={{width: columnWidth[0]}}>{}</span>
+                          <span style={{width: width - (columnWidth[0] + columnWidth[2] + 15)}}>{FormatMessage.string({id: 'components.listSelect.tableName'})}</span>
+                          <span style={{width: columnWidth[2]}}>{FormatMessage.string({id: 'components.listSelect.useGroup'})}</span>
+                        </div>
+                        <Grid
+                          className={`${prefix}-listselect-right-grid`}
+                          columnCount={columnWidth.length}
+                          height={height - 24}
+                          rowCount={finalData.length}
+                          rowHeight={() => 32}
+                          width={width}
+                          columnWidth={(index) => {
+                              if(index === 1) {
+                                return width - (columnWidth[0] + columnWidth[2] + 15);
+                              }
+                              return columnWidth[index];
+                            }}
+                        >
+                          {({ rowIndex, style , columnIndex }) => {
+                            const data = finalData[rowIndex];
+                            const group = dataGroup.filter(dg => dg.id === data.id)[0]?.group || '';
+                            return <Item
+                              style={style}
+                              batchSelection={batchSelection}
+                              checkBoxChange={checkBoxChange}
+                              checked={checked}
+                              defaultSelected={defaultSelected}
+                              i={rowIndex}
+                              allowClear={allowClear}
+                              notAllowEmpty={notAllowEmpty}
+                              onGroupChange={_onGroupChange}
+                              prefix={prefix}
+                              columnIndex={columnIndex}
+                              d={data}
+                              currentGroup={currentGroup}
+                              onRemove={onRemove}
+                              group={group}
+                            />;
+                          }}
+                        </Grid>
+                      </>;
+                    }}
+                  </AutoSizer>
+                </div>
+              </>
         }
     </div>
   </div>;

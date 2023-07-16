@@ -1,5 +1,8 @@
 import * as Component from 'components';
 import { addBodyEvent, removeBodyEvent } from './listener';
+import Worker from './worker';
+import Preview from '../app/container/database/Preview';
+import tr from 'components/table/Tr';
 
 // 复制方法
 export const Copy = (data, successMessage) => {
@@ -39,3 +42,41 @@ export const Save = (cb) => {
 export const removeSave = () => {
   window.onkeydown = null;
 }
+
+
+export const antiShake = (fuc, time = 300) => {
+  let timer = null;
+  return (...args) => {
+    if(timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    timer = setTimeout(() => {
+      fuc(...args);
+    }, time)
+  }
+}
+
+const workerFuc = (params) => {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker();
+    worker.postMessage(params);
+    worker.onmessage = ({data}) => {
+      resolve(data);
+      worker.terminate();
+    };
+    worker.onerror = (err) => {
+      reject(err)
+      worker.terminate();
+    };
+  });
+}
+
+export const postWorkerFuc = (fuc, isExe = false, params = {}) => {
+  return workerFuc({
+    fuc: isExe ? fuc : `(${fuc.toString()})`,
+    params,
+    isExe
+  })
+}
+

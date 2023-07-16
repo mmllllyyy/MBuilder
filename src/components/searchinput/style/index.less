@@ -12,10 +12,19 @@
   &-icon {
     font-size: 16px;
   }
+  &-loading {
+    i:last-child {
+      animation: remote-change 1s infinite linear;
+    }
+  }
+  .chiner-input {
+    flex-grow: 1;
+  }
   input {
     font-size: 11px;
     padding-left: 8px;
     border: 1px solid transparent;
+    width: 100%;
     &:hover {
       border: 1px solid transparent;
     }

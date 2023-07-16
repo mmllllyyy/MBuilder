@@ -71,14 +71,14 @@ export const saveUserConfigData = (data, title, cb) => {
           ...data,
           lang: data[0]?.lang
         });
-        cb && cb();
         dispatch(saveUserConfigSuccess(data));
         dispatch(closeLoading(STATUS[1], null));
+        cb && cb();
       })
       .catch((err) => {
-        cb && cb(err);
         dispatch(saveUserConfigFail(err));
         dispatch(closeLoading(STATUS[2], err));
+        cb && cb(err);
       });
   };
 };

@@ -3,12 +3,14 @@ import React, {useEffect, useState} from 'react';
 import './style/index.less';
 import moment from 'moment';
 import {Button, FormatMessage, openModal, Modal, Message} from 'components';
+import {FixedSizeList as List} from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
 import { getPrefix } from '../../../../lib/prefixUtil';
 import { getBackupAllFileData, readJsonPromise, deleteFile, getFilePath } from '../../../../lib/middle';
 import Log from './Log';
 
 export default React.memo(({prefix, info, data, openLoading, closeLoading,
-                               updateProject, close}) => {
+                               updateProject, close, config}) => {
     const currentPrefix = getPrefix(prefix);
     const [historyOpt, setHistoryOpt] = useState([]);
     const showLog = (files) => {
@@ -17,7 +19,11 @@ export default React.memo(({prefix, info, data, openLoading, closeLoading,
             modal && modal.close();
         };
         modal = openModal(<Log
+          config={config}
+          dataSource={data}
           files={files}
+          openLoading={openLoading}
+          closeLoading={closeLoading}
         />, {
             buttons:  [
               <Button key='cancel' onClick={onCancel}>
@@ -64,27 +70,39 @@ export default React.memo(({prefix, info, data, openLoading, closeLoading,
         });
     }, []);
     return <div className={`${currentPrefix}-history`}>
-      {
-            historyOpt.map((h, i) => {
-                return <div key={h.file} className={`${currentPrefix}-history-item`}>
-                  <span>
-                    <span>
-                      {h.file}
-                    </span>
-                    <span>
-                      {moment(h.file.match(/(\d)+/)[0], 'YYYYMMDDHHmmss').format('YYYY/MM/DD HH:mm:ss')}
-                    </span>
-                  </span>
-                  <span>
-                    <span onClick={() => openWindow(h)}>{FormatMessage.string({id: 'operationsHistory.openWindow'})}</span>
-                    <span onClick={() => showLog([historyOpt[i + 1], h])}>{FormatMessage.string({id: 'operationsHistory.log'})}</span>
-                    <span onClick={() => reset(h)}>{FormatMessage.string({id: 'operationsHistory.reset'})}</span>
-                    <span onClick={() => onDelete(h)}>{FormatMessage.string({id: 'operationsHistory.delete'})}</span>
-                  </span>
-                </div>;
-            })
-        }
+      <AutoSizer>
+        {({height, width}) => {
+                return <List
+                  height={height}
+                  itemCount={historyOpt.length}
+                  itemSize={42}
+                  width={width}
+                >
+                  {
+                        ({ index, style }) => {
+                            const h = historyOpt[index];
+                            return <div style={style} key={h.file} className={`${currentPrefix}-history-item`}>
+                              <span>
+                                <span>
+                                  {h.file}
+                                </span>
+                                <span>
+                                  {moment(h.file.match(/(\d)+/)[0], 'YYYYMMDDHHmmss').format('YYYY/MM/DD HH:mm:ss')}
+                                </span>
+                              </span>
+                              <span>
+                                <span onClick={() => openWindow(h)}>{FormatMessage.string({id: 'operationsHistory.openWindow'})}</span>
+                                <span onClick={() => showLog([historyOpt[index + 1], h])}>{FormatMessage.string({id: 'operationsHistory.log'})}</span>
+                                <span onClick={() => reset(h)}>{FormatMessage.string({id: 'operationsHistory.reset'})}</span>
+                                <span onClick={() => onDelete(h)}>{FormatMessage.string({id: 'operationsHistory.delete'})}</span>
+                              </span>
+                            </div>;
+                        }
+                    }
+                </List>;
+            }}
+      </AutoSizer>
       {historyOpt.length === 0 ?
-        <div style={{textAlign: 'center'}}>{FormatMessage.string({id: 'operationsHistory.emptyHistory'})}</div> : ''}
+        <div className={`${currentPrefix}-history-empty`}>{FormatMessage.string({id: 'operationsHistory.emptyHistory'})}</div> : ''}
     </div>;
 });

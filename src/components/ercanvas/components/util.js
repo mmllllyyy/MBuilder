@@ -1,3 +1,5 @@
+import {hex2Rgba} from '../../../lib/color';
+
 export const renderer = {
   heading(text, level, raw, slugger) {
     if (this.options.headerIds) {
@@ -92,4 +94,16 @@ export const getChildrenId = (n, nodes) => {
         const bNode = nodes.filter(cNode => cNode.id === b)[0];
         return a.concat(bNode ? getChildrenId(bNode, nodes).concat(bNode.id) : []);
     }, children);
+};
+
+
+export const calcColor = (color, opacity = 0.05) => {
+    if (color.startsWith('#')) {
+        return hex2Rgba(color, opacity);
+    }
+    const tempColor = color.replace(/rgb?\(/, '')
+        .replace(/\)/, '')
+        .replace(/[\s+]/g, '')
+        .split(',');
+    return `rgba(${tempColor.join(',')}, ${opacity})`;
 };

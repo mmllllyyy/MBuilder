@@ -1,21 +1,27 @@
-import React, { useState, useMemo } from 'react';
+import React, {useState, useMemo, useCallback, useRef} from 'react';
 
 import CheckBox from 'components/checkbox';
 import Icon from 'components/icon';
 import SearchInput from 'components/searchinput';
 
 import './style/index.less';
+import AutoSizer from 'react-virtualized-auto-sizer';
+import {FixedSizeTree as Tree} from 'react-vtree';
 import {getPrefix} from '../../lib/prefixUtil';
 import {tree2array} from '../../lib/tree';
 
-const Tree = React.memo(({prefix, dataSource, labelRender, defaultCheckeds,
+export default React.memo(({prefix, dataSource, labelRender, defaultCheckeds,
                            onChange, placeholder, simpleChecked}) => {
   const calcKey = (c) => {
     return c.reduce((a, b) => a.concat(b.key).concat(calcKey(b.children || [])), []);
   };
   const arrayData = useMemo(() => tree2array(dataSource), [dataSource]);
+  const arrayDataRef = useRef([]);
+  arrayDataRef.current = arrayData;
   const parentKeys = useMemo(() => arrayData.filter(d => !!d.children).map(d => d.key),
       [arrayData]);
+  const parentKeysRef = useRef([]);
+  parentKeysRef.current = parentKeys;
   const [searchValue, updateSearchValue] = useState('');
   const checkedData = [...(defaultCheckeds || [])];
   const checkData = useMemo(() => arrayData.filter(d => checkedData.includes(d.key)), []);
@@ -40,18 +46,22 @@ const Tree = React.memo(({prefix, dataSource, labelRender, defaultCheckeds,
     return checkData.reduce((a, b) => a.concat(b.parents),[]).map(d => d.key);
   });
   const _iconClick = (key) => {
-    let tempExpands = [...expands];
-    if (tempExpands.includes(key)) {
-      tempExpands = tempExpands.filter(k => k !== key);
-    } else {
-      tempExpands = tempExpands.concat(key);
-    }
-    updateExpands(tempExpands);
+    updateExpands((pre) => {
+      let tempExpands = [...pre];
+      if (tempExpands.includes(key)) {
+        tempExpands = tempExpands.filter(k => k !== key);
+      } else {
+        tempExpands = tempExpands.concat(key);
+      }
+      return tempExpands;
+    });
   };
   const reg = new RegExp((searchValue || '')
       .replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
-  const _checkBoxChange = (e, { key, children }, parent) => {
-    let tempCheckeds = [...checkeds];
+  const regRef = useRef(reg);
+  regRef.current = reg;
+  const _checkBoxChange = (nodeCheckeds, e, { key, children }, parent) => {
+    let tempCheckeds = [...nodeCheckeds];
     const checked = e.target.checked;
     if (checked) {
       if (simpleChecked) {
@@ -66,7 +76,7 @@ const Tree = React.memo(({prefix, dataSource, labelRender, defaultCheckeds,
         }
         if (children) {
           // 选中所有子节点
-          currentChecked.push(...calcKey(children.filter(c => reg.test(c.value || ''))));
+          currentChecked.push(...calcKey(children.filter(c => regRef.current.test(c.value || ''))));
         }
         tempCheckeds = [...new Set(tempCheckeds.concat(currentChecked))];
       }
@@ -78,63 +88,94 @@ const Tree = React.memo(({prefix, dataSource, labelRender, defaultCheckeds,
       }
       if (children) {
         // 取消选中所有子节点
-        currentUnChecked.push(...calcKey(children.filter(c => reg.test(c.value || ''))));
+        currentUnChecked.push(...calcKey(children.filter(c => regRef.current.test(c.value || ''))));
       }
       tempCheckeds = tempCheckeds.filter(p => !currentUnChecked.includes(p));
     }
     updateCheckeds(tempCheckeds);
-    onChange && onChange(tempCheckeds.filter(k => !parentKeys.includes(k)));
+    onChange && onChange(tempCheckeds.filter(k => !parentKeysRef.current.includes(k)));
   };
   const currentPrefix = getPrefix(prefix);
-  const renderChild = (d, p) => {
-    return d.children ?
-      <ul key={d.key}>
-        <li className={`${currentPrefix}-tree-container-ul-parent-${expands.includes(d.key) ? 'show' : 'hidden'}`}>
-          <Icon type='fa-caret-down' onClick={() => _iconClick(d.key)}/>
-          <CheckBox
-            disable={simpleChecked}
-            checked={checkeds.includes(d.key)}
-            onChange={e => _checkBoxChange(e, d, p)}
-          >
-            <span>{d.value}</span>
-          </CheckBox>
-        </li>
-        {
-          d.children.length > 0 && <ul style={{marginLeft: 17}} className={`${currentPrefix}-tree-container-ul-child-${expands.includes(d.key) ? 'show' : 'hidden'}`}>
-            {d.children.filter((c) => {
-              return c.children || reg.test(c.value || '');
-            }).map(c => renderChild(c, d))}
-          </ul>
-        }
-      </ul> : <li key={d.key} style={{marginLeft: 8}}>
-        <CheckBox
-          checked={checkeds.includes(d.key)}
-          onChange={e => _checkBoxChange(e, d, p)}
+  const TreeNode = useMemo(() =>
+      ({data: {isLeaf, node, parent, nestingLevel, nodeCheckeds}, style, isOpen}) => {
+    return <li style={{...style, paddingLeft: 25 * nestingLevel}}>
+      {!isLeaf && <Icon
+        type={`fa-caret-${isOpen ? 'down' : 'right'}`}
+        onClick={() => _iconClick(node.key)}
+      />}
+      <CheckBox
+        disable={!isLeaf && simpleChecked}
+        checked={nodeCheckeds.includes(node.key)}
+        onChange={e => _checkBoxChange(nodeCheckeds, e, node, parent)}
         >
-          <span>{labelRender && labelRender(d.key, d.value) || d.value}</span>
-        </CheckBox>
-      </li>;
-  };
+        <span
+          style={{marginLeft: 2}}
+        >
+          {labelRender && labelRender(node.key, node.value) || node.value}
+        </span>
+      </CheckBox>
+    </li>;
+  }, []);
   const onSearchChange = (e) => {
     updateSearchValue(e.target.value);
     const currentReg = new RegExp((e.target.value || '')
       .replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
-    const searchData = e.target.value ? arrayData.filter(d => currentReg.test(d.value || '')) : [];
+    const searchData = e.target.value ? arrayDataRef.current
+        .filter(d => currentReg.test(d.value || '')) : [];
     updateExpands(pre => pre
       .concat([...new Set(searchData.reduce((a, b) => a.concat(b.parents.map(p => p.key)), []))]));
   };
+  const getNodeData = (node, nestingLevel, parent) => ({
+    data: {
+      id: node.key,
+      node,
+      nestingLevel,
+      isOpenByDefault: expands.includes(node.key),
+      isLeaf: !node.children,
+      parent,
+      nodeCheckeds: checkeds,
+    },
+    nestingLevel,
+    node,
+  });
+  function* treeWalker() {
+    for (let i = 0; i < dataSource.length; i += 1) {
+      yield getNodeData(dataSource[i], 0);
+    }
+
+    while (true) {
+      const parent = yield;
+      const children = (parent.node?.children || [])
+          .filter(c => regRef.current.test(c.value || ''));
+      for (let i = 0; i < children?.length; i += 1) {
+        yield getNodeData(children[i], parent.nestingLevel + 1, parent.node);
+      }
+    }
+  }
+  const innerElementType = useCallback(({children, ...props}) => {
+    return <ul {...props}>{children}</ul>;
+  }, []);
   return (
     <ul className={`${currentPrefix}-tree`}>
       <ul className={`${currentPrefix}-tree-all`}>
         <li><SearchInput onChange={onSearchChange} placeholder={placeholder}/></li>
         <ul>
-          {
-            dataSource.map(d => renderChild(d))
-          }
+          <AutoSizer>
+            {({height, width}) => {
+              return <Tree
+                innerElementType={innerElementType}
+                treeWalker={treeWalker}
+                itemSize={22}
+                height={height}
+                width={width}
+              >
+                {TreeNode}
+              </Tree>;
+            }}
+          </AutoSizer>
         </ul>
       </ul>
     </ul>
   );
 });
 
-export default Tree;

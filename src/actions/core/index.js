@@ -3,9 +3,9 @@ import _ from 'lodash/object';
 //import crypto from 'crypto';
 
 import {
-  saveJsonPromise, readJsonPromise, saveJsonPromiseAs, openProjectFilePath, deleteVersion,
-  removeAllVersionProject, openFileOrDirPath, ensureDirectoryExistence, saveVersion,
-  getAllVersionProject, renameVersion, updateAllVersion,
+  saveJsonPromise, readJsonPromise, saveJsonPromiseAs, openProjectFilePath,
+removeAllVersionProject, openFileOrDirPath, ensureDirectoryExistence,
+  renameVersion,
   dirSplicing, fileExists, deleteFile, basename, writeLog, getBackupAllFile, renameBackupAllFile,
 } from '../../lib/middle';
 import { openLoading, closeLoading, optReset, STATUS } from '../common';
@@ -38,16 +38,6 @@ export const READ_PROJECT_FAIL = 'READ_PROJECT_FAIL'; // 读取失败
 export const CREATE_PROJECT_SUCCESS = 'CREATE_PROJECT_SUCCESS'; // 创建成功
 export const CREATE_PROJECT_ERROR = 'CREATE_PROJECT_ERROR'; // 创建失败
 
-export const SAVE_VERSION_SUCCESS = 'SAVE_VERSION_SUCCESS'; // 保存版本信息成功
-export const SAVE_VERSION_FAIL = 'SAVE_VERSION_FAIL'; // 保存版本信息失败
-
-export const SAVE_ALL_VERSION_SUCCESS = 'SAVE_ALL_VERSION_SUCCESS';
-export const SAVE_ALL_VERSION_FAIL = 'SAVE_ALL_VERSION_FAIL';
-
-export const REMOVE_VERSION_SUCCESS = 'REMOVE_VERSION_SUCCESS'; // 版本信息删除成功
-
-export const REMOVE_ALL_VERSION_SUCCESS = 'REMOVE_ALL_VERSION_SUCCESS'; // 所有版本信息删除成功
-
 export const UPDATE_PROJECT = 'UPDATE_PROJECT'; // 更新项目
 export const CLOSE_PROJECT = 'CLOSE_PROJECT'; // 关闭项目
 
@@ -71,14 +61,13 @@ const saveProjectFail = (err) => {
   };
 };
 
-const readProjectSuccess = (data, versionsData, path, isDemoProject, mode) => {
+const readProjectSuccess = (data, path, isDemoProject, mode) => {
   return {
     type: READ_PROJECT_SUCCESS,
     data: {
       isDemoProject,
       info: path,
       data,
-      versionsData,
       mode,
     },
   };
@@ -97,7 +86,6 @@ const createProjectSuccess = (data, path) => {
     data: {
       info: path,
       data,
-      versionsData: [],
     },
   };
 };
@@ -106,33 +94,6 @@ const createProjectError = (error) => {
   return {
     type: CREATE_PROJECT_ERROR,
     data: error,
-  };
-};
-
-const saveVersionSuccess = (data, oldData) => {
-  return {
-    type: SAVE_VERSION_SUCCESS,
-    data: { data, oldData },
-  };
-};
-
-const saveVersionFail = (err) => {
-  return {
-    type: SAVE_VERSION_FAIL,
-    data: err,
-  };
-};
-
-const removeVersionSuccess = (versionInfo) => {
-  return {
-    type: REMOVE_VERSION_SUCCESS,
-    data: versionInfo,
-  };
-};
-
-const removeAllVersionSuccess = () => {
-  return {
-    type: REMOVE_ALL_VERSION_SUCCESS,
   };
 };
 
@@ -168,7 +129,7 @@ export const autoSaveProject = (data) => {
 // eslint-disable-next-line no-unused-vars
 let isSaving = false;
 
-export const saveProject = (data, saveAs, callback) => {
+export const saveProject = (data, title, saveAs, callback) => {
   isSaving = true;
   // 此处为异步操作
   const time = moment().format('YYYY-M-D HH:mm:ss');
@@ -188,6 +149,7 @@ export const saveProject = (data, saveAs, callback) => {
         return name.split('.')[0];
       };
       if (saveAs) {
+        dispatch(openLoading(title)); // 开启全局loading
         saveJsonPromiseAs(tempData, (d, f) => {
           const oldData = JSON.parse(d.toString().replace(/^\uFEFF/, ''));
           oldData.name = getName(f);
@@ -217,9 +179,13 @@ export const saveProject = (data, saveAs, callback) => {
               isSaving = false;
               callback && callback(err);
               dispatch(saveProjectFail(err));
-            });
+            }).finally(() => {
+              dispatch(closeLoading());
+        });
       } else {
-        saveJsonPromise(info, tempData)
+        dispatch(openLoading(title)); // 开启全局loading
+        // 超过一千张表 不再格式化后保存 优化保存性能
+        saveJsonPromise(info, tempData, tempData.entities?.length > 1000)
             .then(() => {
               getBackupAllFile({info, data: tempData}, (err) => {
                 isSaving = false;
@@ -237,7 +203,9 @@ export const saveProject = (data, saveAs, callback) => {
               isSaving = false;
               callback && callback(err);
               dispatch(saveProjectFail(err));
-            });
+            }).finally(() => {
+              dispatch(closeLoading());
+        });
       }
     }
   };
@@ -259,12 +227,12 @@ export const closeProject = (type) => {
 export const readProject = (path, title, getState, type, isDemoProject, mode = EDIT) => {
   return (dispatch) => {
     dispatch(openLoading(title)); // 开启全局loading
+    const config = getState()?.config?.data[0];
     // 判断项目文件是否为只读权限
     readJsonPromise(path)
       .then((data) => {
         if (!data.version) {
           // 无效的项目
-          const config = getState()?.config?.data[0];
           const err = new Error(allLangData[config.lang].invalidProjectData);
           dispatch(readProjectFail(err));
           dispatch(closeLoading(STATUS[2], err));
@@ -279,14 +247,8 @@ export const readProject = (path, title, getState, type, isDemoProject, mode = E
           }, (err) => {
             if (!err) {
               setMemoryCache('data', newData);
-              getAllVersionProject(path, newData).then((versionData) => {
-                dispatch(readProjectSuccess(newData, versionData, path, isDemoProject, mode));
-              }).catch(() => {
-                setMemoryCache('data', newData);
-                dispatch(readProjectSuccess(newData, versionData, path, isDemoProject, mode));
-              }).finally(() => {
-                dispatch(closeLoading(STATUS[1], null, '', type));
-              });
+              dispatch(readProjectSuccess(newData, path, isDemoProject, mode));
+              dispatch(closeLoading(STATUS[1], null, '', type));
             } else {
               dispatch(readProjectFail(err));
               dispatch(closeLoading(STATUS[2], err));
@@ -295,7 +257,7 @@ export const readProject = (path, title, getState, type, isDemoProject, mode = E
         } else {
           const newData = transformationData(data);
           setMemoryCache('data', newData);
-          dispatch(readProjectSuccess(newData, [], path, isDemoProject, mode));
+          dispatch(readProjectSuccess(newData, path, isDemoProject, mode));
           dispatch(closeLoading(STATUS[1], null, '', type));
         }
       })
@@ -317,7 +279,7 @@ export const openDemoProject = (h, t, title, type) => {
     const data = compareVersion('3.5.0', tempH.version.split('.'))
       ? reduceProject(tempH, 'defKey') : tempH;
     setMemoryCache('data', data);
-    dispatch(readProjectSuccess(data, [], '', isDemoProject, EDIT));
+    dispatch(readProjectSuccess(data, '', isDemoProject, EDIT));
     dispatch(closeLoading(STATUS[1], null, '', type));
   };
 };
@@ -394,48 +356,6 @@ export const createProject = (data, path, title, type) => {
   };
 };
 
-export const removeVersionData = (title, versionInfo) => {
-  return (dispatch, getState) => {
-    const { data, info } = getState()?.core || {};
-    dispatch(openLoading(title));
-    deleteVersion(versionInfo, data, info);
-    dispatch(removeVersionSuccess(versionInfo));
-    dispatch(closeLoading(STATUS[1], null));
-  };
-};
-
-const saveAllVersionSuccess = (data) => {
-  return {
-    type: SAVE_ALL_VERSION_SUCCESS,
-    data,
-  };
-};
-
-const saveAllVersionFail = (err) => {
-  return {
-    type: SAVE_ALL_VERSION_FAIL,
-    data: err,
-  };
-};
-
-export const updateAllVersionData = (versionDataCallBack, title, dataSource) => {
-  return (dispatch, getState) => {
-    const { data, info, versionsData, mode } = getState()?.core || {};
-    if (info && mode !== READING) {
-      dispatch(openLoading(title));
-      const finalData = versionDataCallBack(versionsData);
-      dispatch(autoSaveProject(dataSource));
-      updateAllVersion(finalData, info, data).then(() => {
-        dispatch(saveAllVersionSuccess(finalData));
-        dispatch(closeLoading(STATUS[1], null));
-      }).catch((err) => {
-        dispatch(saveAllVersionFail(err));
-        dispatch(closeLoading(STATUS[2], err));
-      });
-    }
-  };
-};
-
 export const removeAllVersionProjectData = (title) => {
   return (dispatch, getState) => {
     const project = getState()?.core?.info;
@@ -501,22 +421,5 @@ export const removeProject = (data, title) => {
     deleteFile(data.path);
     // 更新历史记录
     removeHistory(data)(dispatch, getState);
-  };
-};
-
-export const saveVersionData = (versionData, oldVersion, dataSource, title) => {
-  return (dispatch, getState) => {
-    dispatch(openLoading(title));
-    const info = getState()?.core?.info;
-    return new Promise((res, rej) => {
-      saveVersion(versionData, oldVersion, info, dataSource).then(() => {
-        dispatch(saveVersionSuccess(versionData, oldVersion));
-        dispatch(closeLoading(STATUS[1], null));
-        res(versionData);
-      }).catch((err) => {
-        dispatch(saveVersionFail(err));
-        rej(err);
-      });
-    });
   };
 };

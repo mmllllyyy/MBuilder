@@ -174,15 +174,15 @@ export const getMenus = (key, type, selectedMenu, parentKey, groupType) => {
   });
 };
 
-export const dealMenuClick = (dataSource, menu, updateDataSource, tabClose, callback, updateAllVersion, genImg) => {
+export const dealMenuClick = (dataSource, menu, updateDataSource, tabClose, callback, genImg) => {
   const { key } = menu;
   switch (key) {
-    case 'add': addOpt(dataSource, menu, updateDataSource, {}, null, null, callback, updateAllVersion); break;
-    case 'edit': editOpt(dataSource, menu, updateDataSource, updateAllVersion); break;
+    case 'add': addOpt(dataSource, menu, updateDataSource, {}, null, null, callback); break;
+    case 'edit': editOpt(dataSource, menu, updateDataSource); break;
     case 'copy': copyOpt(dataSource, menu); break;
     case 'cut': cutOpt(dataSource, menu); break;
     case 'paste': pasteOpt(dataSource, menu, updateDataSource); break;
-    case 'delete': deleteOpt(dataSource, menu, updateDataSource, tabClose, updateAllVersion); break;
+    case 'delete': deleteOpt(dataSource, menu, updateDataSource, tabClose); break;
     case 'clear': clearOpt(dataSource, menu, updateDataSource); break;
     case 'move': moveOpt(dataSource, menu, updateDataSource); break;
     case 'all': editAllOpt(dataSource, menu, updateDataSource); break;
@@ -326,33 +326,48 @@ const editAllOpt = (dataSource, m, updateDataSource) => {
   let modal;
   let tempDataSource;
   const dataChange = (data) => {
-    if (m.parentKey) {
-      tempDataSource = {
-        ...dataSource,
-        [name]: dataSource[name]?.map(d => {
-          const current = data[name].filter(c => c.id === d.id)[0];
-          if (current) {
-            return current;
-          }
-          return d;
-        }),
-        viewGroups: (data.viewGroups || []).map(v => {
-          if (v.id === m.parentKey) {
-            return {
-              ...v,
-              [refName]: data[name]?.map(d => d.id)?.filter(i => v[refName].includes(i)) || [],
-            }
-          }
-          return v;
-        }),
-      }
-    } else {
-      tempDataSource = data;
-    }
+    tempDataSource = data;
   }
   const onOK = () => {
     if (tempDataSource) {
-      const result = validateEmptyOrRepeat(tempDataSource[name] || [], 'defKey');
+      let newDataSource;
+      if(m.parentKey) {
+        if(m.parentKey !== '__ungroup') {
+          const changeData = tempDataSource[name].filter(d => d.isChange).map(d => _.omit(d, 'isChange'));
+          newDataSource = {
+            ...dataSource,
+            [name]: dataSource[name]?.map(d => {
+              const current = changeData.find(c => c.id === d.id);
+              if (current) {
+                return current;
+              }
+              return d;
+            }),
+            viewGroups: (tempDataSource.viewGroups || []).map(v => {
+              if (v.id === m.parentKey) {
+                // 更新分组排序
+                return {
+                  ...v,
+                  [refName]: tempDataSource[name]?.filter(i => v[refName].includes(i.id))?.map(d => d.id) || [],
+                }
+              }
+              return v;
+            }),
+          }
+        } else {
+          const changeDataId = tempDataSource[name].map(c => c.id);
+          newDataSource = {
+            ...dataSource,
+            [name]: dataSource[name]
+                .filter(d => !changeDataId.includes(d.id))
+                .concat(tempDataSource[name]),
+          }
+        }
+      } else {
+        newDataSource = tempDataSource;
+      }
+
+      const result = validateEmptyOrRepeat(newDataSource[name] || [], 'defKey');
       if (result.length > 0) {
         Modal.error({
           title: FormatMessage.string({id: 'optFail'}),
@@ -360,7 +375,7 @@ const editAllOpt = (dataSource, m, updateDataSource) => {
           ${result.filter(r => r.type === 'repeat').map(r => `[${r.value}]`).join('')}`,
         });
       } else {
-        updateDataSource(tempDataSource);
+        updateDataSource(newDataSource);
         modal && modal.close();
       }
     } else {
@@ -372,15 +387,20 @@ const editAllOpt = (dataSource, m, updateDataSource) => {
   }
   let defaultDataSource = {...dataSource};
   if (m.parentKey) {
-    const viewGroup = (defaultDataSource.viewGroups || []).concat(getUnGroup(dataSource)).filter(v => v.id === m.parentKey)[0];
+    let viewGroup;
+    if(m.parentKey === '__ungroup') {
+      viewGroup = getUnGroup(dataSource);
+    } else {
+      viewGroup = (defaultDataSource.viewGroups || []).find(v => v.id === m.parentKey);
+    }
     if (viewGroup) {
       defaultDataSource = {
         ...defaultDataSource,
-        [name]: viewGroup[refName].map(s => defaultDataSource[name].filter(d => d.id === s)[0])
+        [name]: viewGroup[refName].map(s => defaultDataSource[name].find(d => d.id === s))
       }
     }
   }
-  modal = openModal(<Quickedit dataSource={defaultDataSource} name={name} dataChange={dataChange}/>, {
+  modal = openModal(<Quickedit parentKey={m.parentKey} dataSource={defaultDataSource} name={name} dataChange={dataChange}/>, {
     bodyStyle: {width: '80%'},
     title: m.name || '',
     buttons: [<Button key='onOK' onClick={onOK} type='primary'>
@@ -413,9 +433,10 @@ const calcDefaultDb = (newData, oldData, db) => {
   return db;
 }
 
-const addOpt = (dataSource, menu, updateDataSource, oldData = {}, title, customerDealData, callback, updateAllVersion) => {
+const addOpt = (dataSource, menu, updateDataSource, oldData = {}, title, customerDealData, callback) => {
   // 新增操作合集
-  const { dataType, parentKey } = menu;
+  console.log(menu);
+  const { dataType, parentKey, dataKey } = menu;
   let modal = null;
   const data = {group: (parentKey && [parentKey]) || [], ...oldData};
   const dataChange = (value, name) => {
@@ -646,7 +667,7 @@ const addOpt = (dataSource, menu, updateDataSource, oldData = {}, title, custome
                   }, {})
                 })
               },
-            }, _.get(tempDataSource, 'profile.default.db'), updateAllVersion);
+            }, _.get(tempDataSource, 'profile.default.db'));
           } else {
             // viewGroup domains
             tempDataSource = {
@@ -688,7 +709,7 @@ const addOpt = (dataSource, menu, updateDataSource, oldData = {}, title, custome
   )
 };
 
-const editOpt = (dataSource, menu, updateDataSource, updateAllVersion) => {
+const editOpt = (dataSource, menu, updateDataSource) => {
   // 暂时只有关系图和分组可以进行右键编辑 后续可以基于此进行拓展
   // 数据域 双击将触发此处的编辑方法
   const { dataType, dataKey } = menu;
@@ -822,7 +843,7 @@ const editOpt = (dataSource, menu, updateDataSource, updateAllVersion) => {
             }),
           }
         };
-        updateDataSource && updateDataSource(transformFieldType(tempDataSource, defaultData.db, updateAllVersion));
+        updateDataSource && updateDataSource(transformFieldType(tempDataSource, defaultData.db));
       } else if (dataType === 'appCode') {
         let tempDataSource = {
           ...dataSource,
@@ -1232,7 +1253,7 @@ const pasteOpt = (dataSource, menu, updateDataSource) => {
   });
 };
 
-const deleteOpt = (dataSource, menu, updateDataSource, tabClose, updateAllVersion) => {
+const deleteOpt = (dataSource, menu, updateDataSource, tabClose) => {
   Modal.confirm({
     title: FormatMessage.string({id: 'deleteConfirmTitle'}),
     message: FormatMessage.string({id: 'deleteConfirm'}),
@@ -1273,7 +1294,7 @@ const deleteOpt = (dataSource, menu, updateDataSource, tabClose, updateAllVersio
             codeTemplates: (dataSource.profile?.codeTemplates || [])
                 .filter(d => !deleteData.includes(d.applyFor))
           }
-        }, db, updateAllVersion));
+        }, db));
         Message.success({title: FormatMessage.string({id: 'deleteSuccess'})});
       } else {
         const optConfig = getOptConfig(dataType);

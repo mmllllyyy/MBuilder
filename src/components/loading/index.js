@@ -5,17 +5,21 @@ import Icon from '../icon';
 import './style/index.less';
 import {getPrefix} from '../../lib/prefixUtil';
 
-export const Loading = React.memo(({title, children, prefix, visible = false}) => {
+export const Loading = React.memo(({title, children, prefix,
+                                     visible = false, isFull = true}) => {
   const currentPrefix = getPrefix(prefix);
   return (
     <React.Fragment>
-      <div className={`${currentPrefix}-loading ${currentPrefix}-loading-${visible ? 'show' : 'hidden'}`}>
-        <div className={`${currentPrefix}-loading-content`}>
-          <Icon type='fa-spinner'/>
-          <span>{title}</span>
+      <div className={`${currentPrefix}-loading ${isFull ? '' : `${currentPrefix}-normal-loading`} ${currentPrefix}-loading-${visible ? 'show' : 'hidden'}`}>
+        <div className={`${currentPrefix}-loading-bg`}>
+          <div className={`${currentPrefix}-loading-content`}>
+            <Icon type='fa-spinner'/>
+            <span>{title}</span>
+          </div>
         </div>
+        {isFull ? '' : children}
       </div>
-      {children}
+      {isFull ? children : ''}
     </React.Fragment>
   );
 });

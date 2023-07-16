@@ -18,7 +18,7 @@ import {getPrefix} from '../../../lib/prefixUtil';
 export default React.memo(({prefix, data, dataSource, BaseExtraCom, customerHeaders,
                              dataChange, FieldsExtraOpt, updateDataSource, param, getRestData,
                              hasRender, hasDestory, getDataSource, openDict, type,
-                             updateAllVersion, openConfig}) => {
+                             openConfig}) => {
   const Option = MultipleSelect.Option;
   const id = useMemo(() => Math.uuid(), []);
   const [size, setSize] = useState({width: 0});
@@ -256,7 +256,6 @@ export default React.memo(({prefix, data, dataSource, BaseExtraCom, customerHead
           <EntityFields
             openConfig={openConfig}
             type={type}
-            updateAllVersion={updateAllVersion}
             getRestData={getRestData}
             openDict={openDict}
             hasRender={hasRender}

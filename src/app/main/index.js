@@ -13,7 +13,7 @@ import {
   FormatMessage,
   Checkbox, Tooltip, Upload, Terminal, Download,
   VersionListBar,
-  VersionInfoBar, List, Compare, CompareList,
+  VersionInfoBar, List, CompareList,
 } from 'components';
 import Dict from '../container/dict';
 import Entity from '../container/entity';
@@ -89,7 +89,6 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
   const menuContainerModel = useRef(null);
   const menuContainerDataType = useRef(null);
   const menuContainerCode = useRef(null);
-  const injectTempTabs = useRef([]);
   const activeTabStack = useRef([]);
   const importPdRef = useRef(null);
   const tabsRef = useRef(tabs);
@@ -120,6 +119,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
   const { lang } = config;
   const cavRefArray = useRef([]);
   const headerToolRef = useRef(null);
+  //const [menus, setMenus] = useState([]);
   const [menuType, setMenuType] = useState('1');
   const [versionType, setVersionType] = useState('1');
   const currentVersionRef = useRef(null);
@@ -141,14 +141,16 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
     });
   };
   const updateGroupType = (t) => {
-    restProps.update({
-      ...dataSourceRef.current,
-      profile: {
-        ...dataSourceRef.current.profile,
-        modelType: t,
-      },
-    });
-    setGroupType(t);
+    if(dataSourceRef.current.profile?.modelType !== t)  {
+      restProps.update({
+        ...dataSourceRef.current,
+        profile: {
+          ...dataSourceRef.current.profile,
+          modelType: t,
+        },
+      });
+      setGroupType(t);
+    }
   };
   useEffect(() => {
     if(isRefreshRef.current) {
@@ -164,8 +166,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
   }, [restProps.dataSource]);
   const saveProject = (saveAs, callback) => {
     const isSaveAs = saveAs || !projectInfoRef.current;
-    const newData = updateAllData(dataSourceRef.current,
-        injectTempTabs.current.concat(tabsRef.current));
+    const newData = updateAllData(dataSourceRef.current);
     if (newData.result.status) {
       restProps.save(newData.dataSource, FormatMessage.string({id: 'saveProject'}), isSaveAs, (err) => {
         if (!err) {
@@ -173,7 +174,6 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
             restProps?.update(newData.dataSource);
           }
           Message.success({title: FormatMessage.string({id: 'saveSuccess'})});
-          injectTempTabs.current = [];
           clearAllTabData();
           callback && callback(false);
         } else {
@@ -298,12 +298,12 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
     activeTabStack.current.push(tabKey);
   };
   const _onContextMenu = (key, type, selectedMenu, parentKey) => {
-    updateContextMenus(getMenus(key, type, selectedMenu, parentKey, groupType));
+    updateContextMenus(getMenus(key, type, selectedMenu, parentKey, groupTypeRef.current));
   };
   const _contextMenuClick = (e, m, callback) => {
-    dealMenuClick(restProps?.dataSource, m, restProps?.update, _tabClose,
+    dealMenuClick(dataSourceRef.current, m, restProps?.update, _tabClose,
         // eslint-disable-next-line no-use-before-define
-        callback, restProps?.updateAllVersion, genImg);
+        callback, genImg);
   };
   const getDataSource = () => {
     return dataSourceRef.current;
@@ -314,7 +314,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
       cavRef.validateScale(factor);
     }
   };
-  const genImg = (useBase = false, filterDiagrams = [], imageType = 'png') => {
+  const genImg = (useBase = false, filterDiagrams = [], imageType = 'svg') => {
     const currentDiagrams = dataSourceRef.current?.diagrams || [];
     const diagrams = filterDiagrams.length === 0 ? currentDiagrams
         : currentDiagrams.filter(d => filterDiagrams.includes(d.id));
@@ -357,7 +357,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
       onOk={(t) => {
       selectWordFile(dataSourceRef.current, t)
           .then(([dir, template]) => {
-            genImg().then((imgDir) => {
+            genImg(false, [], 'png').then((imgDir) => {
               //console.log(template, imgDir);
               restProps.openLoading(FormatMessage.string({id: 'toolbar.exportWordStep2'}));
               connectDB(dataSourceRef.current, configRef.current, {
@@ -441,20 +441,6 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
             domain: '',
           };
         }),
-        indexes: d.indexes?.map((i) => {
-          return {
-            ...i,
-            id: Math.uuid(),
-            fields: i.fields?.map((fi) => {
-              return {
-                ...fi,
-                fieldDefKey: (d.fields || [])
-                    .filter(fie => fie.defKey === fi.fieldDefKey)[0]?.id,
-                id: Math.uuid(),
-              };
-            }),
-          };
-        }) || [],
       };
     });
   };
@@ -480,10 +466,19 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
                     ...f,
                     group: b.id,
                   }))), []);
-          injectDataSource(mergeDataSource(dataSourceRef.current, newData, importData, true),
-              modal);
+          restProps.openLoading();
+          mergeDataSource(dataSourceRef.current, newData, importData, true, (d) => {
+            if(d) {
+              injectDataSource(d, modal);
+            } else {
+              modal?.close();
+            }
+            Message.success({title: FormatMessage.string({id: 'optSuccess'})});
+            restProps.closeLoading();
+          });
         };
         const allRefEntities = newData.viewGroups.reduce((a, b) => a.concat(b.refEntities), []);
+        restProps.closeLoading();
         modal = openModal(<ImportPd
           defaultSelected={newData.diagrams.reduce((a, b) => a
               .concat((b.canvasData?.cells || []).map(c => c.originKey)
@@ -536,6 +531,9 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
           message: FormatMessage.string({id: type === 'chiner' ? 'invalidCHNRFile' : (type === 'PDManer' ? 'invalidPDManerFile' : 'invalidPDManFile')}),
         });
       }
+      if(result) {
+        restProps.openLoading();
+      }
       return result;
     });
   };
@@ -584,6 +582,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
         modal.close();
       };
       const onOk = () => {
+        console.log('====');
         const importData = importPdRef.current.getData()
             .reduce((a, b) => a.concat((b.fields || [])
                 .map(f => ({
@@ -593,7 +592,8 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
         const domains = calcDomains(result.body?.domains || [], dataSourceRef.current.dataTypeMapping?.mappings, 'defKey');
         const finallyDomains = mergeData(dataSourceRef.current?.domains || [],
             domains,false, false);
-        injectDataSource(mergeDataSource(dataSourceRef.current,
+        restProps.openLoading();
+        mergeDataSource(dataSourceRef.current,
             {
               domains,
               viewGroups: (viewGroups || [])
@@ -603,7 +603,14 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
                       refEntities: g.fields.map(f => f.id),
                     };
                   }),
-            }, calcDomain(importData, null, finallyDomains), true), modal);
+            }, calcDomain(importData, null, finallyDomains), true, (d) => {
+              if(d) {
+                injectDataSource(d, modal);
+              } else {
+                modal?.close();
+              }
+              restProps.closeLoading();
+            });
       };
       const allRefEntities = (viewGroups || [])
           .reduce((a, b) => a.concat(b.fields.map(f => f.id)), []);
@@ -762,7 +769,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
             {
               ...dataSourceRef.current,
               dicts: mergeData(dataSourceRef.current.dicts || [], data.dicts, false, true),
-            }
+            },
         );
         Message.success({title: FormatMessage.string({id: 'optSuccess'})});
       }
@@ -820,7 +827,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
         });
       } else {
         restProps?.update(
-            mergeDomains(dataSourceRef.current, data, restProps?.updateAllVersion, type));
+            mergeDomains(dataSourceRef.current, data, type));
         Message.success({title: FormatMessage.string({id: 'optSuccess'})});
       }
     }, (file) => {
@@ -848,15 +855,26 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
         modal && modal.close();
       };
       const onOk = (data, dbKey) => {
-        injectDataSource(mergeDataSource(dataSourceRef.current, {},
-            calcDomain(data, dbKey, dataSourceRef.current.domains || []), true), modal);
+        restProps.openLoading();
+        mergeDataSource(dataSourceRef.current, {},
+            calcDomain(data, dbKey, dataSourceRef.current.domains || []), true, (d) => {
+              if(d) {
+                injectDataSource(d, modal);
+              } else {
+                modal?.close();
+              }
+              restProps.closeLoading();
+            });
       };
       modal = openModal(<DbReverseParse
+        openLoading={restProps.openLoading}
+        closeLoading={restProps.closeLoading}
         config={configRef.current}
         onOk={onOk}
         onClose={onClose}
         dataSource={dataSourceRef.current}
       />, {
+        closeable: false,
         title: FormatMessage.string({id: 'toolbar.importDb'}),
         bodyStyle: { width: '80%' },
       });
@@ -931,6 +949,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
       _tabCloseAll();
     };
     modal = openModal(<History
+      config={config}
       close={close}
       info={projectInfoRef.current}
       data={dataSourceRef.current}
@@ -982,7 +1001,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
                 ...toggleDatasource.profile,
                 DDLToggleCase: tempValue?.DDLToggleCase || toggleDatasource?.profile?.DDLToggleCase,
               },
-            }
+            },
         );
         const allTab = getAllTabData();
         Object.keys(allTab).map(t => ({tabKey: t, tabData: allTab[t]})).forEach((t) => {
@@ -1019,38 +1038,48 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
       title: FormatMessage.string({id: 'toolbar.toggleCase'}),
     });
   };
-  const domainMenu = useMemo(() => [
-    {
-      id: 'dataTypeMapping',
-      defKey: 'dataTypeMapping',
-      type: 'dataTypeMapping',
-      icon: 'fa-cube',
-      defName: FormatMessage.string({id: 'project.dataTypeMapping'}),
-      children: (restProps.dataSource?.dataTypeMapping?.mappings || []).map(d => ({...d, type: 'mapping'})),
-    },
-    {
-      id: 'domains',
-      defKey: 'domains',
-      type: 'domains',
-      icon: 'fa-key',
-      defName: FormatMessage.string({id: 'project.domains'}),
-      children: (restProps.dataSource?.domains || []).map(d => ({...d, type: 'domain'})),
-    },
-    {
-      id: 'dataTypeSupports',
-      defKey: 'dataTypeSupports',
-      type: 'dataTypeSupport',
-      icon: 'fa-database',
-      defName: FormatMessage.string({id: 'project.dataTypeSupport'}),
-      children: (restProps.dataSource?.profile?.dataTypeSupports || [])
-          .filter((d) =>  {
-            const codeTemplate = (restProps.dataSource?.profile?.codeTemplates || [])
-                .filter(c => c.applyFor === d.id)[0];
-            return codeTemplate?.type !== 'appCode';
-          })
-          .map(d => ({...d, type: 'dataType'})),
-    },
-  ], [restProps.dataSource, config]);
+  const domainMenu = useMemo(() => {
+    if(menuType === '2') {
+      return [
+        {
+          id: 'dataTypeMapping',
+          defKey: 'dataTypeMapping',
+          type: 'dataTypeMapping',
+          icon: 'fa-cube',
+          defName: FormatMessage.string({id: 'project.dataTypeMapping'}),
+          children: (restProps.dataSource?.dataTypeMapping?.mappings || []).map(d => ({...d, type: 'mapping'})),
+        },
+        {
+          id: 'domains',
+          defKey: 'domains',
+          type: 'domains',
+          icon: 'fa-key',
+          defName: FormatMessage.string({id: 'project.domains'}),
+          children: (restProps.dataSource?.domains || []).map(d => ({...d, type: 'domain'})),
+        },
+        {
+          id: 'dataTypeSupports',
+          defKey: 'dataTypeSupports',
+          type: 'dataTypeSupport',
+          icon: 'fa-database',
+          defName: FormatMessage.string({id: 'project.dataTypeSupport'}),
+          children: (restProps.dataSource?.profile?.dataTypeSupports || [])
+              .filter((d) =>  {
+                const codeTemplate = (restProps.dataSource?.profile?.codeTemplates || [])
+                    .filter(c => c.applyFor === d.id)[0];
+                return codeTemplate?.type !== 'appCode';
+              })
+              .map(d => ({...d, type: 'dataType'})),
+        },
+      ];
+    }
+    return [];
+  }, [restProps.dataSource?.dataTypeMapping?.mappings,
+      restProps.dataSource?.domains,
+    restProps.dataSource?.profile?.dataTypeSupports,
+    restProps.dataSource?.profile?.codeTemplates,
+    restProps.dataSource?.profile?.default?.db,
+    config.lang, menuType]);
   const simpleMenu = useMemo(() => [
     {
       id: 'entities',
@@ -1084,8 +1113,14 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
       defName: FormatMessage.string({id: 'project.dicts'}),
       children: (restProps.dataSource?.dicts || []).map(d => ({...d, type: 'dict'})),
     },
-  ], [restProps.dataSource, config]);
-  const appCodeMenu = useMemo(() => (restProps.dataSource?.profile?.dataTypeSupports || [])
+  ], [restProps.dataSource?.entities,
+    restProps.dataSource?.views,
+    restProps.dataSource?.diagrams,
+    restProps.dataSource?.dicts,
+    config.lang]);
+  const appCodeMenu = useMemo(() => {
+    if(menuType === '3') {
+      return (restProps.dataSource?.profile?.dataTypeSupports || [])
           .map((d) => {
             const template = (restProps.dataSource?.profile?.codeTemplates || [])
                 .filter(c => c.applyFor === d.id)[0];
@@ -1093,7 +1128,14 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
               return {...d, type: 'appCode'};
             }
             return null;
-          }).filter(d => !!d), [restProps.dataSource, config]);
+          }).filter(d => !!d);
+    }
+    return [];
+  }, [
+              restProps.dataSource?.profile?.dataTypeSupports,
+              restProps.dataSource?.profile?.codeTemplates,
+    menuType,
+    config.lang]);
   const defaultGroupMenu =
       getUnGroup(restProps.dataSource, FormatMessage.string({id: 'exportSql.defaultGroup'}));
   const useDefaultGroupMenu = ['refDiagrams', 'refDicts', 'refEntities', 'refViews']
@@ -1103,27 +1145,29 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
     ...v,
     type: 'groups',
     icon: 'fa-th-large',
-    children: simpleMenu.map(c => ({
-      ...c,
-      id: `${v.defKey}${separator}${c.defKey}`,
-      defKey: `${v.defKey}${separator}${c.defKey}`,
-      type: c.defKey,
-      children: (v[`ref${c.defKey.slice(0, 1).toUpperCase() + c.defKey.slice(1)}`] || [])
-          .map((key) => {
-            return c.children.filter(e => e.id === key)[0];
-          }).filter(e => !!e),
-    })),
-  })), [restProps.dataSource, config]);
+    children: simpleMenu.map((c) => {
+      const currentRef = (v[`ref${c.defKey.slice(0, 1).toUpperCase() + c.defKey.slice(1)}`] || []);
+      const temChildren = [...c.children];
+      return {
+        ...c,
+        id: `${v.defKey}${separator}${c.defKey}`,
+        defKey: `${v.defKey}${separator}${c.defKey}`,
+        type: c.defKey,
+        children: currentRef.map((r) => {
+          const cIndex = temChildren.findIndex(e => e.id === r);
+          const child = temChildren[cIndex];
+          // 移除已经排好序的数据 在海量的数据下优化下一次查找的次数
+          temChildren.splice(cIndex, 1);
+          return child;
+        }),
+      };
+    }),
+  })), [simpleMenu, restProps.dataSource?.viewGroups]);
   const menus = {
     modalAll: simpleMenu,
     modalGroup: groupMenu,
-    domains: domainMenu,
-    appCode: appCodeMenu,
   };
-  const tabDataChange = (data, t, injectTab) => {
-    if (injectTab && (injectTempTabs.current.findIndex(it => it.tabKey === injectTab.tabKey) < 0)) {
-      injectTempTabs.current.push(injectTab);
-    }
+  const tabDataChange = (data, t) => {
     setDataByTabId(t.tabKey, data);
   };
   const hasRender = (key, instance) => {
@@ -1323,7 +1367,6 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
       return (
         <Entity
           openConfig={() => _openModal('config', 'EntityInit.3')}
-          updateAllVersion={restProps.updateAllVersion}
           saveUserData={restProps.saveUserData}
           getConfig={getConfig}
           type={type}
@@ -1339,11 +1382,9 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
           entity={key}
           group={group}
           tabDataChange={data => tabDataChange(data, t)}
-          versionsData={restProps.versionsData[0]}
           />);
     } else if (type === 'view') {
       return <View
-        updateAllVersion={restProps.updateAllVersion}
         saveUserData={restProps.saveUserData}
         getConfig={getConfig}
         type={type}
@@ -1359,7 +1400,6 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
         entity={key}
         group={group}
         tabDataChange={data => tabDataChange(data, t)}
-        versionsData={restProps.versionsData[0]}
       />;
     } else if (type === 'diagram') {
       return <Relation
@@ -1380,8 +1420,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
         updateDataSource={restProps?.update}
         dataSource={restProps?.dataSource}
         renderReady={cav => renderReady(cav, t.tabKey)}
-        tabDataChange={(data, tab) => tabDataChange(data, tab || t, tab)}
-        versionsData={restProps.versionsData[0]}
+        tabDataChange={(data, tab) => tabDataChange(data, tab || t)}
         autoSave={restProps.autoSave}
       />;
     } else if (type === 'dict') {
@@ -1483,8 +1522,8 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
       };
     }
     const currentType = allType.filter(a => a.type === t.type)[0];
-    const currentData = restProps?.dataSource[currentType.name]?.
-    filter(d => d.id === t.menuKey)[0];
+    const currentData = restProps?.dataSource[currentType.name]
+    .filter(d => d.id === t.menuKey)[0];
     const tempDisplayMode = currentData?.nameTemplate || '{defKey}[{defName}]';
     return {
       title: currentData?.defName || currentData?.defKey,
@@ -1615,8 +1654,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
       autoSaveRef.current = setInterval(() => {
         if(validateNeedSave(dataSourceRef.current)) {
           console.log('autoSave');
-          const newData = updateAllData(dataSourceRef.current,
-              injectTempTabs.current.concat(tabsRef.current));
+          const newData = updateAllData(dataSourceRef.current);
           if (newData.result.status) {
             restProps.autoSave(newData.dataSource);
           }
@@ -1633,16 +1671,19 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
     document.body.setAttribute('theme', themeMode);
   }, [restProps.dataSource?.profile?.themeMode]);
   const getLatelyDataSource = () => {
-    return updateAllData(dataSourceRef.current, injectTempTabs.current.concat(tabsRef.current));
+    return updateAllData(dataSourceRef.current);
   };
   const mergeFromMeta = (data, meta, nextDataSource) => {
+    let newDataSource;
     if (meta) {
-      injectDataSource(mergeDataSource(dataSourceRef.current, {},
-          calcDomain(data, meta, dataSourceRef.current.domains || []), true));
+       newDataSource = mergeDataSource(dataSourceRef.current, {},
+          calcDomain(data, meta, dataSourceRef.current.domains || []), true);
     } else {
-      injectDataSource(mergeDataSource(dataSourceRef.current, nextDataSource, data,
-          true));
+      newDataSource = mergeDataSource(dataSourceRef.current, nextDataSource, data,
+          true);
     }
+    injectDataSource(newDataSource);
+    return newDataSource;
   };
   const openHome = () => {
     _onMenuClick('home-cover', 'diagram', null, 'icon-guanxitu');
@@ -1652,8 +1693,6 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
       <>
         {
           (menuType === '4') && (versionType === '1') && <VersionInfoBar
-            getLatelyDataSource={getLatelyDataSource}
-            versionsData={restProps.versionsData}
             dataSource={restProps.dataSource}
             ref={currentVersionRef}
             empty={<MessageHelp openHome={openHome} prefix={currentPrefix}/>}
@@ -1667,6 +1706,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
             config={config}
             dataSource={restProps.dataSource}
             ref={currentMetaRef}
+            calcDomain={calcDomain}
             />
         }
         <AppCodeEdit
@@ -1706,7 +1746,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
       </>
     );
   };
-  const createGroupMenu = getMenu('add', '', 'groups', [], groupType, '');
+  const createGroupMenu = getMenu('add', '', 'groups', [], groupTypeRef.current, '');
   const createAppCodeMenu = getMenu('add', '', 'appCode', [], '', '');
   const onListDrop = (dropId, dragId) => {
     const dataTypeSupports = dataSourceRef.current?.profile?.dataTypeSupports || [];
@@ -1723,8 +1763,8 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
   const onDoubleClick = (id) => {
     appCodeRef.current?.getData(id);
   };
-  const setCurrentVersion = (v, i) => {
-    currentVersionRef.current?.setVersion(v, restProps.versionsData[i + 1]);
+  const setCurrentVersion = (...args) => {
+    currentVersionRef.current?.setVersion(...args);
   };
   const setCurrentMeta = (m, isCustomer) => {
     currentMetaRef.current?.setMeta(m, isCustomer);
@@ -1842,12 +1882,12 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
                 onContextMenu={_onContextMenu}
                 contextMenus={contextMenus}
                 contextMenuClick={_contextMenuClick}
-                menus={menus.domains}
+                menus={domainMenu}
                 getName={domainGetName}
                 draggable={draggable}
                 dragTable={createEmptyTable}
                 doubleMenuClick={(key, type, parentKey) => _contextMenuClick(null,
-                      getMenu('edit', key, type, [], groupType, parentKey))}
+                      getMenu('edit', key, type, [], groupTypeRef.current, parentKey))}
               />
             </div>
           </TabItem>
@@ -1872,7 +1912,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
                 onContextMenu={_onContextMenu}
                 contextMenus={contextMenus}
                 contextMenuClick={_contextMenuClick}
-                data={menus.appCode}
+                data={appCodeMenu}
                 emptyData={<div
                   className={`${currentPrefix}-home-menu-empty`}
                 >
@@ -1907,24 +1947,17 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
                   </span>
                 </span>
               </div>
-              {
-                  versionType === '1' ? <VersionListBar
-                    menuType={menuType}
-                    projectInfo={projectInfo}
-                    autoSave={restProps.autoSave}
-                    versionsData={restProps.versionsData}
-                    getLatelyDataSource={getLatelyDataSource}
-                    saveVersion={restProps.saveVersion}
-                    dataSource={restProps.dataSource}
-                    removeVersion={restProps.removeVersion}
-                    onSelected={setCurrentVersion}
-                  /> : <Compare
-                    updateDataSource={restProps.update}
-                    menuType={menuType}
-                    onSelected={setCurrentMeta}
-                    dataSource={restProps.dataSource}
-                  />
-              }
+              <VersionListBar
+                versionType={versionType}
+                menuType={menuType}
+                openLoading={restProps.openLoading}
+                closeLoading={restProps.closeLoading}
+                projectInfo={projectInfo}
+                getLatelyDataSource={getLatelyDataSource}
+                dataSource={restProps.dataSource}
+                updateDataSource={restProps.update}
+                onSelected={versionType === '1' ? setCurrentVersion : setCurrentMeta}
+              />
             </div>
           </TabItem>
         </Tab>

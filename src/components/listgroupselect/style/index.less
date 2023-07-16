@@ -112,19 +112,19 @@
     height: 100%;
     overflow: auto;
     &-item {
-      & > td:nth-child(1) {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      & > span:first-child {
+        min-width: 50px;
         text-align: center;
-      }
-      & > td {
-        white-space: nowrap;
-        padding: 5px;
       }
       width: 100%;
       white-space: nowrap;
       &-repeat {
         color: @warring-color;
       }
-      &:nth-child(2n) {
+      &-bg {
         background: @tr-background;
       }
     }
@@ -143,14 +143,8 @@
     &-container {
       margin-top: 5px;
       height: calc(100% - 60px);
-      overflow: auto;
+      overflow: hidden;
       border: 1px solid #DFE3EB;
-      & > table {
-        width: 100%;
-        //height: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-      }
     }
   }
   &-right {
@@ -158,12 +152,20 @@
     height: 100%;
     overflow: auto;
     margin-left: 5px;
-    thead > tr > td {
-      z-index: 2;
-      position: sticky;
-      top: 0;
-      background: @background-color;
+    &-header {
       border-bottom: 1px solid @primary-border-color;
+      & > span {
+        display: inline-block;
+      }
+    }
+    &-grid {
+      & > div {
+        & > span {
+          display: inline-flex;
+          justify-content: center;
+          align-items: center;
+        }
+      }
     }
     &-opt {
       &-batch {
@@ -188,9 +190,22 @@
       }
     }
     &-item {
-      & > td {
+      &-2 {
+        justify-content: flex-start !important;
+      }
+      &-checkbox {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+      }
+      &-name {
+        display: inline-block;
         white-space: nowrap;
-        padding: 5px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+      &-bg {
+        background: @tr-background;
       }
       .@{prefix}-multiple-select {
         width: 200px;
@@ -199,12 +214,6 @@
           width: 100%;
         }
       }
-      & > td:nth-child(1) {
-        text-align: center;
-      }
-      &:nth-child(2n) {
-        background: @tr-background;
-      }
       &-disable {
         color: @warring-color;
         cursor: pointer;
@@ -212,14 +221,8 @@
       }
     }
     &-container {
-      & > table {
-        width: 100%;
-        //height: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-      }
       height: calc(100% - 34px);
-      overflow: auto;
+      //overflow: auto;
       border: 1px solid #DFE3EB;
     }
     &-empty {

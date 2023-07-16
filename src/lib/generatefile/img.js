@@ -1,10 +1,34 @@
 import {Graph} from '@antv/x6';
 import _ from 'lodash/object';
+import { elementToSVG } from 'dom-to-svg'
 
 import { calcCellData } from '../datasource_util';
-import html2canvas from 'html2canvas';
 import { saveTempImages } from '../middle';
-import clipCanvasEmptyPadding from 'components/ercanvas/_util/clip_canvas';
+
+
+export const svg2png = (svgData) => {
+  return new Promise((resolve, reject) => {
+    const svgDataUrl = `data:image/svg+xml;charset=utf-8;base64,${window.btoa(unescape(encodeURIComponent(svgData)))}`
+    const img = document.createElement('img');
+    img.src = svgDataUrl;
+    img.onload = function() {
+      const { width, height } = img.getBoundingClientRect();
+      const canvas = document.createElement('canvas');
+      const dpr = window.devicePixelRatio || window.webkitDevicePixelRatio || window.mozDevicePixelRatio || 1
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
+      const context = canvas.getContext('2d');
+      context.scale(dpr, dpr);
+      context.drawImage(img, 0, 0, width, height);
+      document.body.removeChild(img);
+      resolve(canvas);
+    }
+    document.body.appendChild(img);
+  })
+}
 
 export const img = (data, relationType, dataSource, needCalc = true, groups) => {
   return new Promise((res) => {
@@ -125,15 +149,15 @@ export const imgAll = (dataSource, callBack, useBase, imageType) => {
         }).then((dom) => {
           if (imageType === 'svg') {
             const baseData = html2svg(d.canvasData.cells, dom);
+            document.body.removeChild(dom.parentElement.parentElement);
             result.push({fileName: d.id, data: useBase ? `data:image/svg+xml;base64,${window.btoa(unescape(encodeURIComponent(baseData)))}` : baseData});
             console.log(d.defName || d.defKey);
             callBack && callBack();
             resolve();
           } else {
-            html2canvas(dom).then((canvas) => {
+            svg2png(html2svg(d.canvasData.cells, dom)).then((canvas) => {
               document.body.removeChild(dom.parentElement.parentElement);
-              const clippedCanvas = clipCanvasEmptyPadding(canvas, 30);
-              const baseData = clippedCanvas.toDataURL('image/png');
+              const baseData = canvas.toDataURL('image/png');
               const dataBuffer = Buffer.from(baseData.replace(/^data:image\/\w+;base64,/, ""), 'base64');
               result.push({fileName: d.id, data: useBase ? baseData : dataBuffer});
               console.log(d.defName || d.defKey);
@@ -147,7 +171,7 @@ export const imgAll = (dataSource, callBack, useBase, imageType) => {
     if (useBase) {
       res(result);
     } else {
-      saveTempImages(result)
+      saveTempImages(result, imageType)
           .then((dir) => {
             res(dir);
           }).catch(err => rej(err));
@@ -157,12 +181,42 @@ export const imgAll = (dataSource, callBack, useBase, imageType) => {
 
 
 export const html2svg = (data, dom) => {
-  const cells = data.filter(c => c.position);
+  // vertices
+  const cells = data.reduce((p, n) => {
+    if(n.position) {
+      return p.concat(n);
+    }
+    return p.concat((n.vertices || []).map(v => ({position: v})))
+  }, []);
+  //替换foreignObject
+  dom.querySelectorAll('foreignObject').forEach(f => {
+    const parent = f.parentElement;
+    const svgDom = elementToSVG(f).children[0];
+    const clearId = (d) => {
+      d.setAttribute('id', Math.uuid());
+      // 重新设置透明度 支持word显示
+      if(d.getAttribute('fill')?.includes('rgba')) {
+        const fill = d.getAttribute('fill').replace(/\s/g, '');
+        const fillArray = fill.split(',');
+        if(fillArray.length === 4) {
+          d.setAttribute('fill', fill.replace('rgba', 'rgb').replace(/,\s*(\d|\.)+\)$/, ')'));
+          d.setAttribute('fill-opacity', fillArray.slice(-1)[0].replace(')', ''));
+        }
+      }
+      if(d.children) {
+        Array.from(d.children).forEach(c => {
+          clearId(c);
+        })
+      }
+    }
+    clearId(svgDom);
+    parent.replaceChild(svgDom, f);
+  })
   const minX = Math.min(...cells.map(c => c.position.x));
   const minY = Math.min(...cells.map(c => c.position.y));
   const svg = dom.querySelector('.x6-graph-svg');
   const viewport = dom.querySelector('.x6-graph-svg-viewport');
-  viewport.setAttribute('transform', `matrix(1,0,0,1,${-minX + 10},${-minY + 10})`);
+  viewport.setAttribute('transform', `matrix(1,0,0,1,${-minX + 25},${-minY + 10})`);
   const rect = viewport.getBoundingClientRect();
   return `<svg width="${rect.width + 20}px" height="${rect.height + 20}px" viewBox="0 0 ${rect.width + 20} ${rect.height + 20}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
           ${svg.innerHTML.replaceAll('size="1px">', 'size="1px"/>')}</svg>`;

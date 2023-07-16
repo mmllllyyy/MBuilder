@@ -98,6 +98,7 @@
         }
       }
       &-content {
+        border: 1px solid @primary-border-color;
         flex-grow: 1;
         overflow: auto;
         margin: 5px;
@@ -109,52 +110,114 @@
           align-items: center;
         }
         &-list {
-          & > table {
-            margin: 0 !important;
-            border-top: transparent !important;
-            border-left: transparent !important;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          //border: 1px solid @primary-border-color;
+          &-inner {
+            //border: 1px solid @primary-border-color;
           }
-          & > table > tbody > tr > td:first-child {
-            border-left: 1px solid @primary-border-color;
-          }
-          & > table > thead > tr > td:first-child {
-            border-left: 1px solid @primary-border-color;
-          }
-          & > table > thead > tr {
-            & > td {
-              border-top: 1px solid @primary-border-color;
-              position: sticky;
-              top: 0;
-              z-index: 2;
+          &-header {
+            display: flex;
+            flex-direction: row;
+            border-bottom: 1px solid #DFE3EB;
+            & > span:first-child {
               background: @background-color;
             }
-          }
-          & > table > thead > tr:nth-child(2) {
-            & > td {
-              border-top: none;
-              top: 27px;
+            & > span {
+              text-align: center;
+              display: inline-block;
+              border-right: 1px solid @primary-border-color;
             }
+            & > span:last-child {
+              border-right: 0
+            }
+            & > span:nth-child(2) {
+              color: @primary-color;
+            }
+            & > span:nth-child(4) {
+              color: @danger-color;
+            }
+            background: @background-color;
           }
           &-item {
-            &-comment {
+            &-change {
+              color: @warring-color;
+            }
+            &:not([class*=first]):hover {
+              background: @tr-background;
+              span {
+                background: @tr-background;
+              }
+            }
+            &-first {
+              background: transparent !important;
+              font-weight: bold;
+              span[class*="remove"] {
+                background: @primary-border-color-simple !important;
+              }
+              & > span {
+                background: @primary-border-color-simple !important;
+                text-align: center;
+              }
+            }
+            display: flex;
+            flex-direction: row;
+            border-bottom: 1px solid @primary-border-color;
+            & > span:first-child {
+              background: @background-color;
+              display: flex;
+              flex-direction: row;
               & > span {
                 display: inline-block;
-                width: 200px;
-                white-space: pre-wrap;
+                padding: 2px 5px;
+                border-right: 1px solid @primary-border-color;
               }
+            }
+            & > span:nth-child(3) {
+              display: inline-block;
+              padding: 2px 5px;
+              border-right: 1px solid @primary-border-color;
+            }
+            & > span:nth-child(2), & > span:nth-child(4) {
+              display: flex;
+              flex-direction: row;
+              & > span {
+                display: inline-block;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                padding: 2px 5px;
+                border-right: 1px solid @primary-border-color;
+              }
+            }
+            & > span:nth-child(4) {
+              & > span:last-child {
+                border-right: 1px solid transparent;
+              }
+            }
+            background: @background-color;
+            &-comment {
+              //& > span {
+              //  display: inline-block;
+              //  width: 200px;
+              //  white-space: pre-wrap;
+              //}
             }
             &-remove {
               position: sticky;
               right: 0;
               border-left: 1px solid @primary-border-color;
+              background: @background-color;
               & > span {
                 cursor: pointer;
                 color: @primary-color;
                 text-decoration: underline;
               }
             }
-            &-last {
-              border-right: none !important;
+            & > span:last-child {
+              border-right: 0
             }
             &-defKey {
               position: relative;
@@ -164,7 +227,6 @@
                 }
               }
               & > a {
-                background: @fourth-primary-color;
                 text-decoration: underline;
                 display: none;
                 position: absolute;
@@ -174,61 +236,12 @@
                 font-size: 12px;
               }
             }
-            &:nth-child(2n) {
-              td {
-                background: @tr-background;
-              }
-            }
-            &:hover {
-              td {
-                background: @fourth-primary-color !important;
-              }
-            }
-          }
-           table {
-            outline: none;
-            border-collapse: separate;
-            border-spacing: 0;
-            background: @background-color;
-            width: calc(100% - 10px);
-            margin: 5px;
-            & > thead > tr > td {
-              text-align: center;
-            }
-            & > thead > tr:first-child {
-              & > td:nth-child(2) {
-                color: @primary-color;
-              }
-              & > td:last-child {
-                color: @danger-color;
-              }
-            }
-            & > thead > tr:last-child {
-              td {
-                font-weight: bold;
-                background: @tr-background;
-              }
-            }
-             & > tbody > tr > td:first-child {
-               text-align: center;
-             }
-            td {
-              background: @background-color;
-              white-space: nowrap;
-              border-bottom: 1px solid @primary-border-color;
-              border-right: 1px solid @primary-border-color;
-              padding: 2px 5px;
-            }
-            border-top: 1px solid @primary-border-color;
-            border-left: 1px solid @primary-border-color;
-          }
-          &-item {
             &-line {
               display: inline-block;
               width: 1px;
               margin: 0 3px;
               height: 16px;
-              background: @primary-color;
+              background: @primary-color !important;
               vertical-align: middle;
             }
             &-diff {
@@ -253,6 +266,58 @@
               }
               & > span + span {
                 margin-left: 5px;
+              }
+            }
+            &-field {
+              display: flex;
+              flex-direction: row;
+              &-change {
+                color: @warring-color;
+              }
+              &-container {
+                padding: 0 5px;
+                background: #fff;
+              }
+              &-first {
+                display: flex;
+                flex-direction: row;
+                border-top: 1px solid @primary-border-color;
+                & > span:last-child {
+                  border-right: 1px solid @primary-border-color;
+                }
+                & > span {
+                  border-bottom: 1px solid @primary-border-color;
+                  border-left: 1px solid @primary-border-color;
+                  padding: 2px 5px;
+                  text-align: center;
+                  display: inline-block;
+                }
+                & > span:nth-child(2) {
+                  color: @primary-color;
+                }
+                & > span:nth-child(3) {
+                  color: @danger-color;
+                }
+              }
+              &-second {
+                background: @primary-border-color-simple;
+                & > span {
+                  font-weight: bold;
+                  text-align: center;
+                }
+              }
+              & > span:last-child {
+                border-right: 1px solid @primary-border-color;
+              }
+              & > span {
+                border-bottom: 1px solid @primary-border-color;
+                border-left: 1px solid @primary-border-color;
+                height: 27px;
+                padding: 2px 5px;
+                display: inline-block;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
               }
             }
           }

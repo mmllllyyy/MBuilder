@@ -1,4 +1,11 @@
-import React, {useState, useRef, useImperativeHandle, forwardRef, useMemo, useEffect} from 'react';
+import React, {
+  useState,
+  useRef,
+  useImperativeHandle,
+  forwardRef,
+  useMemo,
+  useCallback,
+} from 'react';
 import moment from 'moment';
 
 import {
@@ -12,6 +19,8 @@ import {
   Tooltip, Upload,
 } from 'components';
 import _ from 'lodash/object';
+import AutoSizer from 'react-virtualized-auto-sizer';
+import {FixedSizeTree as Tree} from 'react-vtree';
 import StandardFieldsEdit from './StandardFieldsEdit';
 import StandardFieldsListSelect from './StandardFieldsListSelect';
 import {getPrefix} from '../../../lib/prefixUtil';
@@ -30,9 +39,10 @@ const OptHelp = ({currentPrefix}) => {
 export default forwardRef(({prefix, dataSource, updateDataSource, activeKey}, ref) => {
   const currentPrefix = getPrefix(prefix);
   const [fold, setFold] = useState(true);
-  const [expandMenu, setExpandMenu] = useState([]);
   const [filterValue, setFilterValue] = useState('');
   const [selectFields, setSelectFields] = useState([]);
+  const selectFieldsRef = useRef([]);
+  selectFieldsRef.current = [...selectFields];
   const listSelectRef = useRef([]);
   const contentRef = useRef(null);
   const dataSourceRef = useRef(dataSource);
@@ -60,7 +70,7 @@ export default forwardRef(({prefix, dataSource, updateDataSource, activeKey}, re
     }
   };
   const onDragStart = (e) => {
-    e.dataTransfer.setData('fields', JSON.stringify(selectFields));
+    e.dataTransfer.setData('fields', JSON.stringify(selectFieldsRef.current));
   };
   const onChange = (e) => {
     setFilterValue(e.target.value);
@@ -73,9 +83,6 @@ export default forwardRef(({prefix, dataSource, updateDataSource, activeKey}, re
           .filter(f => reg.test(getKey(f))),
     };
   }), [dataSource.standardFields, filterValue]);
-  useEffect(() => {
-    setExpandMenu(finalData.map(d => d.id));
-  }, [filterValue]);
   const calcChangeFieldData = (changeFields) => {
     const fullChange = [];
     changeFields.forEach((c) => {
@@ -259,14 +266,59 @@ export default forwardRef(({prefix, dataSource, updateDataSource, activeKey}, re
     };
   }, [dataSource]);
   const type = activeKey.split(separator)[1];
-  const onGroupClick = (id) => {
-    setExpandMenu((pre) => {
-      if (pre.includes(id)) {
-        return pre.filter(p => p !== id);
+  const getMenuData = (node, nestingLevel) => ({
+    data: {
+      id: node.id,
+      node,
+      nestingLevel,
+      isOpenByDefault: true,
+      selected: selectFields.findIndex(s => s.id === node.id) > -1,
+    },
+    nestingLevel,
+    node,
+  });
+  function* treeWalker() {
+    for (let i = 0; i < finalData.length; i += 1) {
+      yield getMenuData(finalData[i], 0);
+    }
+
+    while (true) {
+      const parent = yield;
+
+      for (let i = 0; i < parent.node?.fields?.length; i += 1) {
+        yield getMenuData(parent.node.fields[i], parent.nestingLevel + 1);
       }
-      return pre.concat(id);
-    });
-  };
+    }
+  }
+  const Node = useCallback(({data: {node, selected}, style, isOpen, setOpen}) => {
+    if(node.fields) {
+      return <div
+        style={style}
+        onClick={() => setOpen(!isOpen)}
+        className={`${currentPrefix}-standard-fields-list-group`}
+      >
+        <Icon type='icon-shuju2'/>
+        <span>{node.defName}({node.defKey})</span>
+        <Icon
+          style={{
+              transform: `${isOpen ? 'rotate(0deg)' : 'rotate(90deg)'}`,
+          }}
+          type='fa-angle-down'
+          className={`${currentPrefix}-standard-fields-list-group-icon`}
+                  />
+      </div>;
+    }
+    const key = getKey(node);
+    return <div
+      style={style}
+      onDragStart={onDragStart}
+      draggable={selected}
+      className={`${currentPrefix}-standard-fields-list-content-${selected ? 'selected' : 'unselected'}`}
+      onClick={e => onItemClick(e, node)}
+    >
+      {key}
+    </div>;
+  }, []);
   return <div
     style={{display: (type === 'entity' || type === 'diagram') ? 'block' : 'none'}}
     className={`${currentPrefix}-standard-fields-list-${fold ? 'fold' : 'unfold'}`}
@@ -310,40 +362,19 @@ export default forwardRef(({prefix, dataSource, updateDataSource, activeKey}, re
           <div className={`${currentPrefix}-standard-fields-list-empty`}>
             <FormatMessage id='standardFields.standardFieldsLibEmpty'/>
           </div>
-            : finalData.map((g) => {
-              return <div key={g.id}>
-                <span
-                  onClick={() => onGroupClick(g.id)}
-                  className={`${currentPrefix}-standard-fields-list-group`}
-                >
-                  <Icon type='icon-shuju2'/>
-                  <span>{g.defName}({g.defKey})</span>
-                  <Icon
-                    style={{
-                     transform: `${expandMenu.includes(g.id) ? 'rotate(0deg)' : 'rotate(90deg)'}`,
-                   }}
-                    type='fa-angle-down'
-                    className={`${currentPrefix}-standard-fields-list-group-icon`}
-                 />
-                </span>
-                {
-                  (g.fields || []).map((f) => {
-                    const key = getKey(f);
-                    const selected = selectFields.findIndex(s => s.id === f.id) >= 0;
-                    return <div
-                      style={{display: expandMenu.includes(g.id) ? 'block' : 'none'}}
-                      onDragStart={onDragStart}
-                      draggable={selected}
-                      className={`${currentPrefix}-standard-fields-list-content-${selected ? 'selected' : 'unselected'}`}
-                      onClick={e => onItemClick(e, f)}
-                      key={f.id}
-                    >
-                      {key}
-                    </div>;
-                  })
-                }
-              </div>;
-            })
+            : <div className={`${currentPrefix}-standard-fields-list-container`}>
+              <AutoSizer>
+                {({height, width}) => {
+                return <Tree
+                  treeWalker={treeWalker}
+                  itemSize={25}
+                  height={height}
+                  width={width}>
+                  {Node}
+                </Tree>;
+              }}
+              </AutoSizer>
+            </div>
       }
     </div>
   </div>;

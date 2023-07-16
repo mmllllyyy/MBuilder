@@ -1,5 +1,6 @@
 import React, {useRef, useState} from 'react';
 import SearchInput from '../searchinput';
+import FormatMessage from '../formatmessage';
 
 export default React.memo(({getItemList, filterData, currentPrefix,
                              allData, getFilterData, placeholder, search}) => {
@@ -22,6 +23,11 @@ export default React.memo(({getItemList, filterData, currentPrefix,
     <div className={`${currentPrefix}-search-suggest-morelist-search`}>
       <SearchInput placeholder={placeholder} onChange={onChange} defaultValue={search}/>
     </div>
-    {getItemList(data, data, value.current)}
+    {
+      data.length > 0 ? getItemList(data, data, value.current) :
+      <div className={`${currentPrefix}-search-suggest-empty`}>
+        <FormatMessage id='components.searchSuggest.empty'/>
+      </div>
+    }
   </div>;
 });

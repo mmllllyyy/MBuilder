@@ -48,7 +48,7 @@ export default React.memo(({prefix, dataChange, dataSource, twinkle, updateDataS
         fields: g.children ? g.fields || [] : [],
       };
     });
-    dataChange && dataChange(newDataRef.current);
+    dataChange && dataChange(newDataRef.current, []);
   };
   const commonProps = {
     disableHeaderIcon: true,
@@ -73,8 +73,8 @@ export default React.memo(({prefix, dataChange, dataSource, twinkle, updateDataS
           getDataSource={getDataSource}
           customerHeaders={false}
           data={{
-            headers: (dataSource.profile?.headers?.
-            filter(h => h.enabled !== false && !attNames.includes(h.refKey))),
+            headers: (dataSource.profile?.headers?.filter(h => h.enabled !== false
+                && !attNames.includes(h.refKey))),
             fields: g.fields,
             }}
           dataSource={dataSource}

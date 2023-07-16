@@ -113,6 +113,8 @@ export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
     setType(getType(searchData));
     searchDataRef.current = searchData;
   };
+  const checkNewData = useMemo(() => newData.filter(d => checked.includes(d.id)),
+      [checked, newData]);
   return <div className={`${currentPrefix}-listselect`}>
     <div className={`${currentPrefix}-listselect-opt`}>
       <span>{formatResult && formatResult(newData, repeatData)}</span>
@@ -133,9 +135,7 @@ export default React.memo(forwardRef(({allowClear = false, notAllowEmpty = true,
       <Right
         defaultSelected={tempSelected}
         currentGroup={currentGroup}
-        newData={[...new Set(checked)].map((c) => {
-            return newData.filter(d => d.id === c)[0];
-          }).filter(d => !!d)}
+        newData={checkNewData}
         prefix={currentPrefix}
         onGroupChange={_onGroupChange}
         onRemove={onRemove}

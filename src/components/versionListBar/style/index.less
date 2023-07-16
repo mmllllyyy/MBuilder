@@ -5,9 +5,13 @@
     height: calc(100vh - 130px);
     width: 100%;
     padding: 5px;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     box-sizing: border-box;
     background-color: #FFF;
+    &-container {
+      flex-grow: 1;
+    }
     &-change {
       overflow: hidden;
       white-space: nowrap;
@@ -26,10 +30,24 @@
       width: calc(100% - 10px);
       box-sizing: border-box;
       overflow: hidden;
-      margin: 5px;
       border-radius: 5px;
       border: 1px solid #D5D5D5;
       font-size: 12px;
+      &-more {
+        font-size: 12px;
+        display: inline-block;
+        width: 100%;
+        cursor: pointer;
+        color: @primary-color;
+        text-align: center;
+      }
+      &-all {
+        font-size: 12px;
+        display: inline-block;
+        width: 100%;
+        color: @primary-border-color;
+        text-align: center;
+      }
       &-h {
         width: 100%;
         height: 35px;

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import ReactDOM from 'react-dom';
+import {FixedSizeList as List} from 'react-window';
 
 import { Icon, FormatMessage } from 'components';
 import Option from './Option';
@@ -98,11 +99,23 @@ const MultipleSelect = React.memo(({prefix, children, dropdownRender, allowClear
         >{finalCheckValues[0]}</Option>] : []) : <div className={`${currentPrefix}-multiple-select-empty`}>
           <FormatMessage id='components.multipleselect.empty'/>
         </div>;
+    const renderList = () => {
+      return <List
+        height={menus.length * 31 > 200 ? 200 : menus.length * 31}
+        itemCount={menus.length}
+        itemSize={31}
+      >
+        {({index, style}) => {
+          const menu = menus[index];
+          return React.cloneElement(menu, {style});
+        }}
+      </List>;
+    };
     return <div
       className={`${currentPrefix}-multiple-select-children`}
       ref={optionsRef}
     >
-      {dropdownRender ? dropdownRender(menus) : menus}
+      {dropdownRender ? dropdownRender(renderList()) : renderList()}
     </div>;
   };
   const selectClick = (e) => {

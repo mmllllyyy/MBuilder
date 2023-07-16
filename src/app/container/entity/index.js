@@ -14,7 +14,7 @@ import {subscribeEvent, unSubscribeEvent} from '../../../lib/subscribe';
 const Entity = React.memo(({prefix, dataSource, entity, tabDataChange, tabKey,
                              group, BaseExtraCom, customerHeaders, type, getConfig, saveUserData,
                              FieldsExtraOpt, updateDataSource, param, hasRender, hasDestory,
-                             getDataSource, openDict, updateAllVersion, openConfig}) => {
+                             getDataSource, openDict, openConfig}) => {
   const eventId = Math.uuid();
   const [key, setKey] = useState(Math.uuid());
   const [iniData, setInitData] = useState(getEntityOrViewByName(dataSource, entity) || {});
@@ -89,7 +89,6 @@ const Entity = React.memo(({prefix, dataSource, entity, tabDataChange, tabKey,
             title:  FormatMessage.string({id: 'tableEdit.data'}),
             content: <EntityBase
               openConfig={openConfig}
-              updateAllVersion={updateAllVersion}
               getRestData={getRestData}
               type={type}
               getDataSource={getDataSource}
