@@ -102,7 +102,7 @@ export default React.memo(({prefix, dataChange, dataSource, twinkle, updateDataS
     });
     if (!isTwinkleRef.current) {
       setTimeout(() => {
-        tableRef.current.twinkleTr(twinkle);
+        twinkle && tableRef.current.twinkleTr(twinkle);
         isTwinkleRef.current = true;
       });
     }

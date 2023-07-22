@@ -4,10 +4,10 @@ import Child from './CompareItemField';
 import {getPrefix} from '../../lib/prefixUtil';
 
 export default React.memo(({data: { isLeaf, sourceEntity,
-    i, parent, dataKey, metaEntityData, metaFieldsData }, onRemove,
+    i, parent, dataKey, metaEntityData, metaFieldsData }, onRemove, searchValue,
                                onPicker, isCustomerMeta, defaultMeta, changes, metaDataFields,
                                countWidth, columnWidth, entitiesKeyChecked,checkBoxChange,
-                               getTableDetail, metaData, isOpen, style, setExpand, prefix,
+                               getTableDetail, isOpen, style, setExpand, prefix,
                                allColumnWidth, mergeFromMeta, columnFieldWidth, dB,
                                leftTitle, rightTitle, dataSource, customerDataSource}) => {
     const currentPrefix = getPrefix(prefix);
@@ -17,8 +17,7 @@ export default React.memo(({data: { isLeaf, sourceEntity,
         }
         const metaFieldsIndex = metaDataFields
             .findIndex(m => m.defKey?.toLocaleLowerCase() === dataKey);
-        const metaEntityIndex = metaData.findIndex(m => m.defKey?.toLocaleLowerCase() === dataKey);
-        const metaEntity = metaEntityData || metaData[metaEntityIndex] || {};
+        const metaEntity = metaEntityData || {};
         const currentChange = changes.filter(c => c.opt === 'update')
             .find(f => f.data.baseInfo?.defKey?.toLocaleLowerCase() === dataKey);
         const checkIsChange = (name) => {
@@ -26,6 +25,14 @@ export default React.memo(({data: { isLeaf, sourceEntity,
                 return `${currentPrefix}-compare-list-container-content-list-item-change`;
             }
             return '';
+        };
+        const calcSearchValue = (value = '') => {
+            const reg = new RegExp((searchValue || '').replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'ig');
+            const str = `<span class=${currentPrefix}-compare-list-container-content-list-item-search>$&</span>`;
+            const finalData = `<span>${value.replace(reg, str)}</span>`;
+            // eslint-disable-next-line react/no-danger,react/no-danger-with-children
+            return <span dangerouslySetInnerHTML={{ __html: finalData }}
+            >{}</span>;
         };
         const getStatus = () => {
             if(changes.findIndex(c => (c.data.defKey ||
@@ -74,7 +81,7 @@ export default React.memo(({data: { isLeaf, sourceEntity,
               {
                       !isCustomerMeta && <Checkbox
                         disable={defaultMeta ? (!metaEntityData || !sourceEntity?.defKey)
-                            : (metaEntityIndex < 0)}
+                            : (!metaEntityData)}
                         onChange={e => checkBoxChange(e, dataKey)}
                         checked={entitiesKeyChecked.includes(dataKey)}
                       />
@@ -94,14 +101,14 @@ export default React.memo(({data: { isLeaf, sourceEntity,
             <Tooltip placement='top' title={sourceEntity.defKey}>
               <span style={{width: columnWidth.defKey / 2}} className={`${currentPrefix}-compare-list-container-content-list-item-defKey`}>
                 <span className={checkIsChange('defKey')}>
-                  {sourceEntity.defKey}
+                  {calcSearchValue(sourceEntity.defKey)}
                 </span>
                 {defaultMeta && <a onClick={() => onPicker(dataKey, 'left')}><FormatMessage id='components.compare.entityPicker'/></a>}
               </span>
             </Tooltip>
             <Tooltip placement='top' title={sourceEntity.defName}>
               <span style={{width: columnWidth.defName / 2}}>
-                <span className={checkIsChange('defName')}>{sourceEntity.defName}</span>
+                <span className={checkIsChange('defName')}>{calcSearchValue(sourceEntity.defName)}</span>
               </span>
             </Tooltip>
             <Tooltip placement='top' title={sourceEntity.comment}>
@@ -140,14 +147,14 @@ export default React.memo(({data: { isLeaf, sourceEntity,
                 style={{width: columnWidth.defKey / 2}}
                 className={`${currentPrefix}-compare-list-container-content-list-item-defKey`}>
                 <span>
-                  {metaEntity.defKey}
+                  {calcSearchValue(metaEntity.defKey)}
                 </span>
                 {defaultMeta && <a onClick={() => onPicker(dataKey, 'right')}><FormatMessage id='components.compare.entityPicker'/></a>}
               </span>
             </Tooltip>
             <Tooltip placement='top' title={metaEntity.defName}>
               <span style={{width: columnWidth.defName / 2}}>
-                <span>{metaEntity.defName}</span>
+                <span>{calcSearchValue(metaEntity.defName)}</span>
               </span>
             </Tooltip>
             <Tooltip placement='top' title={metaEntity.defName}>

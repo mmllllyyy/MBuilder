@@ -1,8 +1,6 @@
 import * as Component from 'components';
 import { addBodyEvent, removeBodyEvent } from './listener';
 import Worker from './worker';
-import Preview from '../app/container/database/Preview';
-import tr from 'components/table/Tr';
 
 // 复制方法
 export const Copy = (data, successMessage) => {

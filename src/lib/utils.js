@@ -5,6 +5,8 @@ import allLangData from '../lang';
 import _ from 'lodash';
 import doT from 'dot';
 import {separator} from '../../profile';
+import {firstUp} from './string';
+import './Math';
 
 export const _getDefaultTemplate = (db, template, dataSource, lang = 'zh') => {
     const dataType = dataSource.profile?.dataTypeSupports?.filter(d => d.id === db)[0];
@@ -305,7 +307,7 @@ export const _getTemplateString = (template, templateData, isDemo, dataSource , 
     let resultText = doT.template(tplText, conf)({
         ...templateData,
         func: {
-            _camel: _camel,
+            camel: _camel,
             underline: underline,
             upperCase: upperCase,
             lowerCase: lowerCase,
@@ -846,4 +848,122 @@ export const getAllData = (params) => {
             }, []),
         },
     ];
+};
+
+export const _getAllDataSQLByFilter = (data, code, filterTemplate, filterDefKey) => {
+    // 获取项目的一些配置信息
+    const getDataSourceProfile = (data) => {
+        const dataSource = {...data};
+        const datatype = _.get(dataSource, 'dataTypeMapping.mappings', []);
+        const allTemplate = _.get(dataSource, 'profile.codeTemplates', []);
+        const sqlSeparator = _.get(dataSource, 'profile.sql.delimiter', ';') || ';';
+        return {
+            dataSource,
+            datatype,
+            allTemplate,
+            sqlSeparator
+        };
+    };
+    // 获取全量脚本（删表，建表，建索引，表注释）
+    const { dataSource, allTemplate, sqlSeparator } = getDataSourceProfile(data);
+    const entities = dataSource.entities || [];
+    const getTemplate = (templateShow) => {
+        return allTemplate.filter(t => t.applyFor === code)[0]?.[templateShow] || '';
+    };
+    const getFilterData = (name) => {
+        return (dataSource[name] || []).filter(e => {
+            if (filterDefKey) {
+                return (filterDefKey[name] || []).includes(e.id);
+            }
+            return true;
+        }).map(e => ({
+            ...e,
+            datatype: name,
+            groupType: `ref${firstUp(name)}`
+        }));
+    };
+    let sqlString = '';
+    try {
+        const tempData = code === 'dictSQLTemplate' ? getFilterData('dicts') : getFilterData('entities')
+            .concat(getFilterData('views'));
+        sqlString += tempData.map(e => {
+            const tempTemplate = [...filterTemplate];
+            let tempData = '';
+            let data;
+            if (code === 'dictSQLTemplate') {
+                data = {
+                    dict: _.omit(e, ['groupType', 'datatype']),
+                }
+            } else {
+                const name = e.datatype === 'entities' ? 'entity' : 'view';
+                const childData = {
+                    ..._.omit(e, ['groupType', 'datatype']),
+                    env: _getDefaultEnv(e),
+                    fields: (e.fields || []).map(field => {
+                        return {
+                            ...field,
+                            ..._transform(field, dataSource, code)
+                        }
+                    }),
+                    indexes: (e.indexes || []).map(i => {
+                        return {
+                            ...i,
+                            fields: (i.fields || []).map(f => {
+                                const field = (e.fields || []).find(ie => f.fieldDefKey === ie.id);
+                                return {
+                                    ...f,
+                                    fieldDefKey: field?.defKey || '',
+                                };
+                            })
+                        }
+                    }),
+                    correlations: (e.correlations || []).map(c => {
+                        const refEntityData = entities.find(r => r.id === c.refEntity);
+                        return {
+                            ...c,
+                            myField: (e.fields || []).find(field => field.id === c.myField)?.defKey,
+                            refEntity: refEntityData?.defKey,
+                            refField: (refEntityData.fields || []).find(field => field.id === c.refField)?.defKey,
+                        }
+                    })
+                };
+                if (name === 'view') {
+                    childData.refEntities = dataSource?.entities
+                        ?.filter(e => childData?.refEntities.includes(e.id))
+                        ?.map(e => e.defKey);
+                }
+                data = {
+                    entity: childData,
+                    view: childData,
+                }
+            }
+            const templateData = {
+                ...data,
+                group: (dataSource.viewGroups || [])
+                    .filter(g => (g[e.groupType] || []).includes(e.id))
+                    .map(g => _.pick(g, ['defKey', 'defName'])),
+                separator: sqlSeparator
+            };
+            if (tempTemplate.includes('createTable')) {
+                tempTemplate.push('createView');
+            }
+            tempTemplate.filter(t => {
+                if (e.datatype === 'entities') {
+                    return t !== 'createView';
+                }
+                return t !== 'createTable';
+            }).forEach(f => {
+                const code = `${_getTemplateString(getTemplate(f), templateData)}`;
+                tempData += code ? `${code}\n` : '';
+            });
+            return tempData;
+        }).join('');
+    } catch (e) {
+        sqlString = JSON.stringify(e.message);
+    }
+    // const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
+    // if (DDLToggleCase) {
+    //   return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
+    // }
+    return sqlString;
 };

@@ -389,7 +389,7 @@ export default class ER {
             };
         } else {
             const dataSourceEntity = dataSource?.entities
-                ?.filter(entity => entity.id === key)[0];
+                ?.find(entity => entity.id === key);
             empty = {
                 ...dataSourceEntity,
             };
@@ -503,9 +503,9 @@ export default class ER {
                 } else {
                     currentKey = link.value;
                 }
-                const currenTab = Object.keys(iconMap).filter((i) => {
+                const currenTab = Object.keys(iconMap).find((i) => {
                     return dataSource[i].some(d => d.id === currentKey);
-                })[0];
+                });
                 if (currenTab) {
                     setTimeout(() => {
                         this.openDict(currentKey, keyMap[currenTab], parentKey, iconMap[currenTab]);
@@ -564,7 +564,7 @@ export default class ER {
             ...dataSource,
             entities: dataSource.entities.concat(cells.map(c => ({
                 ...(c.data ? dataSource
-                    .entities.filter(e => e.defKey === c.data.copyDefKey)[0] : {}),
+                    .entities.find(e => e.defKey === c.data.copyDefKey) : {}),
                 ..._.pick(c.data, ['id', 'defKey']),
                 ...initData,
                 serialId: null,
@@ -640,8 +640,8 @@ export default class ER {
             if (cell.shape === 'table') {
                 const cellData = cell.getData();
                 const key = cell.getProp('originKey');
-                const group = dataSource?.viewGroups?.filter(v => v.refEntities?.some(r => r ===
-                    key))[0]?.id || '';
+                const group = dataSource?.viewGroups?.find(v => v.refEntities?.some(r => r ===
+                    key))?.id || '';
                 const entityTabKey = `${key + separator}entity`;
                 if (!this.validateTableStatus(entityTabKey)) {
                     let drawer;
@@ -797,9 +797,9 @@ export default class ER {
     }
     changePortsVisible = (visible, node, source) => {
         if (!this.isView && !node?.getProp('isLock')) {
-            const currentNodeDom = node ? Array.from(this.container.querySelectorAll('.x6-node')).filter((n) => {
+            const currentNodeDom = node ? Array.from(this.container.querySelectorAll('.x6-node')).find((n) => {
                 return n.getAttribute('data-cell-id') === node.id;
-            })[0] : this.container;
+            }) : this.container;
             const ports = currentNodeDom?.querySelectorAll(
                 '.x6-port-body',
             ) || [];
@@ -908,7 +908,7 @@ export default class ER {
                 const sourceNode = this.graph.getCellById(edge.source.cell);
                 if (edge.target.port.includes('extend')) {
                     const nodeData = (dataSource.entities || [])
-                        .filter(e => e.id === node.getProp('originKey'))[0] || node.data || {};
+                        .find(e => e.id === node.getProp('originKey')) || node.data || {};
                     const primaryKeys = (nodeData.fields || []).filter(f => f.primaryKey);
                     if (primaryKeys.length === 0) {
                         this.graph.removeCell(edge);
@@ -916,7 +916,7 @@ export default class ER {
                     } else {
                         const targetField = primaryKeys[0];
                         const sourceField = (sourceNode?.data?.fields || [])
-                            .filter(f => f.defKey === targetField.defKey)[0];
+                            .find(f => f.defKey === targetField.defKey);
                         const createEdge = (creatField) => {
                             this.graph.addEdge({
                                 shape: 'erdRelation',
@@ -1376,8 +1376,8 @@ export default class ER {
                         ...ports,
                         items: (ports.items || []).map((item, index) => {
                             const edge = edges
-                                .filter(e => e.target.port === item.id
-                                    || e.source.port === item.id)[0];
+                                .find(e => e.target.port === item.id
+                                    || e.source.port === item.id);
                             if (index >= sliceCount && item.group !== 'extend') {
                                 if(edge && item.id !== 'out_more' && item.id !== 'in_more') {
                                     // 记录需要变更的连接线

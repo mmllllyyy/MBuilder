@@ -6,14 +6,8 @@ import {getPrefix} from '../../../../lib/prefixUtil';
 import {connectDB,  getLogPath, showItemInFolder} from '../../../../lib/middle';
 
 export default React.memo(({prefix, dataSource, config, selectedTable,
-                             onOk, onClose, currentDb}) => {
+                             onOk, onClose, currentDb, dbData}) => {
   const currentPrefix = getPrefix(prefix);
-  const dbConn = dataSource?.dbConn || [];
-  const defaultConn = dataSource?.profile?.default?.dbConn || dbConn[0].defKey;
-  const dbData = useMemo(() => ({
-    defKey: defaultConn,
-    flag: 'DEFAULT',
-  }), []);
   const [success, setSuccess] = useState([]);
   const [leaveSuccess, setLeaveSuccess] = useState([]);
   const [fail, setFail] = useState([]);
@@ -28,10 +22,8 @@ export default React.memo(({prefix, dataSource, config, selectedTable,
   const successRef = useRef(null);
   const dBReverseGetTableDDL = (tables) => {
     return new Promise((resolve, reject) => {
-      const properties = (dbConn.filter(d => d.defKey === dbData.defKey)[0] || {})?.properties
-          || {};
       parserRef.current = connectDB(dataSource, config, {
-        ...properties,
+        ...currentDb.properties,
         tables: tables.map(t => t.originDefKey).join(','),
       }, 'DBReverseGetTableDDL', (data) => {
         //reject();
@@ -100,7 +92,7 @@ export default React.memo(({prefix, dataSource, config, selectedTable,
     const checkStop = () => {
       return isStopRef.current;
     };
-    while (currentCountRef.current < selectedTable.length && !checkStop()) {
+    while ((currentCountRef.current < selectedTable.length) && (!checkStop())) {
       const currentTable = selectedTable
           .slice(currentCountRef.current, currentCountRef.current + stepRef.current);
       // eslint-disable-next-line no-await-in-loop

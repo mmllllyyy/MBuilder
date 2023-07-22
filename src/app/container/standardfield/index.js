@@ -105,12 +105,13 @@ export default forwardRef(({prefix, dataSource, updateDataSource, activeKey}, re
         ...d,
         fields: (d.fields || []).map((f) => {
           if (f.refStandard) {
-            const currentStandard = update.filter(s => s.id === f.refStandard)[0];
+            const currentStandard = update.find(s => s.id === f.refStandard);
             if (currentStandard) {
               updateData.push(d.id);
               return {
                 ...f,
                 ...currentStandard,
+                id: f.id,
               };
             }
             return f;
@@ -148,7 +149,7 @@ export default forwardRef(({prefix, dataSource, updateDataSource, activeKey}, re
         const result = validateStandardFields(tempData);
         if (!result) {
           const needUpdateFields = calcChangeFieldData(changeFields);
-          tempData && updateDataSource({
+          updateDataSource({
             ...dataSourceRef.current,
             entities: updateFields(dataSourceRef.current.entities, needUpdateFields).data,
             views: updateFields(dataSourceRef.current.views, needUpdateFields).data,

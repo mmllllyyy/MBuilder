@@ -291,7 +291,7 @@ const Menu = React.memo(forwardRef(({contextMenus = [], onContextMenu, fieldName
       key={`${menu[defKey]}`}
       onContextMenu={e => _onContextMenu(e, key, menu.type, parentKey)}
       onDoubleClick={e => onDoubleMenuClick(e, key, menu.type, parentKey, parentMenu.icon)}
-      onClick={e => onMenuClick(e ,key, menu.type, parentKey, null, parentMenu)}
+      onClick={e => onMenuClick(e ,key, menu.type, parentKey, null, parentMenus.slice(-1)[0])}
       className={getClassName(itemBase, key, menu.type, false, selected, insertKey)}
       onDragStart={e => tempDragTable(e, menu, key, pI, parentMenu[defKey])}
       draggable={draggableStatus}

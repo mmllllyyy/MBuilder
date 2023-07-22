@@ -159,7 +159,7 @@ export default React.memo(({prefix, dataSource, labelRender, defaultCheckeds,
     <ul className={`${currentPrefix}-tree`}>
       <ul className={`${currentPrefix}-tree-all`}>
         <li><SearchInput onChange={onSearchChange} placeholder={placeholder}/></li>
-        <ul>
+        {dataSource.length > 0 && <ul>
           <AutoSizer>
             {({height, width}) => {
               return <Tree
@@ -173,7 +173,7 @@ export default React.memo(({prefix, dataSource, labelRender, defaultCheckeds,
               </Tree>;
             }}
           </AutoSizer>
-        </ul>
+        </ul>}
       </ul>
     </ul>
   );

@@ -68,7 +68,7 @@ export const createContentMenu = (event, menus, cb) => {
 export const getChildrenCell = (n, cells) => {
     if (n.prop('children')?.length > 0) {
         return n.prop('children').reduce((a, b) => {
-            const child = cells.filter(c => c.id === b)[0];
+            const child = cells.find(c => c.id === b);
             if (child) {
                 return a.concat(child).concat(getChildrenCell(child, cells));
             }
@@ -91,7 +91,7 @@ export const getChildrenId = (n, nodes) => {
         return [];
     }
     return children.reduce((a, b) => {
-        const bNode = nodes.filter(cNode => cNode.id === b)[0];
+        const bNode = nodes.find(cNode => cNode.id === b);
         return a.concat(bNode ? getChildrenId(bNode, nodes).concat(bNode.id) : []);
     }, children);
 };

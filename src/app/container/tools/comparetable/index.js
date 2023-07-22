@@ -398,7 +398,6 @@ export default React.memo(({dataSource, prefix,
     return <div className={`${currentPrefix}-compare-table`}>
       <Loading visible={loading} isFull={false}>
         <CompareList
-          onCheck={onCheck}
           ref={compareListRef}
           defaultMeta
           empty={<FormatMessage id='components.compare.tableListEmpty'/>}

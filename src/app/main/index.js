@@ -459,55 +459,80 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
         };
         const compareType = compareVersion('3.5.0', newData.version.split('.')) ? 'defKey' : 'old';
         newData = reduceProject(newData, compareType);
-        const onOk = () => {
-          const importData = importPdRef.current.getData()
-              .reduce((a, b) => a.concat((b.fields || [])
-                  .map(f => ({
-                    ...f,
-                    group: b.id,
-                  }))), []);
-          restProps.openLoading();
-          mergeDataSource(dataSourceRef.current, newData, importData, true, (d) => {
-            if(d) {
-              injectDataSource(d, modal);
-            } else {
-              modal?.close();
-            }
-            Message.success({title: FormatMessage.string({id: 'optSuccess'})});
-            restProps.closeLoading();
+        const checkDefaultDb = () => {
+          const dbPath = 'profile.default.db';
+          const dataTypeSupportsPath = 'profile.dataTypeSupports';
+          const newDefault = _.get(newData, dbPath);
+          const currentDefault = _.get(dataSourceRef.current, dbPath);
+          const newDataTypeSupport = _.get(newData, dataTypeSupportsPath, [])
+              .find(d => d.id === newDefault)?.defKey?.toLocaleLowerCase() || '';
+          const currentDataTypeSupport = _.get(dataSourceRef.current, dataTypeSupportsPath, [])
+              .find(d => d.id === currentDefault)?.defKey?.toLocaleLowerCase() || '';
+          return newDefault === currentDefault || newDataTypeSupport === currentDataTypeSupport;
+        };
+        const checkResult = checkDefaultDb();
+        const injectData = () => {
+          const onOk = () => {
+            const importData = importPdRef.current.getData()
+                .reduce((a, b) => a.concat((b.fields || [])
+                    .map(f => ({
+                      ...f,
+                      group: b.id,
+                    }))), []);
+            restProps.openLoading();
+            mergeDataSource(dataSourceRef.current, newData, importData, true, (d) => {
+              if(d) {
+                injectDataSource(d, modal);
+              } else {
+                modal?.close();
+              }
+              restProps.closeLoading();
+            });
+          };
+          const allRefEntities = newData.viewGroups.reduce((a, b) => a.concat(b.refEntities), []);
+          restProps.closeLoading();
+          modal = openModal(<ImportPd
+            defaultSelected={newData.diagrams.reduce((a, b) => a
+                  .concat((b.canvasData?.cells || []).map(c => c.originKey)
+                      .filter(c => !!c)), [])}
+            customerData={newData.viewGroups.map((g) => {
+                return {
+                  ...g,
+                  id: dataSourceRef.current.viewGroups
+                      ?.filter(group => group.defKey === g.defKey)[0]?.id || g.id,
+                  fields: (newData.entities || [])
+                      .filter(e => (g.refEntities || [])
+                          .includes(e.id)),
+                };
+              }).concat({
+                id: '',
+                defKey: '',
+                defName: FormatMessage.string({id: 'components.select.empty'}),
+                fields: newData.entities.filter(e => !allRefEntities.includes(e.id)),
+              })}
+            ref={importPdRef}
+            dataSource={dataSourceRef.current}
+          />, {
+            bodyStyle: {width: '80%'},
+            buttons: [
+              <Button type='primary' key='ok' onClick={onOk}><FormatMessage id='button.ok'/></Button>,
+              <Button key='cancel' onClick={onCancel}><FormatMessage id='button.cancel'/></Button>],
+            // eslint-disable-next-line no-nested-ternary
+            title: FormatMessage.string({id: `toolbar.${type === 'chiner' ? 'importCHNR' : (type === 'PDManer' ? 'importPDManer' : 'importPDMan')}`}),
           });
         };
-        const allRefEntities = newData.viewGroups.reduce((a, b) => a.concat(b.refEntities), []);
-        restProps.closeLoading();
-        modal = openModal(<ImportPd
-          defaultSelected={newData.diagrams.reduce((a, b) => a
-              .concat((b.canvasData?.cells || []).map(c => c.originKey)
-                  .filter(c => !!c)), [])}
-          customerData={newData.viewGroups.map((g) => {
-            return {
-              ...g,
-              id: dataSourceRef.current.viewGroups
-                  ?.filter(group => group.defKey === g.defKey)[0]?.id || g.id,
-              fields: (newData.entities || [])
-                  .filter(e => (g.refEntities || [])
-                      .includes(e.id)),
-            };
-          }).concat({
-            id: '',
-            defKey: '',
-            defName: FormatMessage.string({id: 'components.select.empty'}),
-            fields: newData.entities.filter(e => !allRefEntities.includes(e.id)),
-          })}
-          ref={importPdRef}
-          dataSource={dataSourceRef.current}
-        />, {
-          bodyStyle: {width: '80%'},
-          buttons: [
-            <Button type='primary' key='ok' onClick={onOk}><FormatMessage id='button.ok'/></Button>,
-            <Button key='cancel' onClick={onCancel}><FormatMessage id='button.cancel'/></Button>],
-          // eslint-disable-next-line no-nested-ternary
-          title: FormatMessage.string({id: `toolbar.${type === 'chiner' ? 'importCHNR' : (type === 'PDManer' ? 'importPDManer' : 'importPDMan')}`}),
-        });
+        if (checkResult) {
+          injectData();
+        } else {
+          restProps.closeLoading();
+          Modal.confirm({
+            title: FormatMessage.string({id: 'importConfirmTitle'}),
+            message: FormatMessage.string({id: 'importConfirm'}),
+            onOk:() => {
+              injectData();
+            },
+          });
+        }
       } catch (err) {
         Modal.error({
           title: FormatMessage.string({id: 'optFail'}),
@@ -1159,7 +1184,7 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
           // 移除已经排好序的数据 在海量的数据下优化下一次查找的次数
           temChildren.splice(cIndex, 1);
           return child;
-        }),
+        }).filter(r => !!r),
       };
     }),
   })), [simpleMenu, restProps.dataSource?.viewGroups]);
@@ -1676,11 +1701,9 @@ const Index = React.memo(({getUserData, mode, isChildWindow,
   const mergeFromMeta = (data, meta, nextDataSource) => {
     let newDataSource;
     if (meta) {
-       newDataSource = mergeDataSource(dataSourceRef.current, {},
-          calcDomain(data, meta, dataSourceRef.current.domains || []), true);
+      newDataSource = mergeDataSource(dataSourceRef.current, {}, data, true);
     } else {
-      newDataSource = mergeDataSource(dataSourceRef.current, nextDataSource, data,
-          true);
+      newDataSource = mergeDataSource(dataSourceRef.current, nextDataSource, data, true);
     }
     injectDataSource(newDataSource);
     return newDataSource;

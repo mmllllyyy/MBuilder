@@ -12,7 +12,7 @@ import {
     Modal,
     Terminal,
     openModal,
-    CodeEditor,
+    CodeEditor, SearchInput,
 } from 'components';
 import {FixedSizeTree as Tree} from 'react-vtree';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -52,6 +52,25 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
     const metaDataRef = useRef([]);
     metaDataRef.current = [...metaData];
     const [expand, setExpand] = useState([]);
+    const [searchValue, setSearchValue] = useState('');
+    const searchRef = useRef(null);
+    const reg = new RegExp((searchValue || '')
+        .replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
+    const tempTreeData = useMemo(() => {
+            return (treeData || [])
+                .filter(c => c.id === 'header1'
+                    || c.id === 'header2'
+                    || (defaultMeta ? (reg.test(c.sourceEntity.defKey)
+                                || reg.test(c.metaEntityData.defKey))
+                            : reg.test(c.id))
+                    || (c.sourceEntity && reg.test(c.sourceEntity.defName))
+                    || (c.metaEntityData && reg.test(c.metaEntityData.defName)),
+                );
+        },
+        [treeData, searchValue]);
+    const allTreeKeys = useMemo(() => tempTreeData.map(t => t.id), [tempTreeData]);
+    const allTreeKeysRef = useRef([]);
+    allTreeKeysRef.current = [...allTreeKeys];
     // 头部两个固定数据
     const treeHeader = [{
         id: 'header1',
@@ -99,6 +118,8 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
         return {
             setMeta: (m, isCustomer) => {
                 isScan.current = false;
+                setSearchValue('');
+                searchRef.current?.resetSearchValue();
                 setMetaData([]);
                 resetTableList();
                 setCustomerMeta(isCustomer);
@@ -167,10 +188,13 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
                         const allData = mergeMetaDataSourceKeys(dataSource.entities, newMetaData);
                         setTreeData(treeHeader.concat(allData.map((d) => {
                             const id = d.defKey?.toLocaleLowerCase();
+                            const metaEntityData = newMetaData
+                                .find(m => m.defKey?.toLocaleLowerCase() === id);
                             return {
                                 id,
                                 key: id,
                                 sourceEntity: d.id ? d : {},
+                                metaEntityData,
                                 children : [{
                                     id: `${id}_headerField1`,
                                 }, {
@@ -198,6 +222,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
                     (data.entities || []).some((e) => {
                     return !validateItem(e, emptyEntity);
                 })) {
+                    closeLoading();
                     throw Error();
                 }
                 postWorkerFuc('dataSourceVersion.simplePackageChanges', true, [
@@ -215,12 +240,13 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
                             .map(e => ({...e, isSource: true})), data.entities);
                         setTreeData(treeHeader.concat(allData.map((a) => {
                             const id = a.defKey?.toLocaleLowerCase();
-                            const metaIndex = data.entities
-                                .findIndex(m => m.defKey?.toLocaleLowerCase() === id);
+                            const metaEntityData = data.entities
+                                .find(m => m.defKey?.toLocaleLowerCase() === id);
                             return {
                                 id,
                                 key: id,
                                 sourceEntity: a.isSource ? a : {},
+                                metaEntityData,
                                 children : [{
                                     id: `${id}_headerField1`,
                                 }, {
@@ -228,7 +254,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
                                 }]
                                     .concat((a?.fields || [])
                                     .concat(
-                                        (data.entities[metaIndex]?.fields || []).filter(f =>
+                                        (metaEntityData?.fields || []).filter(f =>
                                         (a?.fields || [] || [])
                                             .findIndex(aF => aF.defKey?.toLocaleLowerCase()
                                                 === f.defKey?.toLocaleLowerCase()) < 0))
@@ -275,7 +301,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
             });
         }
     };
-    const getTableDetail = (table, currentDataSource) => {
+    const getTableDetail = async (table, currentDataSource) => {
         if(scanTable) {
             scanTable(table ? [table] : entitiesKeyChecked);
         } else {
@@ -333,64 +359,112 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
                 updateChanges(currentDataSource);
             } else {
                 const currentConn = dbConn.filter(d => d.defKey === meta)[0];
-                connectDB(dataSource, config, {
-                    ...currentConn?.properties,
-                    tables: selectedMetaData.join(','),
-                }, 'DBReverseGetTableDDL', (data) => {
-                    if (data.status === 'FAILED') {
-                        errorModal(data);
-                    } else {
-                        tempMetaData = data.body.map((d) => {
-                            const currentMetaIndex = metaData.findIndex(m => m.defKey === d.defKey);
-                            return {
-                                ...d,
-                                defName: metaData[currentMetaIndex]?.defName || '',
-                                comment: metaData[currentMetaIndex]?.comment || '',
-                                fields: (d.fields || []).map((f) => {
-                                    return {
-                                        ...f,
-                                        defName: f?.defName?.split(';')[0] || '',
-                                        comment: f.comment || f?.defName?.split(';')[1] || '',
-                                    };
-                                }),
-                            };
+                const dBReverseGetTableDDL = (tables) => {
+                  return new Promise((resolve, reject) => {
+                      connectDB(dataSource, config, {
+                          ...currentConn?.properties,
+                          tables: tables.join(','),
+                      }, 'DBReverseGetTableDDL', (data) => {
+                          if(data.status === 'FAILED') {
+                              reject(data);
+                          } else {
+                              resolve(data);
+                          }
+                      });
+                  });
+                };
+                openLoading(FormatMessage.string({
+                    id: 'components.compare.scanFieldStep',
+                    data: {
+                        step: `${0}/${selectedMetaData.length}`,
+                    },
+                }));
+                const errorResult = [];
+                const successResult = [];
+                let currentCount = 0;
+                while (currentCount < selectedMetaData.length) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await dBReverseGetTableDDL(selectedMetaData
+                        .slice(currentCount, currentCount + 15))
+                        .then((data) => {
+                            successResult.push(...data.body);
+                        })
+                        .catch((data) => {
+                            errorResult.push(data.body);
+                        })
+                        // eslint-disable-next-line no-loop-func
+                        .finally(() => {
+                            currentCount += 15;
+                            if(currentCount < selectedMetaData.length) {
+                                openLoading(FormatMessage.string({
+                                    id: 'components.compare.scanFieldStep',
+                                    data: {
+                                        step: `${currentCount}/${selectedMetaData.length}`,
+                                    },
+                                }));
+                            }
+                    });
+                }
+                if (errorResult.length > 0) {
+                    errorModal({
+                        body: errorResult.map((e) => {
+                            return typeof e === 'object' ? JSON.stringify(e, null, 2)
+                                : e;
+                        }).join('\n'),
+                    });
+                }
+                if(successResult.length > 0) {
+                    tempMetaData = successResult.map((d) => {
+                        const currentMetaIndex = metaData.findIndex(m => m.defKey === d.defKey);
+                        return {
+                            ...d,
+                            defName: metaData[currentMetaIndex]?.defName || '',
+                            comment: metaData[currentMetaIndex]?.comment || '',
+                            fields: (d.fields || []).map((f) => {
+                                return {
+                                    ...f,
+                                    defName: f?.defName?.split(';')[0] || '',
+                                    comment: f.comment || f?.defName?.split(';')[1] || '',
+                                };
+                            }),
+                        };
+                    });
+                    // 合并详细数据
+                    setMetaDataFields((pre) => {
+                        return pre.filter((p) => {
+                            return !selectedMetaDataLowKeys
+                                .includes(p.defKey?.toLocaleLowerCase());
+                        }).concat(calcDomain(tempMetaData, meta,
+                            dataSource.domains || []));
+                    });
+                    // 合并树
+                    setTreeData((pre) => {
+                        return pre.map((p) => {
+                            const metaIndex = tempMetaData
+                                .findIndex(m => m.defKey?.toLocaleLowerCase() === p.id);
+                            if(metaIndex > -1) {
+                                return {
+                                    ...p,
+                                    children: (p.children || [])
+                                        .concat((tempMetaData[metaIndex].fields || [])
+                                            .filter(f =>
+                                                (p.children || [])
+                                                    .findIndex(c => c.key?.toLocaleLowerCase()
+                                                        === f.defKey?.toLocaleLowerCase()) < 0)
+                                            .map((f) => {
+                                                return {
+                                                    id: `${p.id}_${f.defKey}`,
+                                                    key: f.defKey?.toLocaleLowerCase(),
+                                                };
+                                            })),
+                                };
+                            }
+                            return p;
                         });
-                        // 合并详细数据
-                        setMetaDataFields((pre) => {
-                            return pre.filter((p) => {
-                                return !selectedMetaDataLowKeys
-                                    .includes(p.defKey?.toLocaleLowerCase());
-                            }).concat(calcDomain(tempMetaData, meta,
-                                dataSource.domains || []));
-                        });
-                        // 合并树
-                        setTreeData((pre) => {
-                            return pre.map((p) => {
-                                const metaIndex = tempMetaData
-                                    .findIndex(m => m.defKey?.toLocaleLowerCase() === p.id);
-                                if(metaIndex > -1) {
-                                    return {
-                                        ...p,
-                                        children: (p.children || [])
-                                            .concat((tempMetaData[metaIndex].fields || [])
-                                                .filter(f =>
-                                                    (p.children || [])
-                                                        .findIndex(c => c.key?.toLocaleLowerCase()
-                                                            === f.defKey?.toLocaleLowerCase()) < 0)
-                                                .map((f) => {
-                                                    return {
-                                                        id: `${p.id}_${f.defKey}`,
-                                                        key: f.defKey?.toLocaleLowerCase(),
-                                                    };
-                                                })),
-                                    };
-                                }
-                                return p;
-                            });
-                        });
-                        updateChanges(dataSource);
-                    }
-                });
+                    });
+                    updateChanges(dataSource);
+                }
+                closeLoading();
             }
         }
     };
@@ -466,7 +540,9 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
                 }
                 return pre.concat(key);
             } else if (key === 'ind' || key === 'normal') {
-                return metaDataRef.current.map(m => m.defKey?.toLocaleLowerCase());
+                return metaDataRef.current
+                    .filter(m => allTreeKeysRef.current.includes(m.defKey?.toLocaleLowerCase()))
+                    .map(m => m.defKey?.toLocaleLowerCase());
             }
             return [];
         });
@@ -489,32 +565,35 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
         node,
     });
     function* treeWalker() {
-        for (let i = 0; i < treeData.length; i += 1) {
-            yield getNodeData(treeData[i], 0, i);
+        for (let i = 0; i < tempTreeData.length; i += 1) {
+            yield getNodeData(tempTreeData[i], 0, i);
         }
-
         while (true) {
             const parent = yield;
-
-            for (let i = 0; i < parent.node?.children?.length; i += 1) {
+            for (let i = 0; i < parent?.node?.children?.length; i += 1) {
                 yield getNodeData(parent.node.children[i], parent.nestingLevel + 1, i, parent.node);
             }
         }
     }
-    const countWidth = useMemo(() => treeData.length.toString().split('').length * 10 + 20,
-        [treeData.length]);
+    const countWidth = useMemo(() => tempTreeData.length.toString().split('').length * 10 + 20,
+        [tempTreeData.length]);
     const allColumnWidth = useMemo(() => Object.keys(columnWidth)
         .reduce((p, n) => p + columnWidth[n], countWidth), [countWidth]);
     const type = useMemo(() => {
         if(entitiesKeyChecked.length > 0) {
-            if(entitiesKeyChecked.length === metaData.length) {
+            if(entitiesKeyChecked.filter(c => allTreeKeys.includes(c)).length ===
+                metaData.filter(m => allTreeKeys.includes(m.defKey?.toLocaleLowerCase())).length) {
                 return 'all';
             } else {
                 return 'ind';
             }
         }
         return 'normal';
-    }, [entitiesKeyChecked.length, metaData.length]);
+    }, [
+        entitiesKeyChecked.length,
+        metaData.length,
+        allTreeKeys,
+    ]);
     const innerElementType = useCallback((props) => {
         return <Container
           {...props}
@@ -529,6 +608,9 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
           isCustomerMeta={isCustomerMeta}
         />;
     }, [type, countWidth]);
+    const _onChange = (e) => {
+      setSearchValue(e.target.value);
+    };
     return <div style={style} className={`${currentPrefix}-compare-list`}>
       {meta ? <div className={`${currentPrefix}-compare-list-container`}>
         {header ? header(entitiesKeyChecked) : <div className={`${currentPrefix}-compare-list-container-header`}>
@@ -560,12 +642,19 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
             }
           </span>
         </div>}
+        <div style={{top: defaultMeta ? 0 : 9}} className={`${currentPrefix}-compare-list-container-header-search`}>
+          <SearchInput
+            comRef={searchRef}
+            placeholder={FormatMessage.string({id: 'components.listSelect.search'})}
+            onChange={_onChange}
+                  />
+        </div>
         <div className={`${currentPrefix}-compare-list-container-content`}>
           {
               !isScan.current ? <div className={`${currentPrefix}-compare-list-container-content-empty`}>
                 {empty || <FormatMessage id={`components.compare.${isCustomerMeta ? 'extractedFirst' : 'scanTablesFirst'}`}/>}
               </div> : <div className={`${currentPrefix}-compare-list-container-content-list`}>
-                {treeData.length > 0 && <AutoSizer>
+                {tempTreeData.length > 0 && <AutoSizer>
                     {({height, width}) => {
                           return  <Tree
                             innerElementType={innerElementType}
@@ -576,6 +665,7 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
                           >
                             {props => <Node
                               {...props}
+                              searchValue={searchValue}
                               entitiesKeyChecked={entitiesKeyChecked}
                               allColumnWidth={allColumnWidth}
                               columnFieldWidth={columnFieldWidth}
@@ -586,7 +676,6 @@ export default React.memo(forwardRef(({prefix, style, dataSource, config, empty,
                               changes={changes}
                               checkBoxChange={_checkBoxChange}
                               metaDataFields={metaDataFields}
-                              metaData={metaData}
                               getTableDetail={getTableDetail}
                               mergeFromMeta={_mergeFromMeta}
                               dB={dB}

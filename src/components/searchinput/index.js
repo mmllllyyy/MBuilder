@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useCallback } from 'react';
+import React, { useState, forwardRef, useCallback, useImperativeHandle } from 'react';
 
 import './style/index.less';
 import Input from 'components/input';
@@ -7,16 +7,22 @@ import {getPrefix} from '../../lib/prefixUtil';
 import {antiShake} from '../../lib/event_tool';
 
 export default React.memo(forwardRef(({prefix, placeholder, onChange, onBlur,
-                                        defaultValue}, ref) => {
+                                        defaultValue, comRef}, ref) => {
   const currentPrefix = getPrefix(prefix);
   const [value, setValue] = useState(defaultValue);
   const [loading, setLoading] = useState(false);
-
+  useImperativeHandle(comRef, () => {
+    return {
+      resetSearchValue: () => {
+        setValue('');
+      },
+    };
+  }, []);
   const antiShakeFuc = useCallback(antiShake((v) => {
     setLoading(true);
     const result = onChange && onChange({
       target: {
-        value: v,
+        value: v.trim(),
       },
     });
     if(result && result.then) {

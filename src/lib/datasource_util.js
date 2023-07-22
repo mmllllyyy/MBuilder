@@ -115,7 +115,8 @@ export const updateAllData = (dataSource) => {
   }
   if (!message) {
     const getData = () => {
-      return Object.keys(allTabData).reduce((pre, next) => {
+      return Object.keys(allTabData).filter(k => !allTabData[k].isInit)
+          .reduce((pre, next) => {
         const tempPre = {...pre};
         if (allTabData[next]) {
           const type = allTabData[next].type;
@@ -1165,6 +1166,7 @@ export const transformFieldType = (dataSource, old) => {
 
 export const transformTable = (data, dataSource, code, type = 'id', codeType = 'dbDDL') => {
   const fields = data.fields || [];
+  const entities = dataSource.entities || [];
   return {
     ...data,
     fields: fields.map(field => {
@@ -1179,11 +1181,20 @@ export const transformTable = (data, dataSource, code, type = 'id', codeType = '
         fields: (i.fields || []).map(f => {
           return {
             ...f,
-            fieldDefKey: fields.filter(field => field.id === f.fieldDefKey)[0]?.defKey,
+            fieldDefKey: fields.find(field => field.id === f.fieldDefKey)?.defKey,
           };
         }),
       }
     }),
+    correlations: (data.correlations || []).map(c => {
+      const refEntityData = entities.find(e => e.id === c.refEntity);
+      return {
+        ...c,
+        myField: fields.find(field => field.id === c.myField)?.defKey,
+        refEntity: refEntityData?.defKey,
+        refField: (refEntityData.fields || []).find(field => field.id === c.refField)?.defKey,
+      }
+    })
   }
 }
 

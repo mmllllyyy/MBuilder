@@ -54,6 +54,7 @@ export default React.memo(({prefix, dataSource, dataChange, config, onClose, onO
     const selectedTable = dealDataRef.current.getData()
         .reduce((a, b) => a.concat(b.fields.map(f => ({...f, group: b.id}))), []);
     modal = openModal(<DealProgress
+      dbData={dbData}
       currentDb={dbConn.filter(d => d.defKey === dbData.defKey)[0]}
       dataSource={dataSource}
       config={config}

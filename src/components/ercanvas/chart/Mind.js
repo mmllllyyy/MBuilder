@@ -35,9 +35,9 @@ export default class Mind {
             return node;
         }
         return nodes.filter(n => n.shape === 'mind-topic')
-            .filter((n) => {
+            .find((n) => {
                 return getChildrenId(n, nodes).includes(node.id);
-            })[0];
+            });
     }
     updateTree = (node, v, filterCells = []) => {
         const nodes = this.graph.getNodes()
@@ -45,7 +45,7 @@ export default class Mind {
         const node2Tree = (root) => {
             const getChildrenNode = (children) => {
                 return children.map((c) => {
-                    const cNode = nodes.filter(n => n.id === c)[0];
+                    const cNode = nodes.find(n => n.id === c);
                     if (!cNode) {
                         return null;
                     }
@@ -108,7 +108,7 @@ export default class Mind {
         const offset = {x: currentNode.x - prePosition.x, y: currentNode.y - prePosition.y};
         const nodes = this.graph.getNodes();
         result.forEach((n) => {
-            const updateNode = nodes.filter(c => c.id === n.id)[0];
+            const updateNode = nodes.find(c => c.id === n.id);
             // 更新节点信息
             updateNode?.position(n.x - offset.x, n.y - offset.y);
             updateNode?.prop('layout', v);
@@ -146,7 +146,7 @@ export default class Mind {
         });
         setTimeout(() => {
             result.forEach((n) => {
-                const updateNode = nodes.filter(c => c.id === n.id)[0];
+                const updateNode = nodes.find(c => c.id === n.id);
                 updateNode.toFront();
             });
         });
@@ -198,9 +198,9 @@ export default class Mind {
                 } else {
                     currentKey = link.value;
                 }
-                const currenTab = Object.keys(iconMap).filter((i) => {
+                const currenTab = Object.keys(iconMap).find((i) => {
                     return dataSource[i].some(d => d.id === currentKey);
-                })[0];
+                });
                 if (currenTab) {
                     setTimeout(() => {
                         this.openDict(currentKey, keyMap[currenTab], parentKey, iconMap[currenTab]);
@@ -352,10 +352,10 @@ export default class Mind {
         return this.isMindCell(node);
     }
     findParentNode = (node) => {
-        return this.graph.getNodes().filter((n) => {
+        return this.graph.getNodes().find((n) => {
             console.log(n);
             return (n.prop('children') || []).includes(node.id);
-        })[0];
+        });
     }
     findNodeNext = (node) => {
         const parentNode = this.findParentNode(node);
@@ -419,7 +419,7 @@ export default class Mind {
                         if (c.prop('children')?.length > 0){
                             c.setChildren([], {needUndo: true});
                         }
-                        const parent = allNodes.filter(no => no.prop('children')?.includes(c.id))[0];
+                        const parent = allNodes.find(no => no.prop('children')?.includes(c.id));
                         if (parent) {
                             parent.setChildren(parent.getChildren()
                                 .filter(child => child.id !== c.id), {needUndo: true});
@@ -484,7 +484,7 @@ export default class Mind {
                 shape: n.shape,
                 id: n.id,
                 parent: this.graph.getNodes()
-                    .filter(no => no.prop('children')?.includes(n.id))[0],
+                    .find(no => no.prop('children')?.includes(n.id)),
                 position: n.isNode() ? n.position() : {},
             };
         });
@@ -496,7 +496,7 @@ export default class Mind {
             if (currentParent) {
                 this.embedData.filter(node => node.shape === 'mind-topic').forEach((node) => {
                     const edges = this.graph.getEdges();
-                    const currentNode = this.graph.getNodes().filter(n => node.id === n.id)[0];
+                    const currentNode = this.graph.getNodes().find(n => node.id === n.id);
                     const allCells = getChildrenCell(currentNode, this.graph.getNodes());
                     const mindEdge = edges
                         .filter(n => n.shape === 'mind-edge' &&
@@ -519,7 +519,7 @@ export default class Mind {
                 const preReset = [];
                 nodes.forEach((n) => {
                     const graphNodes = this.graph.getNodes();
-                    const currentNode = graphNodes.filter(node => node.id === n.id)[0];
+                    const currentNode = graphNodes.find(node => node.id === n.id);
                     const previousParent = n.parent;
                     if (currentParent && (previousParent !== currentParent)) {
                         currentReset.push(n.id);
@@ -596,7 +596,7 @@ export default class Mind {
                 .map((p) => {
                     if (p.data.key === 'position') {
                         const replacePosition = [].concat(position[0])
-                            .filter(r => r.data.key === 'position' && r.data.id === p.data.id)[0];
+                            .find(r => r.data.key === 'position' && r.data.id === p.data.id);
                         return {
                             ...p,
                             data: {
@@ -658,8 +658,8 @@ export default class Mind {
                     this.graph.addNodes(tempCells.filter(c => c.isNode()));
                     this.graph.addEdges(tempCells.filter((c) => {
                         if (c.isEdge()) {
-                            const source = tempCells.filter(cell => cell.id === c.source.cell)[0];
-                            const target = tempCells.filter(cell => cell.id === c.target.cell)[0];
+                            const source = tempCells.find(cell => cell.id === c.source.cell);
+                            const target = tempCells.find(cell => cell.id === c.target.cell);
                             return source && target;
                         }
                         return false;

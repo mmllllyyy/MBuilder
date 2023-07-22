@@ -2,14 +2,12 @@
 import React from 'react';
 import _ from 'lodash/object';
 import { Message, FormatMessage } from '../components';
-import doT from 'dot';
 
 import { separator } from '../../profile';
-import {firstUp} from './string';
 import {getDefaultTemplate, transform} from './datasource_util';
 import {platform} from './middle';
 import {
-  _camel,
+  _camel, _getAllDataSQLByFilter,
   _getDataByChanges,
   _getDefaultEnv,
   _getEmptyMessage,
@@ -1095,6 +1093,7 @@ export const getTemplateString = (...args) => {
 };
 // 生成增量代码数据
 const generateIncreaseSql = (dataSource, group, dataTable, code, templateShow) => {
+  const entities = dataSource.entities || [];
   // 获取该数据库下的模板信息
   const allTemplate = _.get(dataSource, 'profile.codeTemplates', []);
   // appCode
@@ -1126,11 +1125,20 @@ const generateIncreaseSql = (dataSource, group, dataTable, code, templateShow) =
         fields: (i.fields || []).map(f => {
           return {
             ...f,
-            fieldDefKey: fields.filter(field => field.id === f.fieldDefKey)[0]?.defKey,
+            fieldDefKey: fields.find(field => field.id === f.fieldDefKey)?.defKey,
           };
         }),
       }
     }),
+    correlations: (dataTable.correlations || []).map(c => {
+      const refEntityData = entities.find(e => e.id === c.refEntity);
+      return {
+        ...c,
+        myField: fields.find(field => field.id === c.myField)?.defKey,
+        refEntity: refEntityData?.defKey,
+        refField: (refEntityData.fields || []).find(field => field.id === c.refField)?.defKey,
+      }
+    })
   };
   const name = templateShow === 'createView' ? 'view' : 'entity';
   const templateData = {
@@ -1169,7 +1177,7 @@ export const getCodeByDataTable = (dataSource, group, dataTable, code, templateS
     Message.error({title: <span>
         {FormatMessage.string({id: 'database.templateError'})}
         <FormatMessage id='database.templateErrorLink'/>
-        <a onClick={() => openUrl('http://wwww.xxx.como/xxx')}>http://wwww.xxx.como/xxx</a>
+        <a onClick={() => openUrl('http://github.com/olado/doT')}>http://github.com/olado/doT</a>
       </span>});
     sqlString = JSON.stringify(e.message);
   }
@@ -1290,113 +1298,9 @@ export const getDataByTemplate = (data, template, isDemo, dataSource, code, isAp
   }
   return sqlString;
 };
-// 获取项目的一些配置信息
-const getDataSourceProfile = (data) => {
-  const dataSource = {...data};
-  const datatype = _.get(dataSource, 'dataTypeMapping.mappings', []);
-  const allTemplate = _.get(dataSource, 'profile.codeTemplates', []);
-  const sqlSeparator = _.get(dataSource, 'profile.sql.delimiter', ';') || ';';
-  return {
-    dataSource,
-    datatype,
-    allTemplate,
-    sqlSeparator
-  };
-};
 // 获取所有数据表的全量脚本（filter）
-export const getAllDataSQLByFilter = (data, code, filterTemplate, filterDefKey) => {
-  // 获取全量脚本（删表，建表，建索引，表注释）
-  const { dataSource, allTemplate, sqlSeparator } = getDataSourceProfile(data);
-  const getTemplate = (templateShow) => {
-    return allTemplate.filter(t => t.applyFor === code)[0]?.[templateShow] || '';
-  };
-  const getFilterData = (name) => {
-    return (dataSource[name] || []).filter(e => {
-      if (filterDefKey) {
-        return (filterDefKey[name] || []).includes(e.id);
-      }
-      return true;
-    }).map(e => ({
-      ...e,
-      datatype: name,
-      groupType: `ref${firstUp(name)}`
-    }));
-  };
-  let sqlString = '';
-  try {
-    const tempData = code === 'dictSQLTemplate' ? getFilterData('dicts') : getFilterData('entities')
-        .concat(getFilterData('views'));
-    sqlString += tempData.map(e => {
-      const tempTemplate = [...filterTemplate];
-      let tempData = '';
-      let data;
-      if (code === 'dictSQLTemplate') {
-        data = {
-          dict: _.omit(e, ['groupType', 'datatype']),
-        }
-      } else {
-        const name = e.datatype === 'entities' ? 'entity' : 'view';
-        const childData = {
-          ..._.omit(e, ['groupType', 'datatype']),
-          env: getDefaultEnv(e),
-          fields: (e.fields || []).map(field => {
-            return {
-              ...field,
-              ...transform(field, dataSource, code)
-            }
-          }),
-          indexes: (e.indexes || []).map(i => {
-            return {
-              ...i,
-              fields: (i.fields || []).map(f => {
-                const field = (e.fields || []).filter(ie => f.fieldDefKey === ie.id)[0];
-                return {
-                  ...f,
-                  fieldDefKey: field?.defKey || '',
-                };
-              })
-            }
-          }),
-        };
-        if (name === 'view') {
-          childData.refEntities = dataSource?.entities
-            ?.filter(e => childData?.refEntities.includes(e.id))
-            ?.map(e => e.defKey);
-        }
-        data = {
-          entity: childData,
-          view: childData,
-        }
-      }
-      const templateData = {
-        ...data,
-        group: (dataSource.viewGroups || [])
-            .filter(g => (g[e.groupType] || []).includes(e.id))
-            .map(g => _.pick(g, ['defKey', 'defName'])),
-        separator: sqlSeparator
-      };
-      if (tempTemplate.includes('createTable')) {
-        tempTemplate.push('createView');
-      }
-      tempTemplate.filter(t => {
-        if (e.datatype === 'entities') {
-          return t !== 'createView';
-        }
-        return t !== 'createTable';
-      }).forEach(f => {
-        const code = `${getTemplateString(getTemplate(f), templateData)}`;
-        tempData += code ? `${code}\n` : '';
-      });
-      return tempData;
-    }).join('');
-  } catch (e) {
-    sqlString = JSON.stringify(e.message);
-  }
-  // const DDLToggleCase = dataSource?.profile?.DDLToggleCase || '';
-  // if (DDLToggleCase) {
-  //   return DDLToggleCase === 'U' ? sqlString.toLocaleUpperCase() : sqlString.toLocaleLowerCase();
-  // }
-  return sqlString;
+export const getAllDataSQLByFilter = (...args) => {
+  return _getAllDataSQLByFilter(...args);
 };
 export const getEmptyMessage = (...args) => {
   return _getEmptyMessage(...args)
