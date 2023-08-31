@@ -1,0 +1,2 @@
+mysql -h 192.168.48.1 -u mmllllyyy -p
+jdbc:mysql://192.168.48.1:3306/mydb?allowPublicKeyRetrieval=true&characterEncoding=UTF-8&useSSL=false&useUnicode=true&serverTimezone=UTC

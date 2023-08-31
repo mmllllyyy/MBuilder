@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: cn.com.chiner.ApplicationTest
+-------------------------------------------------------------------------------
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 132.8 s -- in cn.com.chiner.ApplicationTest

@@ -229,7 +229,7 @@ export default React.memo(({prefix, importProject, createProject, openTemplate,
           <div className={`${currentPrefix}-home-container-body-right-nav-search`}>
             <SearchInput placeholder={FormatMessage.string({id: 'home.search'})} onChange={onChange}/>
           </div>
-          <div className={`${currentPrefix}-home-container-body-right-nav-type`}>
+          {/* <div className={`${currentPrefix}-home-container-body-right-nav-type`}>
             <div
               className={`${currentPrefix}-home-container-body-right-nav-type-selected`}
             >
@@ -254,7 +254,7 @@ export default React.memo(({prefix, importProject, createProject, openTemplate,
               <Icon type='fa-home' style={{marginRight: 4, fontSize: '16px'}}/>
               <FormatMessage id='home.page'/>
             </div>
-          </div>
+          </div> */}
         </div>
         <div className={`${currentPrefix}-home-container-body-right-list`}>
           <div>
@@ -262,12 +262,12 @@ export default React.memo(({prefix, importProject, createProject, openTemplate,
               <div className={`${currentPrefix}-home-container-body-right-list-title`}>
                 <FormatMessage id='home.allProject'/>
               </div>
-              <div onClick={() => openUrl('http://pdmaas.pdmaner.com')} className={`${currentPrefix}-home-container-body-right-ad`}>
+              {/* <div onClick={() => openUrl('http://pdmaas.pdmaner.com')} className={`${currentPrefix}-home-container-body-right-ad`}>
                 <Icon type='fa-bullhorn'/>
-                <span>
-                  公云SaaS版，私云企业版，均已正式发布，支持多人团队协作，欢迎了解
-                </span>
-              </div>
+                <span> */}
+                  {/* type in */}
+                {/* </span>
+              </div> */}
             </div>
             <div className={`${currentPrefix}-home-container-body-right-list-tab`}>
               <div className={`${currentPrefix}-home-container-body-right-list-tab-header`}>
