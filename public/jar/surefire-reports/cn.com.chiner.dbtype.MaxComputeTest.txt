@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: cn.com.chiner.dbtype.MaxComputeTest
--------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.247 s -- in cn.com.chiner.dbtype.MaxComputeTest
